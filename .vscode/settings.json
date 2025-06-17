@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+      "*.css": "tailwindcss"
+    },
+    "typescript.validate.enable": true,
+    "javascript.validate.enable": true,
+    "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+    "typescript.tsserver.experimental.disableProjectDiagnostics": true,
+    "typescript.tsserver.experimental.enableProjectWideIntelliSense": false,
+    "typescript.tsserver.experimental.disableProjectWideIntelliSense": true,
+    "typescript.tsserver.experimental.enableProjectWideIntelliSenseForFiles": false,
+    "typescript.tsserver.experimental.disableProjectWideIntelliSenseForFiles": true
+  }
