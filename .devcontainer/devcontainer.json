@@ -1,7 +1,8 @@
 {
   "name": "React DX Dev",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:18",
-  "postCreateCommand": "[ -d dx-app ] || npx --yes create-next-app dx-app --typescript && cd dx-app && npm install",
+  "postCreateCommand": "[ -d dx-app ] || npx create-next-app@latest dx-app --typescript --yes && cd dx-app && npm install",
+  "postStartCommand": "cd dx-app",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -10,5 +11,6 @@
         "dsznajder.eslint-plugin-jsx"
       ]
     }
-  }
+  },
+  "forwardPorts": [3000]
 }
