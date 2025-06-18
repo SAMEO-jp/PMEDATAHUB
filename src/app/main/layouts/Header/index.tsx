@@ -22,8 +22,7 @@ export function Header() {
   const { year, week } = getYearAndWeek();
 
   const handleSave = () => {
-    // TODO: 保存処理を実装
-    console.log('保存ボタンがクリックされました');
+    window.dispatchEvent(new CustomEvent("week-save"));
   };
 
   return (

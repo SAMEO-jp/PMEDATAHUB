@@ -4,6 +4,7 @@ import React from "react"
 import { DroppableTimeSlot } from "./DroppableTimeSlot"
 import { DraggableEvent } from "./DraggableEvent"
 import { formatDayWithWeekday } from "../utils/dateUtils"
+import { WeekSidebar } from "./WeekSidebar"
 
 // 曜日の日本語表記
 const WEEKDAY_JP = ['日', '月', '火', '水', '木', '金', '土'];
@@ -20,13 +21,19 @@ type TimeGridProps = {
   minuteSlots: number[]
   isToday: (date: Date) => boolean
   events: any[]
-  handleTimeSlotClick: (day: Date, hour: number, minute: number) => void
-  handleEventClick: (event: any) => void
-  handleResizeStart: (event: any, position: string) => void
-  workTimes?: WorkTimeData[] // 出退勤時間データ（省略可能）
-  onWorkTimeChange?: (date: string, startTime: string, endTime: string) => void // 出退勤時間変更ハンドラ（省略可能）
-  onCopyEvent?: (event: any) => void // イベントコピー用ハンドラ（省略可能）
-  onDeleteEvent?: (event: any) => void // イベント削除用ハンドラ（省略可能）
+  selectedEvent: any
+  onEventClick: (event: any) => void
+  onTimeSlotClick: (day: Date, hour: number, minute?: number) => void
+  onResizeStart: (event: any, direction: "top" | "bottom") => void
+  workTimes?: WorkTimeData[]
+  onWorkTimeChange?: (date: string, startTime: string, endTime: string) => void
+  onCopyEvent?: (event: any) => void
+  onDeleteEvent?: (event: any) => void
+  year: number
+  week: number
+  currentUser: any
+  hasChanges: boolean
+  setHasChanges: (hasChanges: boolean) => void
 }
 
 export const TimeGrid = ({
@@ -35,13 +42,19 @@ export const TimeGrid = ({
   minuteSlots,
   isToday,
   events,
-  handleTimeSlotClick,
-  handleEventClick,
-  handleResizeStart,
+  selectedEvent,
+  onEventClick,
+  onTimeSlotClick,
+  onResizeStart,
   workTimes = [], // デフォルト空配列
   onWorkTimeChange = () => {}, // デフォルト空関数
   onCopyEvent,
   onDeleteEvent,
+  year,
+  week,
+  currentUser,
+  hasChanges,
+  setHasChanges,
 }: TimeGridProps) => {
   // 日付文字列のフォーマット関数
   const formatDateString = (date: Date): string => {
@@ -122,7 +135,7 @@ export const TimeGrid = ({
         className="overflow-auto"
         style={{ height: "calc(100vh - 8rem)", scrollPaddingTop: "9rem" }}
       >
-        <div className="grid" style={{ gridTemplateColumns: 'auto repeat(7, 1fr)' }}>
+        <div className="grid" style={{ gridTemplateColumns: 'auto repeat(7, 1fr) auto' }}>
           {/* 時間ラベルのヘッダー（左上の空白セル） */}
           <div className="sticky top-0 left-0 z-20 p-1 border-r border-b bg-gray-50 w-10"></div>
           
@@ -136,18 +149,21 @@ export const TimeGrid = ({
               "bg-gray-50";
               
             return (
-            <div
-              key={index}
+              <div
+                key={index}
                 className={`sticky top-0 z-10 p-1 text-center border-r border-b ${bgColorClass}`}
-              style={{ height: "42px" }}
-            >
+                style={{ height: "42px" }}
+              >
                 <div className="font-medium text-xs flex flex-col justify-center">
                   <span className="font-bold">{WEEKDAY_JP[dayOfWeek]}</span>
                   <span>{formatDayWithWeekday(day)}</span>
                 </div>
-            </div>
+              </div>
             );
           })}
+
+          {/* 右側のWeekSidebar用のヘッダー */}
+          <div className="sticky top-0 right-0 z-20 p-1 border-l border-b bg-gray-50 w-64"></div>
 
           {/* 出退勤時間表示用の左ラベル - stickyで左側と上部に固定 */}
           <div className="sticky left-0 top-[42px] z-20 h-16 border-b border-r p-1 text-xs bg-gray-50 flex flex-col justify-center w-10">
@@ -194,6 +210,24 @@ export const TimeGrid = ({
             );
           })}
 
+          {/* 右側のWeekSidebar */}
+          <div className="sticky top-[42px] right-0 z-20 h-full border-l bg-white w-64">
+            <WeekSidebar
+              events={events}
+              onEventClick={onEventClick}
+              onAddEvent={handleSaveDayDefault}
+              onDeleteEvent={onDeleteEvent}
+              onSaveEvent={handleSaveDayDefault}
+              selectedEvent={selectedEvent}
+              setSelectedEvent={setSelectedEvent}
+              hasChanges={hasChanges}
+              setHasChanges={setHasChanges}
+              year={year}
+              week={week}
+              currentUser={currentUser}
+            />
+          </div>
+
           {/* 時間ラベル - stickyで左側に固定 */}
           <div className="col-span-1 sticky left-0 z-10">
             {timeSlots.map((hour) => (
@@ -218,56 +252,56 @@ export const TimeGrid = ({
             const hasWorkTime = workTime?.startTime && workTime?.endTime;
             
             return (
-            <div key={dayIndex} className="col-span-1 relative">
-              {/* 出勤時間から退勤時間までの範囲を示す背景 */}
-              {hasWorkTime && (
-                <div 
-                  className="absolute left-0 right-0 z-0 bg-gray-200/80 border-y border-dashed border-gray-400"
-                  style={{ 
-                    top: `${startTimePosition}px`, 
-                    height: `${endTimePosition - startTimePosition}px` 
-                  }}
-                />
-              )}
+              <div key={dayIndex} className="col-span-1 relative">
+                {/* 出勤時間から退勤時間までの範囲を示す背景 */}
+                {hasWorkTime && (
+                  <div 
+                    className="absolute left-0 right-0 z-0 bg-gray-200/80 border-y border-dashed border-gray-400"
+                    style={{ 
+                      top: `${startTimePosition}px`, 
+                      height: `${endTimePosition - startTimePosition}px` 
+                    }}
+                  />
+                )}
 
-              {timeSlots.map((hour) => (
-                <React.Fragment key={hour}>
-                  {/* 30分刻みのスロット */}
-                  {minuteSlots.map((minute) => (
-                    <DroppableTimeSlot
-                      key={`${hour}-${minute}`}
-                      day={day}
-                      hour={hour}
-                      minute={minute}
-                      isToday={isToday(day)}
-                      dayIndex={dayIndex}
-                      onClick={handleTimeSlotClick}
+                {timeSlots.map((hour) => (
+                  <React.Fragment key={hour}>
+                    {/* 30分刻みのスロット */}
+                    {minuteSlots.map((minute) => (
+                      <DroppableTimeSlot
+                        key={`${hour}-${minute}`}
+                        day={day}
+                        hour={hour}
+                        minute={minute}
+                        isToday={isToday(day)}
+                        dayIndex={dayIndex}
+                        onClick={onTimeSlotClick}
+                      />
+                    ))}
+                  </React.Fragment>
+                ))}
+
+                {/* イベントを表示 */}
+                {events
+                  .filter((event) => {
+                    const eventDate = new Date(event.startDateTime)
+                    return (
+                      eventDate.getDate() === day.getDate() &&
+                      eventDate.getMonth() === day.getMonth() &&
+                      eventDate.getFullYear() === day.getFullYear()
+                    )
+                  })
+                  .map((event) => (
+                    <DraggableEvent
+                      key={event.id}
+                      event={event}
+                      onClick={onEventClick}
+                      onResizeStart={onResizeStart}
+                      onCopy={onCopyEvent}
+                      onDelete={onDeleteEvent}
                     />
                   ))}
-                </React.Fragment>
-              ))}
-
-              {/* イベントを表示 */}
-              {events
-                .filter((event) => {
-                  const eventDate = new Date(event.startDateTime)
-                  return (
-                    eventDate.getDate() === day.getDate() &&
-                    eventDate.getMonth() === day.getMonth() &&
-                    eventDate.getFullYear() === day.getFullYear()
-                  )
-                })
-                .map((event) => (
-                  <DraggableEvent
-                    key={event.id}
-                    event={event}
-                    onClick={handleEventClick}
-                    onResizeStart={handleResizeStart}
-                    onCopy={onCopyEvent}
-                    onDelete={onDeleteEvent}
-                  />
-                ))}
-            </div>
+              </div>
             );
           })}
         </div>

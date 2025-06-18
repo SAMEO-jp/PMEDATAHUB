@@ -13,18 +13,7 @@ import {
 import { restrictToWindowEdges } from "@dnd-kit/modifiers"
 
 // データベース関連
-import { 
-  getEmployees, 
-  saveWeekAchievements, 
-  deleteAchievement, 
-} from "./lib/client-db"
-import { 
-  setWeekDataChanged, 
-  hasWeekDataChanged, 
-  saveWeekDataToStorage,
-  clearWeekData, 
-  getWeekDataFromStorage 
-} from "./lib/client-storage"
+
 import { 
   getKintaiByWeek, 
   updateKintaiByWeek 
@@ -74,14 +63,7 @@ export {
   restrictToWindowEdges,
 
   // データベース
-  getEmployees,
-  saveWeekAchievements,
-  deleteAchievement,
-  setWeekDataChanged,
-  hasWeekDataChanged,
-  saveWeekDataToStorage,
-  clearWeekData,
-  getWeekDataFromStorage,
+
   getKintaiByWeek,
   updateKintaiByWeek,
 
