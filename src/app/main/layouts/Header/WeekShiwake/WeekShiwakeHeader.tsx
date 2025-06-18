@@ -45,8 +45,11 @@ export function WeekShiwakeHeader({ year: yearStr, week: weekStr, onSave }: Week
   };
 
   const handleSave = () => {
+    console.log('保存ボタンがクリックされました');
     onSave();
+    console.log('onSaveが呼び出されました');
     window.dispatchEvent(new CustomEvent("week-save"));
+    console.log('week-saveイベントが発火されました');
   };
 
   return (

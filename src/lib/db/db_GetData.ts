@@ -66,35 +66,45 @@ export async function GetConditionData<T=unknown>(
   config: TableConfig
 ): Promise<DataResult<T>> {
   let db: any = null;
-    try {
-        db = await initializeDatabase();
-        const query = `
-          SELECT * 
-          FROM ${config.tableName} 
-          WHERE ${conditionExpr}`;
-        const result = await db.all(query, conditionValues);
-        return {
-          success: true,
-          data: result as T,
-          count: result.length,
-          error: null
-        };
+  try {
+    console.log('GetConditionData: データベース接続開始');
+    db = await initializeDatabase();
+    console.log('GetConditionData: データベース接続成功');
+
+    const query = `
+      SELECT * 
+      FROM ${config.tableName} 
+      WHERE ${conditionExpr}`;
+    console.log('GetConditionData: 実行クエリ:', query);
+    console.log('GetConditionData: パラメータ:', conditionValues);
+
+    const result = await db.all(query, conditionValues);
+    console.log('GetConditionData: 取得件数:', result.length);
+    console.log('GetConditionData: 最初のレコード:', result[0]);
+
+    return {
+      success: true,
+      data: result as T,
+      count: result.length,
+      error: null
+    };
   } catch (error) {
-        console.error('データの取得に失敗しました:', error);
-        return {
-          success: false,
-          error: 'データベースエラーが発生しました',
-          count: 0,
-          data: null
-        };
+    console.error('GetConditionData: データの取得に失敗しました:', error);
+    return {
+      success: false,
+      error: 'データベースエラーが発生しました',
+      count: 0,
+      data: null
+    };
   } finally {
-      if (db) {
-        try {
-          await db.close();
-        } catch (closeErr) {
-          console.warn('DBクローズ時にエラーが発生しました:', closeErr);
-        }
+    if (db) {
+      try {
+        await db.close();
+        console.log('GetConditionData: データベース接続を閉じました');
+      } catch (closeErr) {
+        console.warn('GetConditionData: DBクローズ時にエラーが発生しました:', closeErr);
       }
+    }
   }
 }
 

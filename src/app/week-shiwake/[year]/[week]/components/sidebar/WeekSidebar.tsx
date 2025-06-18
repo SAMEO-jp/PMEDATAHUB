@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react/react-in-jsx-scope */
 "use client"
 
 import { useState, useEffect } from "react"
@@ -18,21 +20,29 @@ const SUBTABS: Record<string, string[]> = {
 }
 
 type WeekSidebarProps = {
+  year: number
+  week: number
   selectedTab: string
-  setSelectedTab: (tab: string) => void
   selectedProjectSubTab: string
-  setSelectedProjectSubTab: (subTab: string) => void
-  selectedEvent: any
-  hasChanges: boolean
-  handleDeleteEvent: () => void
-  updateEvent: (updatedEvent: any) => void
-  employees: any[]
-  projects: any[]
-  setSelectedEvent: (event: any) => void
-  currentUser: any
-  // 間接業務サブタブ用のプロパティを追加
   indirectSubTab?: string
-  setIndirectSubTab?: (subTab: string) => void
+  onTabChange: (tab: string) => void
+  onProjectSubTabChange: (subTab: string) => void
+  onIndirectSubTabChange: (subTab: string) => void
+  onSave: () => void
+  onRefresh: () => void
+  isSaving: boolean
+  hasChanges: boolean
+  saveMessage: { type: string; text: string; } | null;
+  apiError: string | null
+  
+  // 既存のプロパティ（もし WeekSidebar 内で使用されているなら残す）
+  selectedEvent?: any
+  handleDeleteEvent?: () => void
+  updateEvent?: (updatedEvent: any) => void
+  employees?: any[]
+  projects?: any[]
+  setSelectedEvent?: (event: any) => void
+  currentUser?: any
 }
 
 // プロジェクト選択用のプルダウンコンポーネント

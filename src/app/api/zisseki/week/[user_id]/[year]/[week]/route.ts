@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server'
-import sqlite3 from 'sqlite3'
-import { open } from 'sqlite'
+import { GetConditionData } from '@src/lib/db/db_GetData'
+import { initializeDatabase } from '@src/lib/db/db_connection'
 
-// データベース接続を取得する関数
-async function getDb() {
-  const db = await open({
-    filename: './data/achievements.db',
-    driver: sqlite3.Database
-  })
-  return db
+// テーブル設定
+const ZISSEKI_CONFIG = {
+  tableName: 'ZISSEKI',
+  idColumn: 'key_id'
 }
 
 export async function GET(
@@ -17,44 +14,31 @@ export async function GET(
 ) {
   try {
     const { user_id, year, week } = params
-    const db = await getDb()
+    console.log('API呼び出し:', { user_id, year, week })
 
-    const result = await db.all(
-      `SELECT 
-        key_id as keyID,
-        user_id as employeeNumber,
-        startDateTime,
-        endDateTime,
-        subject,
-        content,
-        type,
-        projectNumber,
-        position,
-        facility,
-        status,
-        businessCode,
-        departmentCode,
-        weekCode,
-        year,
-        week,
-        classification5,
-        classification6,
-        classification7,
-        classification8,
-        classification9
-      FROM ZISSEKI
-      WHERE user_id = ?
-      AND year = ?
-      AND week = ?
-      ORDER BY startDateTime ASC`,
-      [user_id, year, week]
-    )
+    // 条件式とパラメータを設定
+    const conditionExpr = 'user_id = ? AND year = ? AND week = ? ORDER BY startDateTime ASC'
+    const conditionValues = [user_id, year, week]
+    console.log('検索条件:', { conditionExpr, conditionValues })
 
-    await db.close()
+    // データを取得
+    const result = await GetConditionData(conditionExpr, conditionValues, ZISSEKI_CONFIG)
+    console.log('取得結果:', result)
+
+    if (!result.success) {
+      console.error('データ取得エラー:', result.error)
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: result.error || "データの取得に失敗しました" 
+        },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({
       success: true,
-      data: result
+      data: result.data
     })
   } catch (error) {
     console.error("週次実績データの取得中にエラーが発生しました:", error)
@@ -72,6 +56,7 @@ export async function POST(
   request: Request,
   { params }: { params: { user_id: string; year: string; week: string } }
 ) {
+  let db: any = null;
   try {
     const { user_id, year, week } = params
     const body = await request.json()
@@ -95,133 +80,80 @@ export async function POST(
       )
     }
 
-    const db = await getDb()
+    // データベース接続
+    db = await initializeDatabase();
 
     // トランザクション開始
-    await db.run('BEGIN TRANSACTION')
+    await db.run('BEGIN TRANSACTION');
 
     try {
       // 既存データの削除
-      const deleteResult = await db.run(
+      await db.run(
         `DELETE FROM ZISSEKI 
          WHERE user_id = ? 
          AND year = ? 
          AND week = ?`,
         [user_id, year, week]
-      )
-
-      console.log(`削除されたレコード数: ${deleteResult.changes}`)
+      );
 
       // 新しいデータを挿入
       for (const event of events) {
-        // データの検証
-        if (!event.keyID) {
-          console.error('イベントデータにkeyIDが存在しません:', event);
+        if (!event.key_id) {
+          console.error('イベントデータにkey_idが存在しません:', event);
           continue;
         }
 
-        const {
-          keyID,
-          employeeNumber,
-          startDateTime,
-          endDateTime,
-          subject,
-          content,
-          type,
-          projectNumber,
-          position,
-          facility,
-          status,
-          businessCode,
-          departmentCode,
-          weekCode,
-          classification5,
-          classification6,
-          classification7,
-          classification8,
-          classification9
-        } = event
-
-        // データを挿入
         await db.run(
           `INSERT INTO ZISSEKI (
-            key_id,
-            user_id,
-            startDateTime,
-            endDateTime,
-            subject,
-            content,
-            type,
-            organizer,
-            projectNumber,
-            position,
-            facility,
-            status,
-            businessCode,
-            departmentCode,
-            weekCode,
-            year,
-            week,
-            classification1,
-            classification2,
-            classification3,
-            classification4,
-            classification5,
-            classification6,
-            classification7,
-            classification8,
-            classification9,
-            createdAt,
-            updatedAt
+            key_id, user_id, startDateTime, endDateTime, subject, content,
+            type, organizer, projectNumber, position, facility, status,
+            businessCode, departmentCode, year, week, activityMaincode,
+            activitySubcode, activityCode, equipmenNumber, projectType,
+            phase, projectSubType, height, top, color, createdAt, updatedAt
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
           [
-            keyID,
-            employeeNumber,
-            startDateTime,
-            endDateTime,
-            subject,
-            content,
-            type,
-            null, // organizer
-            projectNumber,
-            position,
-            facility,
-            status,
-            businessCode,
-            departmentCode,
-            weekCode,
+            event.key_id,
+            user_id,
+            event.startDateTime,
+            event.endDateTime,
+            event.subject,
+            event.content,
+            event.type,
+            event.organizer || null,
+            event.projectNumber,
+            event.position,
+            event.facility,
+            event.status,
+            event.businessCode,
+            event.departmentCode,
             year,
             week,
-            null, // classification1
-            null, // classification2
-            null, // classification3
-            null, // classification4
-            classification5,
-            classification6,
-            classification7,
-            classification8,
-            classification9
+            event.activityMaincode || null,
+            event.activitySubcode || null,
+            event.activityCode || null,
+            event.equipmenNumber || null,
+            event.projectType || null,
+            event.phase || null,
+            event.projectSubType || null,
+            event.height || null,
+            event.top || null,
+            event.color || null
           ]
-        )
-
-        console.log(`挿入されたレコードID: ${keyID}`)
+        );
       }
 
       // トランザクションをコミット
-      await db.run('COMMIT')
+      await db.run('COMMIT');
 
       return NextResponse.json({
         success: true,
         message: "データを保存しました",
         data: { events }
-      })
+      });
     } catch (error) {
       // エラーが発生した場合はロールバック
-      await db.run('ROLLBACK')
-      console.error("データベース操作中にエラーが発生:", error)
-      throw error
-    } finally {
-      await db.close()
+      await db.run('ROLLBACK');
+      throw error;
     }
   } catch (error) {
     console.error("週次実績データの保存中にエラーが発生しました:", error)
@@ -232,5 +164,13 @@ export async function POST(
       },
       { status: 500 }
     )
+  } finally {
+    if (db) {
+      try {
+        await db.close();
+      } catch (closeErr) {
+        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+      }
+    }
   }
 }

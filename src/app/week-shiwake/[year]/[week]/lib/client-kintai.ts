@@ -2,7 +2,7 @@
  * 出退勤時間データ操作用のヘルパー関数
  */
 
-import { getCurrentUser } from "./client-db"
+import { getCurrentUser } from "./user_data"
 
 type WorkTimeData = {
   date: string;

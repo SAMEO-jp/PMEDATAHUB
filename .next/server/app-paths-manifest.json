@@ -1,8 +1,1 @@
-{
-  "/app_project/[project_id]/page": "app/app_project/[project_id]/page.js",
-  "/api/db/db_project/[project_id]/route": "app/api/db/db_project/[project_id]/route.js",
-  "/app_project/[project_id]/zumen/all_list/page": "app/app_project/[project_id]/zumen/all_list/page.js",
-  "/app_project/[project_id]/zumen/[zumen_id]/page": "app/app_project/[project_id]/zumen/[zumen_id]/page.js",
-  "/app_project/[project_id]/konpo/make_list/page": "app/app_project/[project_id]/konpo/make_list/page.js",
-  "/api/bom/[project_id]/flat/konpo/route": "app/api/bom/[project_id]/flat/konpo/route.js"
-}
+{}
