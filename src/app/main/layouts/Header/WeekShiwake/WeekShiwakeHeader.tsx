@@ -1,10 +1,9 @@
 "use client";
 
 import React from "react";
-import { useParams } from "next/navigation";
 import { Button } from "@ui/button";
 import { ChevronLeft, ChevronRight, Save } from "lucide-react";
-import { getWeekNumber, getWeekDates } from "@/src/app/week-shiwake/[year]/[week]/utils/dateUtils";
+import { getWeekNumber, getWeekDates } from "@/src/app/zisseki/[year]/[week]/utils/dateUtils";
 
 interface WeekShiwakeHeaderProps {
   year: string;

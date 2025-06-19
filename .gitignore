@@ -1,3 +1,32 @@
-node_modules
-".next/" 
-".cursor/" 
+
+
+# 依存関係
+node_modules/
+vendor/
+.cursor/
+.vscode/
+template/
+
+
+# ビルド成果物
+dist/
+build/
+.next/
+*.exe
+*.dll
+data/
+
+# ログファイル
+*.log
+logs/
+
+# 一時ファイル
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# 設定ファイル（機密情報含む）
+.env
+next-env.d.ts
+memo.md
