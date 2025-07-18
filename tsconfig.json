@@ -27,7 +27,7 @@
         "./*"
       ],
       "@ui/*": [
-        "./src/app/main/components/ui/*"
+        "./src/components/ui/*"
       ],
       "@app/*": [
         "./src/app/*"
@@ -53,6 +53,7 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/__ignore__"
   ]
 }

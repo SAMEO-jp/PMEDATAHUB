@@ -1,0 +1,1 @@
+export { KonpoTable } from './KonpoTable'; 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Project } from '@src/types/db_project';
 import React from 'react';
+import { useProjectHeader } from './hooks/useProjectHeader';
 
 interface PageProps {
   params: {
@@ -28,7 +29,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
         if (!response.ok) {
           throw new Error('プロジェクトの取得に失敗しました');
         }
-        const data = await response.json();
+        const data = await response.json() as Project;
         setProject(data);
         setEditedProject(data);
       } catch (err) {
@@ -38,8 +39,11 @@ export default function ProjectDetailPage({ params }: PageProps) {
       }
     };
 
-    fetchProject();
+    void fetchProject();
   }, [params.project_id]);
+
+  // プロジェクト情報をヘッダーストアに設定（データ取得後に実行）
+  useProjectHeader(project);
 
   // プロジェクトの更新
   const handleUpdate = async () => {
@@ -56,7 +60,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
         throw new Error('プロジェクトの更新に失敗しました');
       }
 
-      const updatedProject = await response.json();
+      const updatedProject = await response.json() as Project;
       setProject(updatedProject);
       setIsEditing(false);
     } catch (err) {
@@ -85,28 +89,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
     }
   };
 
-  // ステータスの更新
-  const handleStatusChange = async (newStatus: Project['PROJECT_STATUS']) => {
-    try {
-      const response = await fetch(`/api/db/db_project/${params.project_id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
 
-      if (!response.ok) {
-        throw new Error('ステータスの更新に失敗しました');
-      }
-
-      const updatedProject = await response.json();
-      setProject(updatedProject);
-      setEditedProject(updatedProject);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'エラーが発生しました');
-    }
-  };
 
   if (isLoading) {
     return (
@@ -149,30 +132,24 @@ export default function ProjectDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">プロジェクト詳細</h1>
-        <div className="space-x-2">
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            {isEditing ? 'キャンセル' : '編集'}
-          </button>
-          <button
-            onClick={handleDelete}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-          >
-            削除
-          </button>
-          <button
-            onClick={() => router.push('/app_project')}
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-          >
-            一覧に戻る
-          </button>
+    <div className="project-page-container">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">プロジェクト詳細</h1>
+          <div className="space-x-2">
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              {isEditing ? 'キャンセル' : '編集'}
+            </button>
+            <button
+              onClick={() => void handleDelete()}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            >
+              削除
+            </button>
+          </div>
         </div>
-      </div>
 
       <div className="bg-white shadow-md rounded-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -201,7 +178,7 @@ export default function ProjectDetailPage({ params }: PageProps) {
                 {isEditing ? (
                   <select
                     value={editedProject.PROJECT_STATUS || ''}
-                    onChange={(e) => setEditedProject({ ...editedProject, PROJECT_STATUS: e.target.value as Project['PROJECT_STATUS'] })}
+                    onChange={(e) => setEditedProject({ ...editedProject, PROJECT_STATUS: e.target.value })}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                   >
                     <option value="active">進行中</option>
@@ -291,35 +268,12 @@ export default function ProjectDetailPage({ params }: PageProps) {
           )}
         </div>
 
-        {/* 梱包管理セクション */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4">梱包管理</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button
-              onClick={() => router.push(`/app_project/${params.project_id}/konpo/konpo_list`)}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center justify-center"
-            >
-              梱包リスト一覧
-            </button>
-            <button
-              onClick={() => router.push(`/app_project/${params.project_id}/konpo/make_list`)}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center justify-center"
-            >
-              梱包リスト作成
-            </button>
-            <button
-              onClick={() => router.push(`/app_project/${params.project_id}/konpo/make_tanni`)}
-              className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 flex items-center justify-center"
-            >
-              梱包単位作成
-            </button>
-          </div>
-        </div>
+
 
         {isEditing && (
           <div className="mt-6 flex justify-end">
             <button
-              onClick={handleUpdate}
+              onClick={() => void handleUpdate()}
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
             >
               保存
@@ -341,6 +295,24 @@ export default function ProjectDetailPage({ params }: PageProps) {
               className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors duration-300"
             >
               図面一覧へ
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 梱包パレット作成へのリンクカード */}
+      <div className="mt-8">
+        <div className="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition-shadow duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800">梱包パレット作成</h2>
+              <p className="mt-2 text-gray-600">梱包パレットの作成と管理を行います</p>
+            </div>
+            <button
+              onClick={() => router.push(`/app_project/${params.project_id}/konpo/make_palet`)}
+              className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors duration-300"
+            >
+              パレット作成へ
             </button>
           </div>
         </div>

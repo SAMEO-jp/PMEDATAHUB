@@ -1,9 +1,16 @@
 'use client';
 
+//React関連（必ず最初）
 import { useState, useEffect } from 'react';
-import { Project } from '@src/types/db_project';
+
+//Next.js関連
 import { useRouter } from 'next/navigation';
-import React from 'react';
+
+//型定義（最後）
+import type { Project } from '@src/types/db_project';
+import { useProjectListHeader } from './hooks/useProjectListHeader';
+
+
 
 export default function ProjectListPage() {
   // 状態管理
@@ -18,6 +25,9 @@ export default function ProjectListPage() {
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 10;
   const router = useRouter();
+
+  // プロジェクト一覧用のヘッダー設定
+  useProjectListHeader(projects.length, searchTerm);
 
   // プロジェクトデータの取得
   const fetchProjects = async () => {

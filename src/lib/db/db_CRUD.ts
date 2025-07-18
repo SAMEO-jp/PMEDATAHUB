@@ -128,3 +128,235 @@ export async function deleteById(
     }
   }
 }
+
+/*********************************************************
+ * 単一レコード取得
+ * @param table - テーブル名
+ * @param id - 取得対象のID
+ * @param idColumn - IDカラム名（デフォルト: 'id'）
+ * @returns 取得結果（成功/失敗、データ、エラーメッセージ）
+ *********************************************************/
+export async function getRecord<T>(
+  table: string, 
+  id: number, 
+  idColumn = 'id'
+): Promise<{ success: boolean; data?: T; error?: { code: string; message: string } }> {
+  let db: Database | null = null;
+  try {
+    db = await initializeDatabase();
+    const query = `SELECT * FROM ${table} WHERE ${idColumn} = ?`;
+    const result = await db!.get(query, [id]);
+
+    if (!result) {
+      return {
+        success: false,
+        error: {
+          code: 'RECORD_NOT_FOUND',
+          message: `Record with id ${id} not found in ${table}`
+        }
+      };
+    }
+
+    return {
+      success: true,
+      data: result as T
+    };
+  } catch (error) {
+    console.error('データの取得に失敗しました:', error);
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: error instanceof Error ? error.message : 'Unknown database error'
+      }
+    };
+  } finally {
+    if (db) {
+      try {
+        await db.close();
+      } catch (closeErr) {
+        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+      }
+    }
+  }
+}
+
+/*********************************************************
+ * レコード作成
+ * @param table - テーブル名
+ * @param data - 作成するデータ
+ * @returns 作成結果（成功/失敗、データ、エラーメッセージ）
+ *********************************************************/
+export async function createRecord<T extends Record<string, unknown>>(
+  table: string, 
+  data: T
+): Promise<{ success: boolean; data?: T; error?: { code: string; message: string } }> {
+  let db: Database | null = null;
+  try {
+    db = await initializeDatabase();
+    
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([, value]) => value !== undefined)
+    );
+
+    const columns = Object.keys(filteredData).join(', ');
+    const placeholders = Object.keys(filteredData).map(() => '?').join(', ');
+    const values = Object.values(filteredData);
+
+    const query = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
+    const result = await db!.run(query, values);
+
+    return {
+      success: true,
+      data: { ...data, id: result.lastID } as T
+    };
+  } catch (error) {
+    console.error('データの作成に失敗しました:', error);
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: error instanceof Error ? error.message : 'Unknown database error'
+      }
+    };
+  } finally {
+    if (db) {
+      try {
+        await db.close();
+      } catch (closeErr) {
+        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+      }
+    }
+  }
+}
+
+/*********************************************************
+ * レコード更新
+ * @param table - テーブル名
+ * @param id - 更新対象のID
+ * @param data - 更新するデータ
+ * @param idColumn - IDカラム名（デフォルト: 'id'）
+ * @returns 更新結果（成功/失敗、データ、エラーメッセージ）
+ *********************************************************/
+export async function updateRecord<T>(
+  table: string, 
+  id: number, 
+  data: Partial<T>, 
+  idColumn = 'id'
+): Promise<{ success: boolean; data?: T; error?: { code: string; message: string } }> {
+  let db: Database | null = null;
+  try {
+    db = await initializeDatabase();
+    const keys = Object.keys(data);
+    const setClause = keys.map(key => `${key} = ?`).join(', ');
+    const values = [...Object.values(data), id];
+
+    const query = `UPDATE ${table} SET ${setClause} WHERE ${idColumn} = ?`;
+    await db!.run(query, values);
+
+    return {
+      success: true,
+      data: data as T
+    };
+  } catch (error) {
+    console.error('データの更新に失敗しました:', error);
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: error instanceof Error ? error.message : 'Unknown database error'
+      }
+    };
+  } finally {
+    if (db) {
+      try {
+        await db.close();
+      } catch (closeErr) {
+        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+      }
+    }
+  }
+}
+
+/*********************************************************
+ * レコード削除
+ * @param table - テーブル名
+ * @param id - 削除対象のID
+ * @param idColumn - IDカラム名（デフォルト: 'id'）
+ * @returns 削除結果（成功/失敗、エラーメッセージ）
+ *********************************************************/
+export async function deleteRecord(
+  table: string, 
+  id: number, 
+  idColumn = 'id'
+): Promise<{ success: boolean; error?: { code: string; message: string } }> {
+  let db: Database | null = null;
+  try {
+    db = await initializeDatabase();
+    const query = `DELETE FROM ${table} WHERE ${idColumn} = ?`;
+    await db!.run(query, [id]);
+
+    return {
+      success: true
+    };
+  } catch (error) {
+    console.error('データの削除に失敗しました:', error);
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: error instanceof Error ? error.message : 'Unknown database error'
+      }
+    };
+  } finally {
+    if (db) {
+      try {
+        await db.close();
+      } catch (closeErr) {
+        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+      }
+    }
+  }
+}
+
+/*********************************************************
+ * 全レコード取得（カスタムクエリ対応）
+ * @param table - テーブル名
+ * @param query - カスタムクエリ
+ * @param values - クエリパラメータ
+ * @returns 取得結果（成功/失敗、データ、エラーメッセージ）
+ *********************************************************/
+export async function getAllRecords<T>(
+  table: string, 
+  query?: string, 
+  values: unknown[] = []
+): Promise<{ success: boolean; data?: T[]; error?: { code: string; message: string } }> {
+  let db: Database | null = null;
+  try {
+    db = await initializeDatabase();
+    const sql = query || `SELECT * FROM ${table}`;
+    const result = await db!.all(sql, values);
+
+    return {
+      success: true,
+      data: result as T[]
+    };
+  } catch (error) {
+    console.error('データの取得に失敗しました:', error);
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: error instanceof Error ? error.message : 'Unknown database error'
+      }
+    };
+  } finally {
+    if (db) {
+      try {
+        await db.close();
+      } catch (closeErr) {
+        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+      }
+    }
+  }
+}

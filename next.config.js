@@ -2,11 +2,6 @@
 /* eslint-disable no-undef */
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // App Routerを有効化
-  experimental: {
-    appDir: true,
-  },
-
   // 本番環境でのソースマップの生成を無効化
   productionBrowserSourceMaps: false,
   
@@ -24,7 +19,24 @@ const nextConfig = {
 
   // 開発サーバーの設定
   webpack: (config, { dev, isServer }) => {
-    // カスタムwebpack設定をここに追加
+    // src/nullフォルダをビルド対象から除外
+    if (config.watchOptions) {
+      config.watchOptions.ignored = [
+        ...(Array.isArray(config.watchOptions.ignored) ? config.watchOptions.ignored : []),
+        '**/src/null/**',
+      ];
+    } else {
+      config.watchOptions = {
+        ignored: ['**/src/null/**'],
+      };
+    }
+
+    // ビルド時にsrc/nullフォルダを除外
+    config.module.rules.push({
+      test: /\.(js|jsx|ts|tsx)$/,
+      exclude: /src\/null/,
+    });
+
     return config;
   },
 

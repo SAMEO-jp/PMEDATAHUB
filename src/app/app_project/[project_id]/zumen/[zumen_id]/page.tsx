@@ -1,7 +1,18 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+// ==========================================
+// 型定義層
+// ==========================================
+
+import React, { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { apiRequest } from '@src/lib/apiRequest';
+import type { ApiResponse } from '@src/types/api';
 import type { BomFlatRow } from '@src/types/db_bom';
+import { ZumenViewer } from './components/ZumenViewer';
+import { useHeader } from '@src/components/layout/header/store/headerStore';
 
 interface BomData {
   zumen: BomFlatRow;
@@ -9,201 +20,159 @@ interface BomData {
   buzais: BomFlatRow[];
 }
 
-interface RelatedZumenData {
-  relatedZumen: BomFlatRow[];
-  detailZumen: BomFlatRow | null;
+// ==========================================
+// パラメータとルーティング層
+// ==========================================
+
+interface ZumenDetailPageProps {
+  params: { project_id: string; zumen_id: string };
 }
 
-export default function ZumenDetailPage({
-  params
-}: {
-  params: { project_id: string; zumen_id: string };
-}) {
+export default function ZumenDetailPage({ params }: ZumenDetailPageProps) {
+  const router = useRouter();
+  const { setCustomComponents, clearCustomComponents } = useHeader();
+
+  // ==========================================
+  // 状態管理層
+  // ==========================================
+
   const [bomData, setBomData] = useState<BomData | null>(null);
-  const [relatedData, setRelatedData] = useState<RelatedZumenData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // 図面データの取得
-        const response = await fetch(`/api/db/db_zumen/${params.zumen_id}`);
-        if (!response.ok) {
-          throw new Error('データの取得に失敗しました');
-        }
-        const data = await response.json();
-        setBomData(data);
+  // ==========================================
+  // データ読み込み関数層
+  // ==========================================
 
-        // 関連図面データの取得
-        const relatedResponse = await fetch(`/api/db/db_zumen/${params.zumen_id}/related`);
-        if (!relatedResponse.ok) {
-          throw new Error('関連図面データの取得に失敗しました');
-        }
-        const relatedData = await relatedResponse.json();
-        setRelatedData(relatedData.data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '予期せぬエラーが発生しました');
-      } finally {
-        setLoading(false);
+  const fetchData = async () => {
+    try {
+      // 図面本体データの取得
+      const bomRes = await apiRequest<ApiResponse<BomData>>(
+        `/api/db/db_zumen/${params.zumen_id}`,
+        'GET'
+      );
+
+      if (!bomRes.success) {
+        throw new Error(bomRes.error.message);
       }
-    };
+      setBomData(bomRes.data);
 
-    fetchData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '予期せぬエラーが発生しました');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==========================================
+  // イベントハンドラー層
+  // ==========================================
+
+  const handleGoBack = useCallback(() => {
+    router.back();
+  }, [router]);
+
+  // ==========================================
+  // ライフサイクル層
+  // ==========================================
+
+  useEffect(() => {
+    void fetchData();
   }, [params.zumen_id]);
 
+  // ヘッダーに戻るボタンのみを表示
+  useEffect(() => {
+    if (bomData?.zumen) {
+      setCustomComponents({
+        center: null,
+        right: (
+          <div className="flex items-center gap-4">
+            {/* 戻るボタン */}
+            <Button
+              onClick={() => {
+                void handleGoBack();
+              }}
+              variant="outline"
+              className="shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              戻る
+            </Button>
+          </div>
+        )
+      });
+    }
+
+    // コンポーネントのクリーンアップ
+    return () => {
+      clearCustomComponents();
+    };
+  }, [bomData?.zumen, handleGoBack]);
+
+  // ==========================================
+  // 計算済みプロパティ層
+  // ==========================================
+
+  // ==========================================
+  // 条件分岐レンダリング層（早期リターン）
+  // ==========================================
+
   if (loading) {
-    return <div className="p-4">読み込み中...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-gray-100">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">読み込み中...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="p-4 text-red-500">エラー: {error}</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-red-50">
+        <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-gray-100">
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01" />
+            </svg>
+          </div>
+          <p className="text-red-600 mb-6 font-medium">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+          >
+            再読み込み
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (!bomData) {
-    return <div className="p-4">データが見つかりません</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-gray-50">
+        <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-gray-100">
+          <p className="text-gray-600 font-medium">データが見つかりません</p>
+        </div>
+      </div>
+    );
   }
 
-  const isKumitateZumen = bomData.zumen.Zumen_Kind === '組立図';
+  // ==========================================
+  // レンダリング層（改善版）
+  // ==========================================
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">図面詳細</h1>
-      
-      {/* 図面情報 */}
-      <section className="mb-8">
-        <h2 className="text-xl font-semibold mb-2">図面情報</h2>
-        <div className="bg-white shadow rounded-lg p-4">
-          <dl className="grid grid-cols-2 gap-4">
-            <div>
-              <dt className="text-gray-600">図面ID</dt>
-              <dd>{bomData.zumen.Zumen_ID}</dd>
-            </div>
-            <div>
-              <dt className="text-gray-600">図面名</dt>
-              <dd>{bomData.zumen.Zumen_Name}</dd>
-            </div>
-            <div>
-              <dt className="text-gray-600">図面種別</dt>
-              <dd>{bomData.zumen.Zumen_Kind}</dd>
-            </div>
-            <div>
-              <dt className="text-gray-600">組立図面</dt>
-              <dd>{bomData.zumen.Kumitate_Zumen}</dd>
-            </div>
-          </dl>
-        </div>
-      </section>
-
-      {isKumitateZumen ? (
-        <>
-          {/* 関連図面リスト */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-2">関連図面リスト</h2>
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">図面ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">図面名</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">図面種別</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {relatedData?.relatedZumen.map((zumen) => (
-                    <tr key={zumen.Zumen_ID}>
-                      <td className="px-6 py-4 whitespace-nowrap">{zumen.Zumen_ID}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{zumen.Zumen_Name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{zumen.Zumen_Kind}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          {/* 詳細図リスト */}
-          <section>
-            <h2 className="text-xl font-semibold mb-2">詳細図リスト</h2>
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">図面ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">図面名</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">図面種別</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {relatedData?.detailZumen && (
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap">{relatedData.detailZumen.Zumen_ID}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{relatedData.detailZumen.Zumen_Name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{relatedData.detailZumen.Zumen_Kind}</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </>
-      ) : (
-        <>
-          {/* 部品リスト */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-2">部品リスト</h2>
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">部品ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">部品名</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">数量</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">備考</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {bomData.parts.map((part) => (
-                    <tr key={part.Part_ROWID}>
-                      <td className="px-6 py-4 whitespace-nowrap">{part.PART_ID}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{part.PART_NAME}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{part.QUANTITY}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{part.REMARKS}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          {/* 部材リスト */}
-          <section>
-            <h2 className="text-xl font-semibold mb-2">部材リスト</h2>
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">部材ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">部材名</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">数量</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">材質</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {bomData.buzais.map((buzai) => (
-                    <tr key={buzai.Buzai_ROWID}>
-                      <td className="px-6 py-4 whitespace-nowrap">{buzai.BUZAI_ID}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{buzai.BUZAI_NAME}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{buzai.BUZAI_QUANTITY}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{buzai.ZAISITU_NAME}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </>
-      )}
+    <div className="w-full h-full">
+      {/* 図面画像表示エリア */}
+      <div className="w-full h-full">
+        <ZumenViewer 
+          zumenId={params.zumen_id} 
+          zumenName={bomData.zumen.Zumen_Name}
+          zumenData={bomData.zumen}
+        />
+      </div>
     </div>
   );
 }

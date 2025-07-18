@@ -1,7 +1,6 @@
 import React from 'react';
-import { Header } from '@/src/app/main/layouts/Header/index';
-import { Sidebar } from '@/src/app/main/layouts/Sidebar';
-import { LoginProvider } from './main/components/loginmodal/LoginContext';
+import { TRPCProvider } from '@src/lib/trpc/Provider';
+import { ModernLayout } from '@/src/components/layout/ModernLayout';
 import './globals.css';
 
 export const metadata = {
@@ -16,14 +15,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body>
-        <LoginProvider>
-          <Header />
-          <Sidebar />
-          <main className="pl-64 pt-16 min-h-screen bg-gray-50">
+      <body style={{ overflow: 'hidden' }}>
+        <TRPCProvider>
+          <ModernLayout>
             {children}
-          </main>
-        </LoginProvider>
+          </ModernLayout>
+        </TRPCProvider>
       </body>
     </html>
   );
