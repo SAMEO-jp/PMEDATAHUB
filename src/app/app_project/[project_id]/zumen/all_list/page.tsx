@@ -21,7 +21,6 @@ export default function ProjectZumenPage({ params }: PageProps) {
   const [zumenList, setZumenList] = useState<BomZumen[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedZumenKind, setSelectedZumenKind] = useState<string>('all');
 
   // 図面データの取得
@@ -33,7 +32,7 @@ export default function ProjectZumenPage({ params }: PageProps) {
         if (!response.ok) {
           throw new Error('図面一覧の取得に失敗しました');
         }
-        const data: ZumenResponse = await response.json();
+        const data = await response.json() as ZumenResponse;
         setZumenList(data.zumenList);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'エラーが発生しました');
@@ -42,27 +41,16 @@ export default function ProjectZumenPage({ params }: PageProps) {
       }
     };
 
-    fetchZumenList();
+    void fetchZumenList();
   }, [params.project_id]);
 
-  // 検索フィルター
+  // 図面種類フィルター
   const filteredZumenList = zumenList.filter(zumen => {
     if (!zumen) return false;
 
-    // プロパティの存在チェックとNULL/空白の処理
-    const zumenName = zumen.Zumen_Name || '';
-    const zumenId = zumen.Zumen_ID || '';
-    const zumenKind = zumen.Zumen_Kind || '';
-
-    // 検索条件のチェック
-    const searchTermLower = searchTerm.toLowerCase();
-    const matchesSearch = zumenName.toLowerCase().includes(searchTermLower) ||
-      zumenId.toLowerCase().includes(searchTermLower);
-
     // 図面種類のフィルター
-    const matchesZumenKind = selectedZumenKind === 'all' || zumenKind === selectedZumenKind;
-
-    return matchesSearch && matchesZumenKind;
+    const zumenKind = zumen.Zumen_Kind || '';
+    return selectedZumenKind === 'all' || zumenKind === selectedZumenKind;
   });
 
   // ステータスの色を取得
@@ -116,24 +104,6 @@ export default function ProjectZumenPage({ params }: PageProps) {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">図面一覧</h1>
-        <div className="flex space-x-4">
-          <input
-            type="text"
-            placeholder="図面を検索..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            onClick={() => router.push(`/app_project/${params.project_id}`)}
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-          >
-            プロジェクト詳細に戻る
-          </button>
-        </div>
-      </div>
 
       {/* 図面種類タブ */}
       <div className="mb-6">
@@ -174,97 +144,95 @@ export default function ProjectZumenPage({ params }: PageProps) {
       </div>
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                図面ID
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                図面名
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                図面種類
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ステータス
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                担当者
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                出図日
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                アクション
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredZumenList && filteredZumenList.length > 0 ? (
-              filteredZumenList.map((zumen) => {
-                // プロパティの存在チェックとNULL/空白の処理
-                const zumenName = zumen.Zumen_Name || '';
-                const zumenId = zumen.Zumen_ID || '';
-                const status = zumen.status || '';
-                const tantoA1 = zumen.Tantou_a1 || '';
-                const syutuzubiDate = zumen.Syutuzubi_Date || '';
-                const zumenKind = zumen.Zumen_Kind || '';
+        <div className="overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
+                  図面ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
+                  図面名
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
+                  図面種類
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
+                  ステータス
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
+                  担当者
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
+                  出図日
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
+                  アクション
+                </th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+        <div className="overflow-y-auto" style={{ maxHeight: '500px' }}>
+          <table className="min-w-full divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredZumenList && filteredZumenList.length > 0 ? (
+                filteredZumenList.map((zumen) => {
+                  // プロパティの存在チェックとNULL/空白の処理
+                  const zumenName = zumen.Zumen_Name || '';
+                  const zumenId = zumen.Zumen_ID || '';
+                  const status = zumen.status || '';
+                  const tantoA1 = zumen.Tantou_a1 || '';
+                  const syutuzubiDate = zumen.Syutuzubi_Date || '';
+                  const zumenKind = zumen.Zumen_Kind || '';
 
-                return (
-                  <tr key={zumenId} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {zumenId}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{zumenName}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {zumenKind}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          getStatusColor(status)
-                        }`}
-                      >
-                        {status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {tantoA1}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {syutuzubiDate}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-4">
+                  return (
+                    <tr key={zumenId} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {zumenId}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{zumenName}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {zumenKind}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            getStatusColor(status)
+                          }`}
+                        >
+                          {status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {tantoA1}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {syutuzubiDate}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => router.push(`/app_project/${params.project_id}/zumen/${zumenId}`)}
                           className="text-blue-600 hover:text-blue-900"
                         >
                           詳細
                         </button>
-                        <button
-                          onClick={() => router.push(`/app_bom/${zumenId}`)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          BOMを表示
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
-                  図面が見つかりません
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
+                    図面が見つかりません
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

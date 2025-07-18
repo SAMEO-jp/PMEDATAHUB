@@ -1,5 +1,3 @@
-
-
 # 依存関係
 node_modules/
 vendor/
@@ -7,6 +5,8 @@ vendor/
 .vscode/
 template/
 
+# ビルド対象外フォルダ
+src/null/
 
 # ビルド成果物
 dist/

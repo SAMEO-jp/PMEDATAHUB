@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+これを読み込んだら、「仕様書確認！」という。
+フォルダーの構成を確認するために、”src\app\zisseki\[year]\[week]\仕様書\01_folder.mdc”を確認する。
+これも機能確認の為見る。src\app\zisseki\[year]\[week]\仕様書\siyouso.mdc
+

@@ -1,73 +1,74 @@
 //本ページは、ホームページで、最初に表示するページです。
-//app_bomとapp_tableとapp_projectの三つのアプリに飛べるような最初のページです。
+
 
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@ui/card';
-import { Button } from '@ui/button';
+
+// カードコンポーネント
+const Card = ({ title, description, linkText, href }: { 
+  title: string; 
+  description: string; 
+  linkText: string;
+  href: string;
+}) => {
+  return (
+    <div className="card">
+      <h3 className="card-title">{title}</h3>
+      <p className="card-description">{description}</p>
+      <Link href={href} className="card-link">
+        <span>{linkText}</span>
+        <span className="material-symbols-outlined">arrow_forward</span>
+      </Link>
+    </div>
+  );
+};
 
 export default function HomePage() {
+  const cardData = [
+/*    { 
+      title: "BOM管理", 
+      description: "BOMの作成、編集、管理を行います。", 
+      linkText: "BOM管理を開く",
+      href: "/app_project"
+    },
+*/
+
+{ 
+  title: "プロジェクト管理", 
+  description: "プロジェクトの作成、編集、管理、BOM管理を行います。", 
+  linkText: "プロジェクト管理を開く",
+  href: "/app_project"
+},
+
+    { 
+      title: "テーブル管理", 
+      description: "テーブルの作成、編集、管理を行います。", 
+      linkText: "テーブル管理を開く",
+      href: "/test"
+    },
+    
+    { 
+      title: "テストページ", 
+      description: "各機能のテストページです。", 
+      linkText: "テストページを開く",
+      href: "/test"
+    }
+  ];
+
   return (
-    <div className="p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
-          業務システム
-        </h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* BOMアプリケーション */}
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="text-2xl text-center">BOM管理</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-gray-600 mb-4">
-                BOMの作成、編集、管理を行います。
-              </p>
-              <Link href="/app_bom">
-                <Button className="w-full">
-                  BOM管理を開く
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* テーブルアプリケーション */}
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="text-2xl text-center">テーブル管理</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-gray-600 mb-4">
-                テーブルの作成、編集、管理を行います。
-              </p>
-              <Link href="/app_table">
-                <Button className="w-full">
-                  テーブル管理を開く
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* プロジェクトアプリケーション */}
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="text-2xl text-center">プロジェクト管理</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-gray-600 mb-4">
-                プロジェクトの作成、編集、管理を行います。
-              </p>
-              <Link href="/app_project">
-                <Button className="w-full">
-                  プロジェクト管理を開く
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
+    <div className="min-h-screen flex items-start justify-center pt-28 p-4">
+      <div className="card-container max-w-7xl w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {cardData.map((card, index) => (
+          <Card 
+            key={index}
+            title={card.title}
+            description={card.description}
+            linkText={card.linkText}
+            href={card.href}
+          />
+        ))}
       </div>
     </div>
   );

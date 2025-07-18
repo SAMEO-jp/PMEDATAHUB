@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GetRecode, GetConditionData } from '@src/lib/db/db_GetData';
 import { updateDataById, deleteById } from '@src/lib/db/db_CRUD';
 import type { BomFlatRow } from '@src/types/db_bom';
+import type { ApiResponse } from '@src/types/api';
 
 /**
  * 図面の取得
@@ -12,51 +13,53 @@ export async function GET(
   { params }: { params: { zumen_id: string } }
 ) {
   try {
-    // 図面データの取得
+    console.log('図面データ取得リクエスト:', params.zumen_id); // デバッグ用
+
     const zumenResult = await GetRecode<BomFlatRow>(params.zumen_id, {
       tableName: 'BOM_ZUMEN',
       idColumn: 'Zumen_ID'
     });
 
+    console.log('図面データ取得結果:', zumenResult); // デバッグ用
+
     if (!zumenResult.success || !zumenResult.data) {
-      return NextResponse.json(
-        { error: '図面データが見つかりません' },
+      console.log('図面データが見つかりません:', params.zumen_id); // デバッグ用
+      return NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: { code: 'ZUMEN_NOT_FOUND', message: '図面データが見つかりません', status: 404 }
+        },
         { status: 404 }
       );
     }
 
-    // 部品データの取得
     const partsResult = await GetConditionData<BomFlatRow[]>(
       'ZUMEN_ID = ?',
       [params.zumen_id],
-      {
-        tableName: 'BOM_PART',
-        idColumn: 'ROWID'
-      }
+      { tableName: 'BOM_PART', idColumn: 'ROWID' }
     );
 
-    // 部材データの取得
     const buzaisResult = await GetConditionData<BomFlatRow[]>(
       'ZUMEN_ID = ?',
       [params.zumen_id],
-      {
-        tableName: 'BOM_BUZAI',
-        idColumn: 'ROWID'
-      }
+      { tableName: 'BOM_BUZAI', idColumn: 'ROWID' }
     );
 
-    // レスポンスデータの構築
     const response = {
       zumen: zumenResult.data,
       parts: partsResult.success ? partsResult.data : [],
       buzais: buzaisResult.success ? buzaisResult.data : []
     };
 
-    return NextResponse.json(response);
+    console.log('図面データ取得成功:', response.zumen.Zumen_ID); // デバッグ用
+    return NextResponse.json<ApiResponse<typeof response>>({ success: true, data: response });
   } catch (error) {
     console.error('BOMデータ取得エラー:', error);
-    return NextResponse.json(
-      { error: 'データの取得に失敗しました' },
+    return NextResponse.json<ApiResponse<null>>(
+      {
+        success: false,
+        error: { code: 'ZUMEN_FETCH_FAILED', message: 'データの取得に失敗しました', status: 500 }
+      },
       { status: 500 }
     );
   }
@@ -71,30 +74,33 @@ export async function PUT(
   { params }: { params: { zumen_id: string } }
 ) {
   try {
-    console.log('API: 図面更新開始', { zumenId: params.zumen_id });
-    const updates = await request.json();
+    const updates: Record<string, unknown> = await request.json();
 
     const result = await updateDataById(
       'BOM_ZUMEN',
       params.zumen_id,
-      updates as Record<string, unknown>,
+      updates,
       'ZUMEN_ID'
     );
 
     if (!result.success) {
-      console.log('API: 図面が見つかりません', { zumenId: params.zumen_id });
-      return NextResponse.json(
-        { error: '図面が見つかりません' },
+      return NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: { code: 'ZUMEN_NOT_FOUND', message: '図面が見つかりません', status: 404 }
+        },
         { status: 404 }
       );
     }
 
-    console.log('API: 図面更新成功', { zumenId: params.zumen_id });
-    return NextResponse.json(result.data);
+    return NextResponse.json<ApiResponse<typeof result.data>>({ success: true, data: result.data });
   } catch (error) {
     console.error('API: 図面更新エラー', error);
-    return NextResponse.json(
-      { error: '図面の更新に失敗しました' },
+    return NextResponse.json<ApiResponse<null>>(
+      {
+        success: false,
+        error: { code: 'ZUMEN_UPDATE_FAILED', message: '図面の更新に失敗しました', status: 500 }
+      },
       { status: 500 }
     );
   }
@@ -109,27 +115,30 @@ export async function DELETE(
   { params }: { params: { zumen_id: string } }
 ) {
   try {
-    console.log('API: 図面削除開始', { zumenId: params.zumen_id });
     const result = await deleteById('BOM_ZUMEN', params.zumen_id, 'ZUMEN_ID');
 
     if (!result.success) {
-      console.log('API: 図面が見つかりません', { zumenId: params.zumen_id });
-      return NextResponse.json(
-        { error: '図面が見つかりません' },
+      return NextResponse.json<ApiResponse<null>>(
+        {
+          success: false,
+          error: { code: 'ZUMEN_NOT_FOUND', message: '図面が見つかりません', status: 404 }
+        },
         { status: 404 }
       );
     }
 
-    console.log('API: 図面削除成功', { zumenId: params.zumen_id });
-    return NextResponse.json({ message: '図面を削除しました' });
+    return NextResponse.json<ApiResponse<{ message: string }>>({
+      success: true,
+      data: { message: '図面を削除しました' }
+    });
   } catch (error) {
     console.error('API: 図面削除エラー', error);
-    return NextResponse.json(
-      { error: '図面の削除に失敗しました' },
+    return NextResponse.json<ApiResponse<null>>(
+      {
+        success: false,
+        error: { code: 'ZUMEN_DELETE_FAILED', message: '図面の削除に失敗しました', status: 500 }
+      },
       { status: 500 }
     );
   }
 }
-
-
-
