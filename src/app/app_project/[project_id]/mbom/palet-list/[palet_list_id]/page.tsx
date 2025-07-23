@@ -458,20 +458,12 @@ export default function PaletListDetailPage() {
   const [selectedStepId, setSelectedStepId] = useState<string>('');
   const [photos, setPhotos] = useState<PhotoData[]>([
     {
-      id: '1',
-      src: 'https://placehold.co/600x400/000000/FFFFFF?text=発送時の写真',
-      title: '発送時 (2025/07/18 10:10)',
-      date: '2025/07/18 10:10',
-      photographer: '田中',
-      notes: '梱包状態問題なし'
-    },
-    {
-      id: '2',
-      src: 'https://placehold.co/600x400/cccccc/000000?text=倉庫搬入時の写真',
-      title: '戸畑中央倉庫 搬入時 (2025/07/19 08:35)',
-      date: '2025/07/19 08:35',
-      photographer: '鈴木',
-      notes: '雨養生シートをかけた状態'
+      id: 'demo-1',
+      src: '/demopic/IMG_2025-04-23-14-26-48-006.jpg',
+      title: 'デモ写真 - パレット現況',
+      date: new Date().toLocaleString(),
+      photographer: 'システム',
+      notes: 'デモ用の写真です'
     }
   ]);
 
@@ -1005,18 +997,35 @@ export default function PaletListDetailPage() {
               <input type="file" id="photo-upload" className="hidden" accept="image/*" onChange={handlePhotoUpload}/>
               <button 
                 onClick={() => document.getElementById('photo-upload')?.click()} 
-                className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center justify-center font-semibold"
+                className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center justify-center font-semibold mb-4"
               >
                 <CameraIcon className="w-5 h-5 mr-2" />
                 写真をアップロード
               </button>
-              <div className="mt-6 space-y-4">
+              <div className="space-y-4">
                 {photos.map((photo) => (
-                  <div key={photo.id} className="border rounded-lg overflow-hidden">
-                    <img src={photo.src} alt={photo.title} className="w-full h-48 object-cover" />
-                    <div className="p-3 bg-gray-50">
-                      <p className="font-semibold text-sm">{photo.title}</p>
-                      <p className="text-xs text-gray-500">撮影者: {photo.photographer} / 備考: {photo.notes}</p>
+                  <div key={photo.id} className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <div className="relative">
+                      <img 
+                        src={photo.src} 
+                        alt={photo.title} 
+                        className="w-full h-64 object-cover" 
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://placehold.co/600x400/cccccc/000000?text=画像読み込みエラー';
+                        }}
+                      />
+                      <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
+                        デモ
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gray-50">
+                      <h3 className="font-semibold text-gray-900 mb-2">{photo.title}</h3>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <p>撮影日時: {photo.date}</p>
+                        <p>撮影者: {photo.photographer}</p>
+                        <p>備考: {photo.notes}</p>
+                      </div>
                     </div>
                   </div>
                 ))}
