@@ -1,8 +1,10 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Download, ZoomIn, ZoomOut, RotateCw, AlertCircle } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCw, AlertCircle, Info } from 'lucide-react';
 import { Button } from '@ui/button';
+import { ZumenDetailView } from './ZumenDetailView';
 
 // ==========================================
 // 型定義層
@@ -32,6 +34,7 @@ export function ZumenViewer({ zumenId, zumenName, zumenData }: ZumenViewerProps)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
 
   // 画像読み込み
   useEffect(() => {
@@ -154,14 +157,9 @@ export function ZumenViewer({ zumenId, zumenName, zumenData }: ZumenViewerProps)
     setPosition({ x: 0, y: 0 });
   };
 
-  // ダウンロード機能
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = `${zumenName || zumenId}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // 詳細表示切り替え
+  const handleToggleDetail = () => {
+    setShowDetail(!showDetail);
   };
 
   if (loading) {
@@ -197,7 +195,7 @@ export function ZumenViewer({ zumenId, zumenName, zumenData }: ZumenViewerProps)
   return (
     <div className="w-full bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
       {/* ツールバー */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+      <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-gray-50 h-14">
         <div className="flex items-center gap-4">
           {/* 図面情報 */}
           {zumenData && (
@@ -268,72 +266,57 @@ export function ZumenViewer({ zumenId, zumenName, zumenData }: ZumenViewerProps)
             <RotateCw className="h-4 w-4" />
           </Button>
           
-          {/* ダウンロードボタン */}
+          {/* 詳細ボタン */}
           <Button
-            onClick={handleDownload}
+            onClick={handleToggleDetail}
             variant="outline"
             size="sm"
             className="h-8 px-3"
           >
-            <Download className="h-4 w-4 mr-1" />
-            保存
+            <Info className="h-4 w-4 mr-1" />
+            詳細
           </Button>
         </div>
       </div>
 
-      {/* 画像表示エリア */}
-      <div 
-        className="relative overflow-hidden bg-gray-100 cursor-grab active:cursor-grabbing select-none" 
-        style={{ height: 'calc(100vh - 170px)' }}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-      >
-        <div className="flex items-center justify-center min-h-full p-4">
-          <div
-            className="relative"
-            style={{
-              transform: `translate(${position.x}px, ${position.y}px) scale(${zoom}) rotate(${rotation}deg)`,
-              transformOrigin: 'center center',
-              transition: isDragging ? 'none' : 'transform 0.1s ease-out',
-              cursor: isDragging ? 'grabbing' : 'grab',
-              userSelect: 'none'
-            }}
-          >
-            <img
-              src={imageUrl}
-              alt={`図面 ${zumenName || zumenId}`}
-              className="max-w-full max-h-full object-contain shadow-lg rounded"
-              onError={() => setError('画像の表示に失敗しました')}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* 画像情報 */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div>
-            <span className="font-medium text-gray-700">図面ID:</span>
-            <span className="ml-2 text-gray-600">{zumenId}</span>
-          </div>
-          {zumenName && (
-            <div>
-              <span className="font-medium text-gray-700">図面名:</span>
-              <span className="ml-2 text-gray-600">{zumenName}</span>
+      {/* コンテンツエリア */}
+      {showDetail ? (
+        <ZumenDetailView
+          zumenId={zumenId}
+          zumenData={zumenData}
+          onBack={() => setShowDetail(false)}
+        />
+      ) : (
+        /* 画像表示エリア */
+        <div 
+          className="relative overflow-hidden bg-gray-100 cursor-grab active:cursor-grabbing select-none" 
+          style={{ height: 'calc(100vh - 150px)' }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
+          <div className="flex items-center justify-center h-full p-4">
+            <div
+              className="relative h-full flex items-center justify-center"
+              style={{
+                transform: `translate(${position.x}px, ${position.y}px) scale(${zoom}) rotate(${rotation}deg)`,
+                transformOrigin: 'center center',
+                transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+                cursor: isDragging ? 'grabbing' : 'grab',
+                userSelect: 'none'
+              }}
+            >
+              <img
+                src={imageUrl}
+                alt={`図面 ${zumenName || zumenId}`}
+                className="max-w-full max-h-[90vh] object-contain shadow-lg rounded"
+                onError={() => setError('画像の表示に失敗しました')}
+              />
             </div>
-          )}
-          <div>
-            <span className="font-medium text-gray-700">表示倍率:</span>
-            <span className="ml-2 text-gray-600">{Math.round(zoom * 100)}%</span>
-          </div>
-          <div>
-            <span className="font-medium text-gray-700">位置:</span>
-            <span className="ml-2 text-gray-600">X: {Math.round(position.x)}px, Y: {Math.round(position.y)}px</span>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

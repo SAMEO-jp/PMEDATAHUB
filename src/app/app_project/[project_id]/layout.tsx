@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { Project } from '@src/types/db_project';
-import ProjectHeader from './components/ProjectHeader';
 
 interface ProjectLayoutProps {
   children: React.ReactNode;
@@ -38,9 +37,6 @@ export default function ProjectLayout({ children, params }: ProjectLayoutProps) 
 
   return (
     <div className="project-layout">
-      {!isLoading && project && (
-        <ProjectHeader projectId={params.project_id} />
-      )}
       <div className="project-content" style={{ overflow: 'hidden', textAlign: 'left' }}>
         {children}
       </div>

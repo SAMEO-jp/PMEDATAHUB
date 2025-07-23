@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Material Symbols のフォールバック用アイコンマッピング
 const iconFallbacks: Record<string, string> = {
@@ -16,6 +17,12 @@ const iconFallbacks: Record<string, string> = {
   'data_object': '📦',
   'account_circle': '👤',
   'logout': '🚪',
+  'description': '📄',
+  'image': '🖼️',
+  'notes': '📝',
+  'inventory': '📦',
+  'widgets': '🧩',
+  'table_chart': '📊',
 };
 
 // アイコン表示用のヘルパー関数
@@ -74,13 +81,50 @@ interface MenuItem {
   isNew?: boolean;
 }
 
+// サイドバーの状態管理
+const useSidebarStore = () => {
+  const [menuType, setMenuType] = useState<'project' | 'global'>('global');
+  
+  const toggleMenuType = () => {
+    setMenuType(prev => prev === 'project' ? 'global' : 'project');
+  };
+
+  return { 
+    menuType, 
+    toggleMenuType
+  };
+};
+
 export const ModernSidebar: React.FC = () => {
   const pathname = usePathname();
+  const params = useParams();
+  const { 
+    menuType, 
+    toggleMenuType
+  } = useSidebarStore();
   const [activePage, setActivePage] = useState('ホーム');
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const footerRef = useRef<HTMLDivElement>(null);
 
-  const menuItems: MenuItem[] = [
+  // プロジェクトIDを取得
+  const projectId = params?.project_id as string;
+
+  // 現在のページがプロジェクト関連かどうかを判定
+  const isProjectPage = pathname.includes('/app_project/') && projectId;
+
+  // プロジェクトサブメニューの項目
+  const projectMenuItems: MenuItem[] = [
+    { id: 'detail', name: '詳細', icon: 'description', href: `/app_project/${projectId}/detail` },
+    { id: 'drawing', name: '図面', icon: 'image', href: `/app_project/${projectId}/zumen` },
+    { id: '3d', name: '3D', icon: 'view_in_ar', href: `/app_project/${projectId}/3d` },
+    { id: 'minutes', name: '議事録', icon: 'notes', href: `/app_project/${projectId}/minutes` },
+    { id: 'ebom', name: 'EBOM', icon: 'inventory', href: `/app_project/${projectId}/ebom` },
+    { id: 'mbom', name: 'MBOM', icon: 'widgets', href: `/app_project/${projectId}/mbom` },
+    { id: 'cmom', name: 'CMOM', icon: 'table_chart', href: `/app_project/${projectId}/cmom` },
+  ];
+
+  // 全体メニューの項目
+  const globalMenuItems: MenuItem[] = [
     { id: 'home', name: 'ホーム', icon: 'home', href: '/' },
     { id: 'bom', name: 'BOM管理', icon: 'view_in_ar', href: '/app_project' },
     { id: 'project', name: 'プロジェクト管理', icon: 'assignment', href: '/app_project' },
@@ -89,6 +133,9 @@ export const ModernSidebar: React.FC = () => {
     { id: 'user', name: 'ユーザー管理', icon: 'group', href: '/test' },
     { id: 'settings', name: '設定', icon: 'settings', href: '/test' },
   ];
+
+  // 現在表示するメニュー項目を選択
+  const currentMenuItems = menuType === 'project' ? projectMenuItems : globalMenuItems;
 
   // フッターの外側をクリックしたときにポップアップを閉じる
   useEffect(() => {
@@ -119,7 +166,7 @@ export const ModernSidebar: React.FC = () => {
       </div>
       <nav className="sidebar-nav">
         <ul>
-          {menuItems.map(item => (
+          {currentMenuItems.map(item => (
             <li key={item.id}>
               {item.href ? (
                 <Link 
@@ -146,6 +193,28 @@ export const ModernSidebar: React.FC = () => {
         </ul>
       </nav>
       <div className="sidebar-footer" ref={footerRef}>
+        {/* メニュー切り替えボタン */}
+        <div className="menu-toggle-button">
+          {menuType === 'project' ? (
+            <button 
+              onClick={toggleMenuType} 
+              className="flex items-center gap-2 p-2 w-full hover:bg-gray-100 rounded transition-colors duration-200"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              <span>全体メニュー</span>
+            </button>
+          ) : (
+            isProjectPage && (
+              <button 
+                onClick={toggleMenuType} 
+                className="flex items-center gap-2 p-2 w-full hover:bg-gray-100 rounded transition-colors duration-200"
+              >
+                <ChevronRight className="w-5 h-5" />
+                <span>プロジェクトへ</span>
+              </button>
+            )
+          )}
+        </div>
         {isPopupOpen && (
           <div className="logout-popup">
             <button className="logout-button" onClick={handleLogout}>
@@ -164,4 +233,4 @@ export const ModernSidebar: React.FC = () => {
       </div>
     </aside>
   );
-}; 
+};
