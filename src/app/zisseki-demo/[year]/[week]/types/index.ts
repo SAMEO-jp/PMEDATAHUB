@@ -5,7 +5,7 @@ export interface Project {
   isProject?: string;
   projectNumber?: string;
   name?: string;
-  [key: string]: any; // 追加のプロパティを許可
+  [key: string]: string | boolean | number | undefined; // 追加のプロパティを許可
 }
 
 // 設備関連の型定義
@@ -64,12 +64,14 @@ export type WorkTimeData = {
   endTime?: string;
 }
 
-// TimeGrid用のEvent型を拡張
+// UI用: TimeGridEvent型を復活
 export type TimeGridEvent = Event & {
   top: number;
   height: number;
   color: string;
   unsaved?: boolean;
+  category?: string;
+  employeeNumber?: string;
 }
 
 export type TimeGridProps = {
@@ -103,14 +105,14 @@ export type ZissekiSidebarProps = {
   setSelectedTab: (tab: string) => void;
   selectedProjectSubTab: string;
   _setSelectedProjectSubTab: (subTab: string) => void;
-  selectedEvent: Event | null;
+  selectedEvent: TimeGridEvent | null;
   _hasChanges: boolean;
   handleDeleteEvent: () => void;
-  updateEvent: (updatedEvent: Event) => void;
+  updateEvent: (updatedEvent: TimeGridEvent) => void;
   _employees: Employee[];
   projects: Project[];
-  setSelectedEvent: (event: Event | null) => void;
-  _currentUser: User;
+  setSelectedEvent: (event: TimeGridEvent | null) => void;
+  _currentUser: User | null;
   // 間接業務サブタブ用のプロパティを追加
   indirectSubTab?: string;
   setIndirectSubTab?: (subTab: string) => void;
@@ -122,8 +124,8 @@ export type ProjectSelectProps = {
   selectedProjectCode: string;
   onChange: (projectCode: string) => void;
   label: string;
-  selectedEvent: Event | null;
-  updateEvent: (event: Event) => void;
+  selectedEvent: TimeGridEvent | null;
+  updateEvent: (event: TimeGridEvent) => void;
   isProjectTab: boolean;
 };
 

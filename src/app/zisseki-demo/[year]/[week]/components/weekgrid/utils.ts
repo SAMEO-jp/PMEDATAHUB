@@ -44,4 +44,11 @@ export const isToday = (date: Date): boolean => {
     date.getMonth() === today.getMonth() &&
     date.getFullYear() === today.getFullYear()
   );
+};
+
+// 日付フォーマット関数（月/日形式）
+export const formatDayWithWeekday = (date: Date): string => {
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  return `${month}/${day}`;
 }; 
