@@ -43,6 +43,7 @@ export interface Event {
   planningSubType?: string;
   estimateSubType?: string;
   designSubType?: string;
+  meetingType?: string;
   travelType?: string;
   stakeholderType?: string;
   documentType?: string;
@@ -55,6 +56,12 @@ export interface Event {
   top?: number;
   height?: number;
   status?: string;
+  // タブ状態を保存するプロパティ
+  selectedTab?: string;           // "project" | "indirect"
+  selectedProjectSubTab?: string; // "計画" | "設計" | "会議" | "購入" | "その他"
+  selectedIndirectSubTab?: string; // "純間接" | "目的間接" | "控除時間"
+  selectedIndirectDetailTab?: string; // 詳細タブ
+  selectedOtherSubTab?: string;   // その他のサブタブ
 }
 
 // TimeGrid関連の型定義

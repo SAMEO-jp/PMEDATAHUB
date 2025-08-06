@@ -3,6 +3,15 @@ import React from 'react';
 // グリッドパターンの型定義
 export type GridPattern = 'default' | 'compact' | 'wide' | 'centered' | 'sidebar' | 'dashboard' | 'custom';
 
+// カラム設定の型定義
+export interface ColumnConfig {
+  default?: number;
+  sm?: number;
+  md?: number;
+  lg?: number;
+  xl?: number;
+}
+
 // CardGridコンポーネントの型定義
 export interface CardGridProps {
   children: React.ReactNode;
@@ -13,13 +22,7 @@ export interface CardGridProps {
   gridPattern?: GridPattern;
   // カスタム設定（gridPatternが'custom'の場合に使用）
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl';
-  columns?: {
-    default?: number;
-    sm?: number;
-    md?: number;
-    lg?: number;
-    xl?: number;
-  };
+  columns?: ColumnConfig;
   gap?: number;
   padding?: number;
   paddingTop?: number;
@@ -33,7 +36,7 @@ export const CardGrid: React.FC<CardGridProps> = ({
   gridClassName = '',
   gridPattern = 'default',
   maxWidth = '7xl',
-  columns = { default: 1, sm: 2, lg: 4 },
+  columns = { default: 1, sm: 2, md: 3, lg: 4, xl: 5 },
   gap = 6,
   padding = 4,
   paddingTop = 28
@@ -110,9 +113,9 @@ export const CardGrid: React.FC<CardGridProps> = ({
   const gridCols = [
     appliedColumns.default && `grid-cols-${appliedColumns.default}`,
     appliedColumns.sm && `sm:grid-cols-${appliedColumns.sm}`,
-    (appliedColumns as any).md && `md:grid-cols-${(appliedColumns as any).md}`,
+    appliedColumns.md && `md:grid-cols-${appliedColumns.md}`,
     appliedColumns.lg && `lg:grid-cols-${appliedColumns.lg}`,
-    (appliedColumns as any).xl && `xl:grid-cols-${(appliedColumns as any).xl}`
+    appliedColumns.xl && `xl:grid-cols-${appliedColumns.xl}`
   ].filter(Boolean).join(' ');
 
   const containerClass = `${appliedContainerClass} pt-${appliedPaddingTop} p-${appliedPadding} ${containerClassName}`;

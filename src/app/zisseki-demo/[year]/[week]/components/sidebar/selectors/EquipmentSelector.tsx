@@ -1,52 +1,60 @@
 "use client"
 
+import { useEventContext } from "@src/app/zisseki-demo/[year]/[week]/context/EventContext"
+
+// 設備選択コンポーネントのProps（データのみ）
 interface EquipmentSelectorProps {
-  selectedTab: string
-  selectedProjectSubTab: string
-  selectedProjectCode: string
-  equipmentNumber: string
-  equipmentName: string
-  equipmentOptions: { id: string, name: string }[]
-  isLoadingEquipment: boolean
-  equipmentNumbers: string[]
-  selectedEvent: any
-  updateEvent: (event: any) => void
-  setEquipmentNumber: (number: string) => void
-  setEquipmentName: (name: string) => void
+  equipmentNumber: string                    // ← 定数：現在選択中の設備番号
+  equipmentName: string                      // ← 定数：現在選択中の設備名
+  equipmentOptions: { id: string, name: string }[]  // ← 定数：設備オプション一覧
+  isLoadingEquipment: boolean                // ← 定数：ローディング状態
+  setEquipmentNumber: (number: string) => void  // ← 関数1：設備番号を設定
+  setEquipmentName: (name: string) => void     // ← 関数2：設備名を設定
 }
 
 export const EquipmentSelector = ({
-  selectedTab,
-  selectedProjectSubTab,
-  selectedProjectCode,
   equipmentNumber,
   equipmentName,
   equipmentOptions,
   isLoadingEquipment,
-  equipmentNumbers,
-  selectedEvent,
-  updateEvent,
   setEquipmentNumber,
   setEquipmentName
 }: EquipmentSelectorProps) => {
-  // 設備番号選択時に設備名もセット
+  // Contextから取得するProps（状態 + 関数）
+  const { 
+    selectedEvent,        // ← 定数：選択中のイベント
+    activeTab,           // ← 定数：現在のタブ
+    activeSubTabs,       // ← 定数：サブタブの状態
+    updateEvent          // ← 関数：イベントを更新
+  } = useEventContext();
+
+  // 設備番号選択時の処理
   const handleEquipmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value
-    setEquipmentNumber(selectedId)
+    setEquipmentNumber(selectedId)  // ← 関数1：設備番号を更新
     const found = equipmentOptions.find(opt => opt.id === selectedId)
-    setEquipmentName(found ? found.name : "")
+    setEquipmentName(found ? found.name : "")  // ← 関数2：設備名を更新
+    
     // 必要に応じてイベントにも反映
     if (selectedEvent) {
-      if (selectedProjectSubTab === "購入品") {
-        updateEvent({ ...selectedEvent, equipmentNumber: selectedId, itemName: found ? found.name : "" })
+      if (activeSubTabs.project === "購入品") {
+        updateEvent(selectedEvent.id, { 
+          ...selectedEvent, 
+          equipmentNumber: selectedId, 
+          itemName: found ? found.name : "" 
+        })
       } else {
-        updateEvent({ ...selectedEvent, equipment_id: selectedId, equipment_Name: found ? found.name : "" })
+        updateEvent(selectedEvent.id, { 
+          ...selectedEvent, 
+          equipment_id: selectedId, 
+          equipment_Name: found ? found.name : "" 
+        })
       }
     }
   }
 
   // プロジェクトタブまたは購入品タブの場合のみ表示
-  if (selectedTab !== "project" && selectedTab !== "indirect") {
+  if (activeTab !== "project" && activeTab !== "indirect") {
     return null
   }
 
@@ -56,12 +64,12 @@ export const EquipmentSelector = ({
       <div className="flex space-x-2">
         <select
           className="flex-1 py-1 border rounded text-sm"
-          value={equipmentNumber}
-          onChange={handleEquipmentChange}
-          disabled={isLoadingEquipment || !selectedProjectCode}
+          value={equipmentNumber}  // ← 定数で現在の値を表示
+          onChange={handleEquipmentChange}  // ← 変更時の処理
+          disabled={isLoadingEquipment}  // ← 定数でローディング状態を制御
         >
           <option value="">設備番号を選択</option>
-          {equipmentOptions.map((option) => (
+          {equipmentOptions.map((option) => (  // ← 定数でオプション一覧を表示
             <option key={option.id} value={option.id}>
               {option.id} - {option.name}
             </option>
@@ -69,11 +77,11 @@ export const EquipmentSelector = ({
         </select>
       </div>
       
-      {equipmentName && (
+      {equipmentName && (  // ← 定数で条件分岐
         <div className="mt-2">
           <label className="block text-xs font-medium text-gray-500 mb-1">設備名</label>
           <div className="p-2 bg-gray-100 rounded border text-sm text-gray-700">
-            {equipmentName}
+            {equipmentName}  {/* ← 定数で設備名を表示 */}
           </div>
         </div>
       )}

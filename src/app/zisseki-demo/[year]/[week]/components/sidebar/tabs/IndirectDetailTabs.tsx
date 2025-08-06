@@ -1,15 +1,16 @@
 "use client"
 
 import { SUBTABS } from "../../../constants"
-import { Event } from "../../../types"
+import { TimeGridEvent } from "../../../types"
+import { useEventContext } from "@src/app/zisseki-demo/[year]/[week]/context/EventContext"
 
 interface IndirectDetailTabsProps {
   selectedTab: string
   indirectSubTab: string
   selectedIndirectDetailTab: string
   setSelectedIndirectDetailTab: (tab: string) => void
-  selectedEvent: Event | null
-  updateEvent: (event: Event) => void
+  selectedEvent: TimeGridEvent | null
+  updateEvent: (event: TimeGridEvent) => void
 }
 
 export const IndirectDetailTabs = ({
@@ -20,6 +21,11 @@ export const IndirectDetailTabs = ({
   selectedEvent,
   updateEvent
 }: IndirectDetailTabsProps) => {
+  // Event ContextからupdateEventを取得
+  const { updateEvent: contextUpdateEvent } = useEventContext();
+  // イベントが選択されている場合は、そのイベントのタブ状態を表示
+  const currentIndirectDetailTab = selectedEvent?.selectedIndirectDetailTab || selectedIndirectDetailTab
+
   // 間接業務の純間接サブタブ
   if (selectedTab === "indirect" && indirectSubTab === "純間接") {
     return (
@@ -28,7 +34,7 @@ export const IndirectDetailTabs = ({
           <button
             key={subTab}
             className={`py-1 px-1 whitespace-nowrap mr-2 ${
-              selectedIndirectDetailTab === subTab
+              currentIndirectDetailTab === subTab
                 ? "bg-blue-100 text-blue-800 font-medium rounded"
                 : "text-gray-500 hover:text-gray-700"
             }`}
@@ -52,13 +58,22 @@ export const IndirectDetailTabs = ({
               };
               
               if (selectedEvent) {
-                updateEvent({ 
+                const updatedEvent = { 
                   ...selectedEvent, 
                   ...resetFields,
+                  selectedIndirectDetailTab: subTab,
                   indirectDetailType: subTab,
                   activityCode: newCode,
                   businessCode: newCode 
-                });
+                };
+                
+                // Event ContextのupdateEventを使用（eventIdが必要）
+                if (contextUpdateEvent && selectedEvent?.id) {
+                  contextUpdateEvent(selectedEvent.id, updatedEvent);
+                } else if (updateEvent) {
+                  // フォールバック: propsから渡されたupdateEventを使用
+                  updateEvent(updatedEvent);
+                }
               }
             }}
           >
@@ -77,7 +92,7 @@ export const IndirectDetailTabs = ({
           <button
             key={subTab}
             className={`py-1 px-1 whitespace-nowrap mr-2 ${
-              selectedIndirectDetailTab === subTab
+              currentIndirectDetailTab === subTab
                 ? "bg-blue-100 text-blue-800 font-medium rounded"
                 : "text-gray-500 hover:text-gray-700"
             }`}
@@ -99,13 +114,22 @@ export const IndirectDetailTabs = ({
               };
               
               if (selectedEvent) {
-                updateEvent({ 
+                const updatedEvent = { 
                   ...selectedEvent, 
                   ...resetFields,
+                  selectedIndirectDetailTab: subTab,
                   indirectDetailType: subTab,
                   activityCode: newCode,
                   businessCode: newCode 
-                });
+                };
+                
+                // Event ContextのupdateEventを使用（eventIdが必要）
+                if (contextUpdateEvent && selectedEvent?.id) {
+                  contextUpdateEvent(selectedEvent.id, updatedEvent);
+                } else if (updateEvent) {
+                  // フォールバック: propsから渡されたupdateEventを使用
+                  updateEvent(updatedEvent);
+                }
               }
             }}
           >
@@ -124,7 +148,7 @@ export const IndirectDetailTabs = ({
           <button
             key={subTab}
             className={`py-1 px-1 whitespace-nowrap mr-2 ${
-              selectedIndirectDetailTab === subTab
+              currentIndirectDetailTab === subTab
                 ? "bg-blue-100 text-blue-800 font-medium rounded"
                 : "text-gray-500 hover:text-gray-700"
             }`}
@@ -140,12 +164,21 @@ export const IndirectDetailTabs = ({
               const newCode = `ZK${codeSuffix}`;
               
               if (selectedEvent) {
-                updateEvent({ 
+                const updatedEvent = { 
                   ...selectedEvent, 
+                  selectedIndirectDetailTab: subTab,
                   indirectDetailType: subTab,
                   activityCode: newCode,
                   businessCode: newCode 
-                });
+                };
+                
+                // Event ContextのupdateEventを使用（eventIdが必要）
+                if (contextUpdateEvent && selectedEvent?.id) {
+                  contextUpdateEvent(selectedEvent.id, updatedEvent);
+                } else if (updateEvent) {
+                  // フォールバック: propsから渡されたupdateEventを使用
+                  updateEvent(updatedEvent);
+                }
               }
             }}
           >
