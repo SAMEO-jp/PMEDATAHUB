@@ -1,12 +1,12 @@
 "use client"
 
-import { Event } from "../../../types"
+import { TimeGridEvent } from "../../../types"
 
 interface PurchaseItemSelectorProps {
   selectedTab: string
   selectedProjectSubTab: string
-  selectedEvent: Event | null
-  updateEvent: (event: Event) => void
+  selectedEvent: TimeGridEvent | null
+  updateEvent: (event: TimeGridEvent) => void
 }
 
 export const PurchaseItemSelector = ({

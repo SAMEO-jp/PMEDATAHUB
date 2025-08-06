@@ -1,5 +1,12 @@
-// メインコンポーネント
-export { TimeGrid } from './weekgrid';
-export { ZissekiSidebar } from './sidebar'; 
-// ローディング関連コンポーネント
-export { LoadingSpinner } from './loadingspinner';
+// TimeGrid関連のコンポーネント
+export { TimeGrid } from './weekgrid/TimeGrid';
+export { LoadingSpinner } from './loadingspinner/LoadingSpinner';
+
+// サイドバー関連のコンポーネント
+export { ZissekiSidebar } from './sidebar/ZissekiSidebar';
+
+// 右クリックメニューコンポーネント
+export { ContextMenu } from './rightclickmenu/ContextMenu';
+
+// エラー表示コンポーネント
+export { ErrorDisplay } from './ErrorDisplay';

@@ -1,26 +1,30 @@
 "use client"
 
-interface IndirectSelectProps {
-  indirectSubTab: string
-  setIndirectSubTab: (subTab: string) => void
-  selectedEvent: any
-  updateEvent: (event: any) => void
-}
+import { useEventContext } from "@src/app/zisseki-demo/[year]/[week]/context/EventContext"
 
-export const IndirectSelect = ({
-  indirectSubTab,
-  setIndirectSubTab,
-  selectedEvent,
-  updateEvent
-}: IndirectSelectProps) => {
+export const IndirectSelect = () => {
+  // Contextから取得するProps（定数 + 関数）
+  const { 
+    selectedEvent,        // ← 定数：選択中のイベント
+    activeSubTabs,       // ← 定数：サブタブの状態
+    setActiveSubTab,     // ← 関数1：サブタブを設定
+    updateEvent          // ← 関数2：イベントを更新
+  } = useEventContext();
+
+  // イベントが選択されている場合は、そのイベントのタブ状態を表示
+  const currentIndirectSubTab = selectedEvent?.selectedIndirectSubTab || activeSubTabs.indirect  // ← 定数で現在のサブタブを決定
+
+  // 間接業務サブタブ変更時の処理
   const handleIndirectSubTabChange = (subTab: string) => {
-    setIndirectSubTab(subTab)
+    setActiveSubTab('indirect', subTab);  // ← 関数1：サブタブ状態を更新
     
     if (selectedEvent) {
-      updateEvent({
+      updateEvent(selectedEvent.id, {  // ← 関数2：イベントデータを更新
         ...selectedEvent,
+        selectedIndirectSubTab: subTab,
+        selectedTab: "indirect",
         indirectType: subTab
-      })
+      });
     }
   }
 
@@ -30,11 +34,11 @@ export const IndirectSelect = ({
         <button
           key={subTab}
           className={`py-1 px-1 whitespace-nowrap mr-2 ${
-            indirectSubTab === subTab
-              ? "bg-blue-100 text-blue-800 font-medium rounded"
-              : "text-gray-500 hover:text-gray-700"
+            currentIndirectSubTab === subTab  // ← 定数で比較してスタイルを決定
+              ? "bg-blue-100 text-blue-800 font-medium rounded"  // 選択中：青背景
+              : "text-gray-500 hover:text-gray-700"  // 非選択：グレー文字
           }`}
-          onClick={() => handleIndirectSubTabChange(subTab)}
+          onClick={() => handleIndirectSubTabChange(subTab)}  // ← subTabを引数として渡す
         >
           {subTab}
         </button>

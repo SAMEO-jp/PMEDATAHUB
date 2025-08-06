@@ -1,5 +1,6 @@
 import React from "react"
 import { WorkTimeData, TimeGridEvent } from "../../../types"
+import { EventDisplay } from "./EventDisplay"
 import { formatDateString, timeToPosition } from "../utils"
 
 // Props型定義 - TimeSlotsコンポーネントで受け取るプロパティ
@@ -90,31 +91,16 @@ export const TimeSlots = ({
               )
             })
             // フィルタリングされたイベントをレンダリング
-            .map((event: TimeGridEvent) => (
-              <div
-                key={event.id}
-                className={`absolute overflow-hidden text-xs border border-gray-300 ${
-                  event.unsaved ? "border-yellow-400" : "border-gray-300"  // 未保存の場合は黄色の枠線
-                } shadow-md rounded-md cursor-pointer`}
-                style={{
-                  top: `${event.top}px`,  // イベントの縦位置
-                  height: `${event.height}px`,  // イベントの高さ
-                  left: "4px",  // 左マージン
-                  right: "4px",  // 右マージン
-                  backgroundColor: event.color,  // イベントの背景色
-                  color: "white"  // テキスト色は白固定
-                }}
-                onClick={() => onEventClick(event)}
-              >
-                {/* イベント内容の表示 */}
-                <div className="p-1 h-full flex flex-col">
-                  {/* イベントタイトル */}
-                  <div className="font-semibold truncate">{event.title}</div>
-                  {/* イベント説明 */}
-                  <div className="text-xs opacity-90 truncate">{event.description}</div>
-                </div>
-              </div>
-            ))}
+            .map((event: TimeGridEvent) => {
+              console.log('TimeSlots - イベントをレンダリング:', event);
+              return (
+                <EventDisplay
+                  key={event.id}
+                  event={event}
+                  onClick={onEventClick}
+                />
+              );
+            })}
         </div>
         );
       })}

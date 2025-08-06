@@ -2,29 +2,10 @@
 
 import { IndirectSelect } from "./IndirectSelect"
 
-interface IndirectSubTabsProps {
-  indirectSubTab: string
-  setIndirectSubTab: (subTab: string) => void
-  selectedIndirectDetailTab: string
-  setSelectedIndirectDetailTab: (tab: string) => void
-  selectedEvent: any
-  updateEvent: (event: any) => void
-}
-
-export const IndirectSubTabs = ({
-  indirectSubTab,
-  setIndirectSubTab,
-  selectedIndirectDetailTab,
-  setSelectedIndirectDetailTab,
-  selectedEvent,
-  updateEvent
-}: IndirectSubTabsProps) => {
+export const IndirectSubTabs = () => {
+  // TODO: このコンポーネントはIndirectSelectを呼び出すだけのラッパー
+  // IndirectSelectは既にContextを使用しているため、Propsは不要
   return (
-    <IndirectSelect
-      indirectSubTab={indirectSubTab}
-      setIndirectSubTab={setIndirectSubTab}
-      selectedEvent={selectedEvent}
-      updateEvent={updateEvent}
-    />
+    <IndirectSelect />
   )
 } 
