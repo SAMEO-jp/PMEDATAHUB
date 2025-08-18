@@ -1,4 +1,4 @@
-import { EventAction, TimeGridEvent } from './types';
+import { EventAction, TimeGridEvent, SidebarState, HierarchyState } from './types';
 
 export const eventActions = {
   // イベントデータ関連
@@ -43,14 +43,25 @@ export const eventActions = {
     payload: { isResizing, resizedEvent }
   }),
 
-  setActiveTab: (tab: string): EventAction => ({
+  // 階層状態関連
+  setActiveTab: (tab: 'project' | 'indirect'): EventAction => ({
     type: 'SET_ACTIVE_TAB',
     payload: tab
   }),
 
-  setActiveSubTab: (tab: string, subTab: string): EventAction => ({
+  setActiveSubTab: (tab: 'project' | 'indirect', subTab: string): EventAction => ({
     type: 'SET_ACTIVE_SUBTAB',
     payload: { tab, subTab }
+  }),
+
+  setDetailTab: (mainTab: string, subTab: string, detailTab: string): EventAction => ({
+    type: 'SET_DETAIL_TAB',
+    payload: { mainTab, subTab, detailTab }
+  }),
+
+  setBusinessType: (businessType: string, subType: string, value: string): EventAction => ({
+    type: 'SET_BUSINESS_TYPE',
+    payload: { businessType, subType, value }
   }),
 
   // 共通状態
@@ -69,35 +80,45 @@ export const eventActions = {
     payload: undefined
   }),
   
-  // 新規追加（プロジェクト選択）
-  // 選択中のイベントのプロジェクト属性を更新
+  // サイドバー状態関連
   setSelectedProjectCode: (code: string): EventAction => ({
     type: 'SET_SELECTED_PROJECT_CODE',
     payload: code
   }),
+
   setPurposeProjectCode: (code: string): EventAction => ({
     type: 'SET_PURPOSE_PROJECT_CODE',
     payload: code
   }),
-  
-  // 新規追加（タブ詳細状態）
-  // 選択中のイベントのタブ詳細属性を更新（サイドバー操作で呼び出し）
+
   setTabDetail: (tab: string, detail: string, value: string): EventAction => ({
     type: 'SET_TAB_DETAIL',
     payload: { tab, detail, value }
   }),
-  
-  // 新規追加（間接業務詳細）
-  // 選択中のイベントの間接業務詳細属性を更新
+
   setIndirectDetail: (detail: string, value: string): EventAction => ({
     type: 'SET_INDIRECT_DETAIL',
     payload: { detail, value }
   }),
-  
-  // 新規追加（イベント選択時の状態反映）
-  // イベント選択時にサイドバーの状態をイベントの属性で初期化
+
+  updateSidebarState: (sidebarState: Partial<SidebarState>): EventAction => ({
+    type: 'UPDATE_SIDEBAR_STATE',
+    payload: sidebarState
+  }),
+
+  // 統合操作
   syncEventToSidebar: (event: TimeGridEvent): EventAction => ({
     type: 'SYNC_EVENT_TO_SIDEBAR',
     payload: event
+  }),
+
+  syncSidebarToEvent: (eventId: string, sidebarState: Partial<SidebarState>): EventAction => ({
+    type: 'SYNC_SIDEBAR_TO_EVENT',
+    payload: { eventId, sidebarState }
+  }),
+
+  syncHierarchyToEvent: (eventId: string, hierarchyState: Partial<HierarchyState>): EventAction => ({
+    type: 'SYNC_HIERARCHY_TO_EVENT',
+    payload: { eventId, hierarchyState }
   })
 }; 

@@ -1,19 +1,18 @@
-"use client"
+import { TabSelector } from './TabSelector';
 
-import { TabSelector } from "../selectors/TabSelector"
-import { useEventContext } from "@src/app/zisseki-demo/[year]/[week]/context/EventContext";
+interface SidebarHeaderProps {
+  title: string;
+  activeTab: 'project' | 'indirect';
+  onTabChange: (tab: 'project' | 'indirect') => void;
+}
 
-export const SidebarHeader = () => {
-  // Contextから選択中のイベントを取得
-  const { selectedEvent } = useEventContext();
-
+export const SidebarHeader = ({ title, activeTab, onTabChange }: SidebarHeaderProps) => {
   return (
-    <div className="p-3 flex justify-between items-center border-b">
-      <h2 className="text-lg font-bold">業務詳細</h2>
-      {/* イベントが選択されている場合のみタブセレクターを表示 */}
-      {selectedEvent && (
-        <TabSelector />
-      )}
+    <div className="p-3 border-b">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-bold">{title}</h2>
+        <TabSelector activeTab={activeTab} onTabChange={onTabChange} />
+      </div>
     </div>
-  )
-} 
+  );
+};

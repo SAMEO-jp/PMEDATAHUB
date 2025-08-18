@@ -10,6 +10,7 @@ type TimeSlotsProps = {
   minuteSlots: number[];  // 分スロット配列（分単位、通常は[0, 30]で30分刻み）
   workTimes: WorkTimeData[];  // 勤務時間データの配列
   events: TimeGridEvent[];  // イベントデータの配列
+  selectedEvent: TimeGridEvent | null;  // 選択されたイベント
   onTimeSlotClick: (day: Date, hour: number, minute: number) => void;  // タイムスロットクリック時のコールバック
   onEventClick: (event: TimeGridEvent) => void;  // イベントクリック時のコールバック
 }
@@ -24,6 +25,7 @@ export const TimeSlots = ({
   minuteSlots, 
   workTimes, 
   events,
+  selectedEvent,
   onTimeSlotClick,
   onEventClick
 }: TimeSlotsProps) => {
@@ -97,6 +99,7 @@ export const TimeSlots = ({
                 <EventDisplay
                   key={event.id}
                   event={event}
+                  selectedEvent={selectedEvent}
                   onClick={onEventClick}
                 />
               );

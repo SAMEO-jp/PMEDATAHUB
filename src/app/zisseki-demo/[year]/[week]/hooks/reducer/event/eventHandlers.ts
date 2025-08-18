@@ -1,4 +1,4 @@
-import { TimeGridEvent, EventState } from './types';
+import { TimeGridEvent, EventState, HierarchyState } from './types';
 import { EventAction } from './types';
 import { eventActions } from './eventActions';
 
@@ -14,6 +14,11 @@ export interface EventHandlers {
     selectedOtherSubTab?: string;
   }) => void;
   updateActivityCodePrefix: (tab: string, subTab?: string) => void;
+  // サイドバーとイベントの同期操作
+  syncSidebarToSelectedEvent: () => void;
+  // 階層状態の操作
+  handleHierarchyChange: (level: 1 | 2 | 3 | 4, value: string, subValue?: string, detailValue?: string) => void;
+  syncHierarchyToSelectedEvent: () => void;
 }
 
 export const createEventHandlers = (
@@ -24,24 +29,21 @@ export const createEventHandlers = (
     handleEventClick: (event: TimeGridEvent) => {
       console.log('イベントクリック:', event);
       
-      // 1. イベントを選択状態に設定
-      dispatch(eventActions.setSelectedEvent(event));
-      
-      // 2. イベントの属性でサイドバーの状態を初期化
-      dispatch(eventActions.syncEventToSidebar(event));
-      
-      // 3. タブ状態を反映
-      if (event.selectedTab) {
-        dispatch(eventActions.setActiveTab(event.selectedTab));
+      try {
+        // 1. イベントを選択状態に設定
+        dispatch(eventActions.setSelectedEvent(event));
+        
+        // 2. イベントの属性でサイドバーとUIの状態を同期
+        dispatch(eventActions.syncEventToSidebar(event));
+        
+        // 3. エラーをクリア
+        dispatch(eventActions.clearError());
+        
+        console.log('イベント選択が完了しました:', event.title);
+      } catch (error) {
+        console.error('イベント選択エラー:', error);
+        dispatch(eventActions.setError('イベントの選択に失敗しました'));
       }
-      if (event.selectedProjectSubTab) {
-        dispatch(eventActions.setActiveSubTab('project', event.selectedProjectSubTab));
-      }
-      if (event.selectedIndirectSubTab) {
-        dispatch(eventActions.setActiveSubTab('indirect', event.selectedIndirectSubTab));
-      }
-      
-      dispatch(eventActions.clearError()); // エラーをクリア
     },
 
     handleDeleteEvent: () => {
@@ -62,16 +64,23 @@ export const createEventHandlers = (
     },
 
     handleUpdateEvent: (updatedEvent: TimeGridEvent) => {
-      if (!state.selectedEvent) {
-        dispatch(eventActions.setError('更新するイベントが選択されていません'));
+      // updatedEventにIDがない場合はselectedEventのIDを使用
+      const eventToUpdate = updatedEvent.id ? updatedEvent : {
+        ...updatedEvent,
+        id: state.selectedEvent?.id || updatedEvent.id
+      };
+
+      if (!eventToUpdate.id) {
+        console.error('更新するイベントのIDが見つかりません:', eventToUpdate);
+        dispatch(eventActions.setError('更新するイベントのIDが見つかりません'));
         return;
       }
 
       try {
-        dispatch(eventActions.updateEvent(state.selectedEvent.id, updatedEvent));
-        dispatch(eventActions.setSelectedEvent(updatedEvent)); // 選択状態を更新されたイベントに変更
+        dispatch(eventActions.updateEvent(eventToUpdate.id, eventToUpdate));
+        dispatch(eventActions.setSelectedEvent(eventToUpdate)); // 選択状態を更新されたイベントに変更
         dispatch(eventActions.clearError());
-        console.log('イベントを更新しました:', updatedEvent.title);
+        console.log('イベントを更新しました:', eventToUpdate.title);
       } catch (error) {
         console.error('イベント更新エラー:', error);
         dispatch(eventActions.setError('イベントの更新に失敗しました'));
@@ -104,31 +113,24 @@ export const createEventHandlers = (
       
       // 業務分類コードの更新ロジック
       let newActivityCode = state.selectedEvent.activityCode || '';
-      let newBusinessCode = state.selectedEvent.businessCode || '';
       
       // タブに基づいて業務分類コードを更新
       switch (tab) {
         case 'project':
           if (subTab === '計画') {
             newActivityCode = 'P001';
-            newBusinessCode = 'P001';
           } else if (subTab === '設計') {
             newActivityCode = 'D001';
-            newBusinessCode = 'D001';
           } else if (subTab === '会議') {
             newActivityCode = 'M001';
-            newBusinessCode = 'M001';
           } else if (subTab === '購入品') {
             newActivityCode = 'P001';
-            newBusinessCode = 'P001';
           } else if (subTab === 'その他') {
             newActivityCode = 'O001';
-            newBusinessCode = 'O001';
           }
           break;
         case 'indirect':
           newActivityCode = 'I001';
-          newBusinessCode = 'I001';
           break;
         default:
           // デフォルトの場合は既存のコードを維持
@@ -138,11 +140,79 @@ export const createEventHandlers = (
       // イベントを更新
       const updatedEvent = {
         ...state.selectedEvent,
-        activityCode: newActivityCode,
-        businessCode: newBusinessCode
+        activityCode: newActivityCode
       };
       
       dispatch(eventActions.updateEvent(state.selectedEvent.id, updatedEvent));
+    },
+
+    // サイドバーの現在の状態を選択中のイベントに反映
+    syncSidebarToSelectedEvent: () => {
+      if (!state.selectedEvent) {
+        console.warn('選択中のイベントがないため、サイドバーの状態を同期できません');
+        return;
+      }
+
+      try {
+        // サイドバーの現在の状態を取得して、イベントに反映
+        dispatch(eventActions.syncSidebarToEvent(state.selectedEvent.id, state.sidebar));
+        console.log('サイドバーの状態をイベントに同期しました:', state.selectedEvent.id);
+      } catch (error) {
+        console.error('サイドバー状態の同期エラー:', error);
+        dispatch(eventActions.setError('サイドバー状態の同期に失敗しました'));
+      }
+    },
+
+    // 階層状態の変更を処理
+    handleHierarchyChange: (level: 1 | 2 | 3 | 4, value: string, subValue?: string, detailValue?: string) => {
+      try {
+        switch (level) {
+          case 1: // メインタブ
+            dispatch(eventActions.setActiveTab(value as 'project' | 'indirect'));
+            break;
+          case 2: // サブタブ
+            if (subValue) {
+              dispatch(eventActions.setActiveSubTab(value as 'project' | 'indirect', subValue));
+            }
+            break;
+          case 3: // 詳細タブ
+            if (subValue && detailValue) {
+              dispatch(eventActions.setDetailTab(value, subValue, detailValue));
+            }
+            break;
+          case 4: // 業務タイプ
+            if (subValue && detailValue) {
+              dispatch(eventActions.setBusinessType(value, subValue, detailValue));
+            }
+            break;
+        }
+        
+        // 選択中のイベントがある場合は、階層状態をイベントに同期
+        if (state.selectedEvent) {
+          dispatch(eventActions.syncHierarchyToEvent(state.selectedEvent.id, state.ui.hierarchy));
+        }
+        
+        console.log('階層状態を更新しました:', { level, value, subValue, detailValue });
+      } catch (error) {
+        console.error('階層状態更新エラー:', error);
+        dispatch(eventActions.setError('階層状態の更新に失敗しました'));
+      }
+    },
+
+    // 階層状態を選択中のイベントに同期
+    syncHierarchyToSelectedEvent: () => {
+      if (!state.selectedEvent) {
+        console.warn('選択中のイベントがないため、階層状態を同期できません');
+        return;
+      }
+
+      try {
+        dispatch(eventActions.syncHierarchyToEvent(state.selectedEvent.id, state.ui.hierarchy));
+        console.log('階層状態をイベントに同期しました:', state.selectedEvent.id);
+      } catch (error) {
+        console.error('階層状態の同期エラー:', error);
+        dispatch(eventActions.setError('階層状態の同期に失敗しました'));
+      }
     }
   };
 }; 

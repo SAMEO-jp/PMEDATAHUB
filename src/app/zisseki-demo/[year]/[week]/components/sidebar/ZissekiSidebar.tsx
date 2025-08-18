@@ -1,210 +1,183 @@
 "use client"
 
-import { ZissekiSidebarProps } from "../../types"
-import { useEquipmentData } from "./hooks/useEquipmentData"
-import { usePurchaseData } from "./hooks/usePurchaseData"
-import { SidebarLayout } from "./SidebarLayout"
-import { ConditionalContent } from "./components/ConditionalContent"
-import { useEventContext } from "@src/app/zisseki-demo/[year]/[week]/context/EventContext"
+import React, { useState, useEffect } from "react";
+import { useEventContext } from "../../context/EventContext";
+import { 
+  SidebarHeader, 
+  SidebarEmpty, 
+  DeleteButton,
+  TitleField,
+  DescriptionField,
+  ProjectSelect,
+  ActivityCodeField
+} from "./components";
 
+interface ZissekiSidebarProps {
+  projects: Array<{
+    projectCode?: string;
+    projectName?: string;
+    name?: string;
+    [key: string]: string | number | boolean | undefined;
+  }>;
+}
 
 /**
- * 実績入力サイドバーのメインコンポーネント
- * 
- * このコンポーネントは以下の責務を持ちます：
- * - 状態管理hooksの統合
- * - イベントハンドリングの統合
- * - レンダリング制御
- * 
- * 設計方針：
- * - データフローの制御のみに集中
- * - 詳細なUIロジックは子コンポーネントに委譲
- * - 型安全性の確保
+ * 実績入力サイドバー（個別コンポーネント直接使用版）
+ * - 各フィールドコンポーネントを直接配置
+ * - EventFormコンテナを使用しない
  */
-export const ZissekiSidebar = ({
-  selectedTab,
-  setSelectedTab,
-  selectedProjectSubTab,
-  _setSelectedProjectSubTab,
-  selectedEvent,
-  _hasChanges,
-  handleDeleteEvent,
-  updateEvent,
-  _employees,
-  projects,
-  setSelectedEvent,
-  _currentUser,
-  indirectSubTab = "純間接",
-  setIndirectSubTab = () => {},
-}: ZissekiSidebarProps) => {
+export const ZissekiSidebar = ({ projects }: ZissekiSidebarProps) => {
+  const { selectedEvent, updateEvent, setSelectedEvent, deleteEvent } = useEventContext();
 
-  // デバッグ用: selectedEventの値を確認
-  console.log('ZissekiSidebar - selectedEvent:', selectedEvent);
-  console.log('ZissekiSidebar - selectedEvent truthy:', !!selectedEvent);
+  // アクティビティコードからタブ状態を判定
+  const getActiveTab = (): 'project' | 'indirect' => {
+    if (!selectedEvent?.activityCode) return 'project';
+    const firstChar = selectedEvent.activityCode.charAt(0);
+    return firstChar === 'Z' ? 'indirect' : 'project';
+  };
 
-  // ========================================
-  // 1. 状態管理hooks
-  // ========================================
-  
-  // Event Contextから統合された状態を取得
-  const { 
-    selectedProjectCode, 
-    purposeProjectCode,
-    tabDetails,
-    setSelectedProjectCode,
-    setPurposeProjectCode,
-    setTabDetail,
-    setIndirectDetail,
-    updateEvent: contextUpdateEvent
-  } = useEventContext();
-  
-  // 設備データの取得と管理
-  const equipmentData = useEquipmentData(
-    selectedProjectCode, 
-    selectedProjectSubTab, 
-    ""
-  )
-  
-  // 購入品データの取得と管理（現在は未使用だが将来の拡張用）
-  const _purchaseData = usePurchaseData(
-    selectedProjectCode, 
-    equipmentData.equipmentNumber || ""
-  )
+  const activeTab = getActiveTab();
 
-  // ========================================
-  // 2. イベントハンドリング
-  // ========================================
-  
-  // 業務分類コード更新関数（Event Contextから直接取得）
-  const updateActivityCodePrefix = (tab: string, subTab?: string) => {
-    if (!selectedEvent) return;
-    
-    // 業務分類コードの更新ロジック
-    let newActivityCode = selectedEvent.activityCode || '';
-    let newBusinessCode = selectedEvent.businessCode || '';
-    
-    // タブに基づいて業務分類コードを更新
-    switch (tab) {
-      case 'planning':
-        if (subTab === '計画図') {
-          newActivityCode = 'PP01'; // 計画図のデフォルトコード
-          newBusinessCode = 'PP01';
-        } else if (subTab === '見積り') {
-          newActivityCode = 'PT01'; // 見積りのデフォルトコード
-          newBusinessCode = 'PT01';
-        }
-        break;
-      case 'design':
-        if (subTab === '計画図') {
-          newActivityCode = 'DP01'; // 設計-計画図のデフォルトコード
-          newBusinessCode = 'DP01';
-        } else if (subTab === '詳細図') {
-          newActivityCode = 'DS01'; // 設計-詳細図のデフォルトコード
-          newBusinessCode = 'DS01';
-        }
-        break;
-      case 'meeting':
-        if (subTab === '内部定例') {
-          newActivityCode = 'MN01'; // 会議-内部定例のデフォルトコード
-          newBusinessCode = 'MN01';
-        } else if (subTab === '外部定例') {
-          newActivityCode = 'MG01'; // 会議-外部定例のデフォルトコード
-          newBusinessCode = 'MG01';
-        }
-        break;
-      case 'other':
-        if (subTab === '出張') {
-          newActivityCode = 'OT01'; // その他-出張のデフォルトコード
-          newBusinessCode = 'OT01';
-        } else if (subTab === '〇対応') {
-          newActivityCode = 'OC01'; // その他-対応のデフォルトコード
-          newBusinessCode = 'OC01';
-        }
-        break;
-      case 'indirect':
-        newActivityCode = 'I001'; // 間接業務のデフォルトコード
-        newBusinessCode = 'I001';
-        break;
-      default:
-        // デフォルトの場合は既存のコードを維持
-        break;
-    }
-    
-    // イベントを更新
-    const updatedEvent = {
-      ...selectedEvent,
-      activityCode: newActivityCode,
-      businessCode: newBusinessCode
-    };
-    
-    // Event ContextのupdateEventを使用（eventIdが必要）
-    if (contextUpdateEvent && selectedEvent?.id) {
-      contextUpdateEvent(selectedEvent.id, updatedEvent);
-    } else if (updateEvent) {
-      // フォールバック: propsから渡されたupdateEventを使用
-      updateEvent(updatedEvent);
+  // タブ変更時の処理
+  const handleTabChange = (newTab: 'project' | 'indirect') => {
+    if (selectedEvent) {
+      let newActivityCode = '';
+      
+      if (newTab === 'project') {
+        newActivityCode = 'P000';
+      } else if (newTab === 'indirect') {
+        newActivityCode = 'Z000';
+      }
+
+      const updatedEvent = {
+        ...selectedEvent,
+        activityCode: newActivityCode,
+        selectedTab: newTab
+      };
+
+      // 直接更新とセレクトを実行
+      updateEvent(selectedEvent.id, updatedEvent);
+      setSelectedEvent(updatedEvent);
     }
   };
 
-  // ========================================
-  // 3. Props統合
-  // ========================================
-  
-  // ConditionalContentに渡すpropsを統合
-  // Props Drillingを避けるため、スプレッド構文で渡す
-  const conditionalContentProps = {
-    // 基本props（親から受け取ったprops）
-    selectedTab,
-    selectedProjectSubTab,
-    selectedEvent,
-    projects,
-    updateEvent,
-    handleDeleteEvent,
-    setSelectedEvent,
-    setIndirectSubTab,
+  // ローカル状態で入力値を管理
+  const [localValues, setLocalValues] = useState({
+    title: '',
+    description: '',
+    project: '',
+    activityCode: ''
+  });
+
+  // 選択イベントが変わったらローカル状態を更新
+  useEffect(() => {
+    if (selectedEvent) {
+      setLocalValues({
+        title: selectedEvent.title || '',
+        description: selectedEvent.description || '',
+        project: selectedEvent.project || '',
+        activityCode: selectedEvent.activityCode || ''
+      });
+    }
+  }, [selectedEvent]);
+
+  // 入力中の変更はローカル状態のみ更新
+  const handleLocalChange = (field: keyof typeof localValues, value: string) => {
+    setLocalValues(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // blurイベント時にイベント情報を更新し、再選択
+  const handleFieldBlur = (field: string, value: string) => {
+    if (!selectedEvent) return;
     
-    // サイドバー状態（Event Contextから取得）
-    selectedOtherSubTab: tabDetails.indirect.otherSubTab,
-    selectedIndirectDetailTab: tabDetails.indirect.indirectDetailTab,
-    selectedProjectCode: selectedProjectCode,
-    purposeProjectCode: purposeProjectCode,
-    // Event Contextから取得したsetter
-    setSelectedProjectCode,
-    setPurposeProjectCode,
-    setSelectedProjectSubTab: _setSelectedProjectSubTab,
-    setSelectedOtherSubTab: (value: string) => setTabDetail('indirect', 'otherSubTab', value),
-    setSelectedIndirectDetailTab: (value: string) => setIndirectDetail('indirectDetailTab', value),
-    
-    // 設備データ（設備hooksから取得）
-    equipmentNumber: equipmentData.equipmentNumber,
-    equipmentName: equipmentData.equipmentName,
-    equipmentOptions: equipmentData.equipmentOptions,
-    isLoadingEquipment: equipmentData.isLoadingEquipment,
-    equipmentNumbers: equipmentData.equipmentNumbers,
-    setEquipmentNumber: equipmentData.setEquipmentNumber,
-    setEquipmentName: equipmentData.setEquipmentName,
-    
-    // 間接業務関連
-    indirectSubTab,
-    
-    // イベントハンドリング（直接実装）
-    updateActivityCodePrefix,
+    const updatedEvent = {
+      ...selectedEvent,
+      [field]: value
+    };
+    updateEvent(selectedEvent.id, updatedEvent);
+    setSelectedEvent(updatedEvent);
+  };
+
+  // セレクトボックスは即座に更新し、再選択
+  const handleSelectChange = (field: string, value: string) => {
+    if (!selectedEvent) return;
+
+    setLocalValues(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    const updatedEvent = {
+      ...selectedEvent,
+      [field]: value
+    };
+    updateEvent(selectedEvent.id, updatedEvent);
+    setSelectedEvent(updatedEvent);
+  };
+
+  const handleDeleteEvent = () => {
+    if (selectedEvent) {
+      deleteEvent(selectedEvent.id);
+      setSelectedEvent(null);
+    }
+  };
+
+  if (!selectedEvent) {
+    return (
+      <div className="w-80 ml-4">
+        <div className="bg-white rounded-lg shadow">
+          <SidebarHeader 
+            title="業務詳細" 
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+          <div className="p-4">
+            <SidebarEmpty message="イベントを選択してください" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  // ========================================
-  // 4. レンダリング
-  // ========================================
-  
   return (
-    <SidebarLayout
-      selectedEvent={selectedEvent}
-      selectedTab={selectedTab}
-      setSelectedTab={setSelectedTab}
-      updateActivityCodePrefix={updateActivityCodePrefix}
-    >
-      {/* 条件分岐ロジックを子コンポーネントに委譲 */}
-      <ConditionalContent {...conditionalContentProps} />
-    </SidebarLayout>
+    <div className="w-80 ml-4">
+      <div className="bg-white rounded-lg shadow">
+        <SidebarHeader 
+          title="業務詳細"
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
+        
+        <div className="p-4">
+          <div className="space-y-4">
+            <TitleField
+              value={localValues.title}
+              onChange={(value) => handleLocalChange('title', value)}
+              onBlur={(value) => handleFieldBlur('title', value)}
+            />
+            
+            <DescriptionField
+              value={localValues.description}
+              onChange={(value) => handleLocalChange('description', value)}
+              onBlur={(value) => handleFieldBlur('description', value)}
+            />
+            
+            <ProjectSelect
+              value={localValues.project}
+              onChange={(value) => handleSelectChange('project', value)}
+              projects={projects}
+            />
+            
+            <ActivityCodeField
+              value={localValues.activityCode}
+            />
+
+            <DeleteButton onDelete={handleDeleteEvent} />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
-      

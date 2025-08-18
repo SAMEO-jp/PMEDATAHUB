@@ -3,13 +3,12 @@
 import React, { Suspense } from 'react';
 import { useZissekiStore } from './store/zissekiStore';
 import { useWorkTimeReducer } from './hooks/reducer/useWorkTimeReducer';
-import { useSidebarProps } from './hooks/props/useSidebarProps';
-import { useTimeGridProps } from './hooks/props/useTimeGridProps';
 import { ZissekiSidebar } from './components/sidebar/ZissekiSidebar';
 import { TimeGrid } from './components/weekgrid/TimeGrid';
 import { ErrorDisplay } from './components/ErrorDisplay';
 import { LoadingSpinner } from './components/loadingspinner';
 import { EventProvider } from './context/EventContext';
+import { useEventContext } from './context/EventContext';
 
 // ========================================
 // メインページコンポーネント
@@ -31,15 +30,15 @@ function ZissekiPageContent({
     loading: storeLoading, 
     error: storeError, 
     isInitialized,
-    initializeFromStorage
+    initializeFromStorage,
+    projects, 
+    employees, 
+    currentUser
   } = useZissekiStore();
 
-  // 勤務時間管理
-  const { 
-    loading: workTimeLoading, 
-    error: workTimeError, 
-    clearError: clearWorkTimeError 
-  } = useWorkTimeReducer();
+  // 統合された状態管理
+  const eventState = useEventContext();
+  const workTimeState = useWorkTimeReducer();
 
   // 初期化（初回のみ）
   React.useEffect(() => {
@@ -49,43 +48,31 @@ function ZissekiPageContent({
     }
   }, [isInitialized, initializeFromStorage]);
 
-  // Propsを生成（フックの呼び出し順序を保つため）
-  const sidebarProps = useSidebarProps(year, week);
-  const timeGridProps = useTimeGridProps(year, week);
-
   // ========================================
   // エラーハンドリング
   // ========================================
   
   // 統合されたエラー状態
-  const hasError = storeError || workTimeError;
-  const errorMessage = storeError || workTimeError;
+  const hasError = storeError || workTimeState.error || eventState.error;
+  const errorMessage = storeError || workTimeState.error || eventState.error;
 
   // エラーをクリアする関数
   const clearAllErrors = () => {
-    clearWorkTimeError();
+    workTimeState.clearError();
+    eventState.clearError();
   };
 
   // ========================================
   // ローディング状態
   // ========================================
   
-  const isLoading = storeLoading || workTimeLoading || !isInitialized;
-
-  // デバッグ用: ローディング状態の詳細を確認
-  console.log('ローディング状態:', {
-    storeLoading,
-    workTimeLoading,
-    isInitialized,
-    isLoading
-  });
+  const isLoading = storeLoading || workTimeState.loading || eventState.loading || !isInitialized;
 
   // ========================================
   // エラー表示
   // ========================================
   
   if (hasError) {
-    console.log('エラーが発生:', errorMessage);
     return (
       <ErrorDisplay 
         error={errorMessage} 
@@ -99,11 +86,8 @@ function ZissekiPageContent({
   // ========================================
   
   if (isLoading) {
-    console.log('ローディング中...');
     return <LoadingSpinner />;
   }
-
-  console.log('メインコンテンツを表示');
 
   // ========================================
   // メインコンテンツ
@@ -114,12 +98,69 @@ function ZissekiPageContent({
       {/* メインコンテンツ */}
       <div className="flex-1 overflow-hidden">
         <Suspense fallback={<LoadingSpinner />}>
-          <TimeGrid {...timeGridProps} />
+          <TimeGrid 
+            year={year}
+            week={week}
+            events={eventState.events}
+            workTimes={workTimeState.workTimes}
+            selectedEvent={eventState.selectedEvent}
+            onEventClick={eventState.handleEventClick}
+            onTimeSlotClick={(day, hour, minute) => {
+              // 新しいイベント作成ロジック
+              const currentTab = eventState.ui.hierarchy.activeTab;
+              const currentSubTab = eventState.ui.hierarchy.activeSubTabs.project;
+              
+              // タブに基づいて業務分析コードを設定
+              let activityCode = "";
+              if (currentTab === "project") {
+                switch (currentSubTab) {
+                  case "計画":
+                    activityCode = "P001";
+                    break;
+                  case "設計":
+                    activityCode = "D001";
+                    break;
+                  case "会議":
+                    activityCode = "M001";
+                    break;
+                  case "購入品":
+                    activityCode = "P001";
+                    break;
+                  case "その他":
+                    activityCode = "O001";
+                    break;
+                  default:
+                    activityCode = "P001";
+                }
+              } else if (currentTab === "indirect") {
+                activityCode = "I001";
+              }
+              
+              const newEvent = {
+                id: `event-${Date.now()}`,
+                title: "新しいイベント",
+                description: "",
+                startDateTime: new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour, minute).toISOString(),
+                endDateTime: new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour + 1, minute).toISOString(),
+                project: "",
+                color: "#3788d8",
+                top: hour * 64 + (minute / 60) * 64,
+                height: 64,
+                activityCode: activityCode, // 業務分析コードを設定
+                unsaved: false
+              };
+              const createdEvent = eventState.createEvent(newEvent);
+              eventState.setSelectedEvent(createdEvent);
+            }}
+            onWorkTimeChange={workTimeState.updateWorkTime}
+          />
         </Suspense>
       </div>
       {/* サイドバー */}
       <Suspense fallback={<LoadingSpinner />}>
-        <ZissekiSidebar {...sidebarProps} />
+        <ZissekiSidebar 
+          projects={projects}
+        />
       </Suspense>
     </div>
   );

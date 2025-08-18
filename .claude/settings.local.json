@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(rm:*)",
+      "Bash(npx tsc:*)",
+      "mcp__serena__check_onboarding_performed",
+      "mcp__serena__activate_project",
+      "mcp__serena__read_file",
+      "mcp__serena__find_file",
+      "mcp__serena__get_symbols_overview",
+      "mcp__serena__list_dir",
+      "mcp__serena__replace_symbol_body",
+      "mcp__serena__search_for_pattern",
+      "mcp__serena__execute_shell_command",
+      "mcp__serena__create_text_file",
+      "Bash(npm run storybook:*)",
+      "mcp__serena__replace_regex",
+      "Bash(taskkill:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)"
+    ],
+    "deny": []
+  },
+  "mcpContextUris": [],
+  "mcpServers": {
+    "chrome-mcp": {
+      "type": "http",
+      "url": "http://127.0.0.1:12306/mcp"
+    },
+    "serena": {
+      "type": "stdio",
+      "command": "serena-mcp-server"
+    }
+  }
+}

@@ -64,7 +64,6 @@ export default function TimeSlotsTestPage() {
       height: 96, // 2時間分
       color: '#3B82F6',
       activityCode: 'DP01',
-      businessCode: 'DP01',
       subTabType: '詳細図',
       selectedTab: 'project',
       selectedProjectSubTab: '設計',
@@ -80,7 +79,6 @@ export default function TimeSlotsTestPage() {
       height: 96, // 2時間分
       color: '#10B981',
       activityCode: 'PP01',
-      businessCode: 'PP01',
       subTabType: '計画図',
       selectedTab: 'project',
       selectedProjectSubTab: '計画',
@@ -96,7 +94,6 @@ export default function TimeSlotsTestPage() {
       height: 96, // 2時間分
       color: '#F59E0B',
       activityCode: 'P100',
-      businessCode: 'P100',
       subTabType: '計画図作成',
       selectedTab: 'project',
       selectedProjectSubTab: '購入品',
@@ -112,7 +109,6 @@ export default function TimeSlotsTestPage() {
       height: 48, // 1時間分
       color: '#8B5CF6',
       activityCode: 'ZJD0',
-      businessCode: 'ZJD0',
       subTabType: '日報入力',
       selectedTab: 'indirect',
       selectedIndirectSubTab: '純間接',
@@ -149,7 +145,6 @@ export default function TimeSlotsTestPage() {
       height: 48, // 1時間分
       color: '#EF4444',
       activityCode: 'TEST',
-      businessCode: 'TEST',
       subTabType: 'テスト',
       selectedTab: 'project',
       selectedProjectSubTab: 'その他',

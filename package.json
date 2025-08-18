@@ -9,7 +9,9 @@
     "lint": "next lint",
     "starts": "node server.js",
     "build-react": "react-scripts build",
-    "pkg": "pkg . --targets node16-win-x64 --output dist/react-app.exe"
+    "pkg": "pkg . --targets node16-win-x64 --output dist/react-app.exe",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "pkg": {
     "scripts": "build/**/*",
@@ -99,8 +101,12 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "^4.1.0",
     "@eslint/js": "^9.28.0",
     "@next/eslint-plugin-next": "^15.3.4",
+    "@storybook/addon-docs": "^9.1.1",
+    "@storybook/addon-onboarding": "^9.1.1",
+    "@storybook/nextjs": "^9.1.1",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.11.30",
     "@types/react": "^18.2.67",
@@ -112,9 +118,11 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-storybook": "^9.1.1",
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^16.2.0",
     "postcss": "^8.4.35",
+    "storybook": "^9.1.1",
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.2",
