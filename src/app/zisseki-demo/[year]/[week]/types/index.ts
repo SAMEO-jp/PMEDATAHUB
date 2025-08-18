@@ -36,7 +36,7 @@ export interface Event {
   itemName?: string;
   startDateTime: string;
   endDateTime: string;
-  activityCode?: string;
+  activityCode?: string; // 業務分類コード（BusinessCodeと統合）
   purposeProject?: string;
   departmentCode?: string;
   // サブタブ関連のプロパティ
@@ -50,7 +50,7 @@ export interface Event {
   documentMaterial?: string;
   subTabType?: string;
   activityColumn?: string;
-  businessCode?: string;
+  // businessCodeを削除 - activityCodeに統合
   indirectType?: string;
   indirectDetailType?: string;
   top?: number;
@@ -86,6 +86,7 @@ export type TimeGridProps = {
   week: number;
   events: TimeGridEvent[];
   workTimes: WorkTimeData[];
+  selectedEvent: TimeGridEvent | null;
   onEventClick: (event: TimeGridEvent) => void;
   onTimeSlotClick: (day: Date, hour: number, minute: number) => void;
   onWorkTimeChange: (date: string, startTime: string, endTime: string) => void;
@@ -163,3 +164,6 @@ export interface RecentItem {
   name: string;
   description: string;
 } 
+
+// 統合サイドバー型定義のエクスポート
+export * from './unifiedSidebar'; 

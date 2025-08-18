@@ -21,7 +21,6 @@ import { useReducer, useEffect, useCallback, useMemo } from 'react';
 import { eventReducer, initialState } from './event/eventReducer';
 import { eventActions } from './event/eventActions';
 import { eventStorage } from './event/eventStorage';
-import { eventSelectors } from './event/eventSelectors';
 import { createEventHandlers } from './event/eventHandlers';
 import { TimeGridEvent } from './event/types';
 
@@ -31,6 +30,7 @@ import { TimeGridEvent } from './event/types';
  * 機能:
  * - イベントデータの管理（CRUD操作）
  * - UI状態の管理（選択、モーダル、ドラッグ、タブ等）
+ * - 4段階階層状態の管理
  * - localStorageとの同期
  * - エラーハンドリング
  * - セレクター機能
@@ -42,7 +42,8 @@ export const useEventReducer = () => {
   console.log('useEventReducer - current state:', {
     eventsCount: state.events.length,
     selectedEvent: state.selectedEvent?.title || 'null',
-    activeTab: state.activeTab,
+    activeTab: state.ui.hierarchy.activeTab,
+    selectedProjectCode: state.sidebar.selectedProjectCode,
     error: state.error
   });
 
@@ -100,14 +101,25 @@ export const useEventReducer = () => {
       console.log('リサイズ状態設定:', isResizing, resizedEvent?.title);
       dispatch(eventActions.setResizeState(isResizing, resizedEvent));
     },
-    setActiveTab: (tab: string) => {
+    
+    // 階層状態管理
+    setActiveTab: (tab: 'project' | 'indirect') => {
       console.log('アクティブタブ設定:', tab);
       dispatch(eventActions.setActiveTab(tab));
     },
-    setActiveSubTab: (tab: string, subTab: string) => {
+    setActiveSubTab: (tab: 'project' | 'indirect', subTab: string) => {
       console.log('アクティブサブタブ設定:', tab, subTab);
       dispatch(eventActions.setActiveSubTab(tab, subTab));
     },
+    setDetailTab: (mainTab: string, subTab: string, detailTab: string) => {
+      console.log('詳細タブ設定:', mainTab, subTab, detailTab);
+      dispatch(eventActions.setDetailTab(mainTab, subTab, detailTab));
+    },
+    setBusinessType: (businessType: string, subType: string, value: string) => {
+      console.log('業務タイプ設定:', businessType, subType, value);
+      dispatch(eventActions.setBusinessType(businessType, subType, value));
+    },
+    
     setError: (error: string | null) => {
       console.log('エラー設定:', error);
       dispatch(eventActions.setError(error));
@@ -119,7 +131,8 @@ export const useEventReducer = () => {
     setLoading: (loading: boolean) => {
       dispatch(eventActions.setLoading(loading));
     },
-    // 新規追加（プロジェクト選択）
+    
+    // サイドバー状態管理
     setSelectedProjectCode: (code: string) => {
       console.log('プロジェクトコード設定:', code);
       dispatch(eventActions.setSelectedProjectCode(code));
@@ -128,15 +141,31 @@ export const useEventReducer = () => {
       console.log('目的プロジェクトコード設定:', code);
       dispatch(eventActions.setPurposeProjectCode(code));
     },
-    // 新規追加（タブ詳細状態）
     setTabDetail: (tab: string, detail: string, value: string) => {
       console.log('タブ詳細設定:', tab, detail, value);
       dispatch(eventActions.setTabDetail(tab, detail, value));
     },
-    // 新規追加（間接業務詳細）
     setIndirectDetail: (detail: string, value: string) => {
       console.log('間接業務詳細設定:', detail, value);
       dispatch(eventActions.setIndirectDetail(detail, value));
+    },
+    updateSidebarState: (sidebarState: any) => {
+      console.log('サイドバー状態更新:', sidebarState);
+      dispatch(eventActions.updateSidebarState(sidebarState));
+    },
+    
+    // 統合操作
+    syncEventToSidebar: (event: TimeGridEvent) => {
+      console.log('イベントをサイドバーに同期:', event.title);
+      dispatch(eventActions.syncEventToSidebar(event));
+    },
+    syncSidebarToEvent: (eventId: string) => {
+      console.log('サイドバーをイベントに同期:', eventId);
+      dispatch(eventActions.syncSidebarToEvent(eventId, state.sidebar));
+    },
+    syncHierarchyToEvent: (eventId: string) => {
+      console.log('階層状態をイベントに同期:', eventId);
+      dispatch(eventActions.syncHierarchyToEvent(eventId, state.ui.hierarchy));
     }
   }), []);
 
@@ -148,31 +177,29 @@ export const useEventReducer = () => {
 
   // セレクターをメモ化
   const selectors = useMemo(() => ({
-    getEventById: (eventId: string) => eventSelectors.getEventById(state, eventId),
-    getEventsByDate: (date: Date) => eventSelectors.getEventsByDate(state, date),
-    getActiveEvents: () => eventSelectors.getActiveEvents(state),
-    getPastEvents: () => eventSelectors.getPastEvents(state),
-    getEventsByCategory: (category: string) => eventSelectors.getEventsByCategory(state, category),
-    getSelectedEvent: () => eventSelectors.getSelectedEvent(state),
-    isEventSelected: (eventId: string) => eventSelectors.isEventSelected(state, eventId),
-    getModalState: (modalType: string) => eventSelectors.getModalState(state, modalType),
-    getDragState: () => eventSelectors.getDragState(state),
-    getResizeState: () => eventSelectors.getResizeState(state),
-    getActiveTab: () => eventSelectors.getActiveTab(state),
-    getActiveSubTab: (tab: string) => eventSelectors.getActiveSubTab(state, tab),
-    getLoadingState: () => eventSelectors.getLoadingState(state),
-    getErrorState: () => eventSelectors.getErrorState(state),
-    getEventsCount: () => eventSelectors.getEventsCount(state),
-    // 新規追加（プロジェクト選択状態）
-    getSelectedProjectCode: () => eventSelectors.getSelectedProjectCode(state),
-    getPurposeProjectCode: () => eventSelectors.getPurposeProjectCode(state),
-    // 新規追加（タブ詳細状態）
-    getTabDetails: () => eventSelectors.getTabDetails(state),
-    getPlanningTabDetails: () => eventSelectors.getPlanningTabDetails(state),
-    getDesignTabDetails: () => eventSelectors.getDesignTabDetails(state),
-    getMeetingTabDetails: () => eventSelectors.getMeetingTabDetails(state),
-    getOtherTabDetails: () => eventSelectors.getOtherTabDetails(state),
-    getIndirectTabDetails: () => eventSelectors.getIndirectTabDetails(state)
+    // 基本セレクター
+    getEventById: (eventId: string) => state.events.find(event => event.id === eventId),
+    getSelectedEvent: () => state.selectedEvent,
+    
+    // サイドバー状態セレクター
+    getSidebarState: () => state.sidebar,
+    getSelectedProjectCode: () => state.sidebar.selectedProjectCode,
+    getPurposeProjectCode: () => state.sidebar.purposeProjectCode,
+    getTabDetails: () => state.sidebar.tabDetails,
+    
+    // UI状態セレクター（階層構造を含む）
+    getUIState: () => state.ui,
+    getHierarchyState: () => state.ui.hierarchy,
+    getActiveTab: () => state.ui.hierarchy.activeTab,
+    getActiveSubTab: (tab: 'project' | 'indirect') => state.ui.hierarchy.activeSubTabs[tab],
+    getDetailTab: (mainTab: string, subTab: string) => 
+      state.ui.hierarchy.detailTabs[mainTab as keyof typeof state.ui.hierarchy.detailTabs]?.[subTab as any],
+    getBusinessType: (businessType: string, subType: string) => 
+      state.ui.hierarchy.businessTypes[businessType as keyof typeof state.ui.hierarchy.businessTypes]?.[subType as any],
+    
+    // システム状態
+    getLoadingState: () => state.loading,
+    getErrorState: () => state.error
   }), [state]);
 
   // イベントのタブ状態を更新（サイドバー用）

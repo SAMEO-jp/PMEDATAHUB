@@ -30,3 +30,5 @@ Thumbs.db
 .env
 next-env.d.ts
 memo.md
+*storybook.log
+storybook-static

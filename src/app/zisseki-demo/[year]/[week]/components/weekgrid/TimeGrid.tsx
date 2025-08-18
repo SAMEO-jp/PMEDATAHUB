@@ -14,6 +14,7 @@ export const TimeGrid = ({
   week,
   events,
   workTimes,
+  selectedEvent,
   onEventClick,
   onTimeSlotClick,
   onWorkTimeChange,
@@ -53,6 +54,7 @@ export const TimeGrid = ({
             minuteSlots={minuteSlots}
             workTimes={workTimes}
             events={events}
+            selectedEvent={selectedEvent}
             onTimeSlotClick={onTimeSlotClick}
             onEventClick={onEventClick}
           />

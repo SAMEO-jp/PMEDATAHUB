@@ -198,7 +198,6 @@ export default function EventDisplayTestPage() {
     height: 96,
     color: '#3B82F6',
     activityCode: 'DP01',
-    businessCode: 'DP01',
     subTabType: '詳細図',
     selectedTab: 'project',
     selectedProjectSubTab: '設計',
@@ -245,7 +244,6 @@ export default function EventDisplayTestPage() {
         title: '会議',
         description: '',
         activityCode: '',
-        businessCode: '',
         subTabType: ''
       }
     },
@@ -271,7 +269,6 @@ export default function EventDisplayTestPage() {
       event: { 
         ...baseEvent, 
         activityCode: 'IMPORTANT',
-        businessCode: 'IMPORTANT',
         title: '重要業務',
         description: '業務コードが強調される'
       }
@@ -282,7 +279,6 @@ export default function EventDisplayTestPage() {
         ...baseEvent, 
         color: '#8B5CF6',
         activityCode: 'ZJD0',
-        businessCode: 'ZJD0',
         subTabType: '日報入力',
         selectedTab: 'indirect',
         selectedIndirectSubTab: '純間接',
@@ -296,7 +292,6 @@ export default function EventDisplayTestPage() {
         ...baseEvent, 
         color: '#F97316',
         activityCode: 'P100',
-        businessCode: 'P100',
         subTabType: '計画図作成',
         selectedProjectSubTab: '購入品',
         title: '購入品検討',
@@ -336,7 +331,6 @@ export default function EventDisplayTestPage() {
       event: { 
         ...baseEvent, 
         activityCode: '',
-        businessCode: '',
         subTabType: '',
         title: 'コードなし',
         description: '業務コードが設定されていない'

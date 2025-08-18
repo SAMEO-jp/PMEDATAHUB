@@ -23,6 +23,13 @@ export default function HomePage() {
       stylePattern: 'table' as const
     },
     { 
+      title: "実績デモ", 
+      description: "実績入力システムのデモページです。週単位でのイベント管理機能を提供します。", 
+      linkText: "実績デモを開く",
+      href: "/zisseki-demo/2024/1",
+      stylePattern: 'demo' as const
+    },
+    { 
       title: "テストページ", 
       description: "各機能のテストページです。", 
       linkText: "テストページを開く",
