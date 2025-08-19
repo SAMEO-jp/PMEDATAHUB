@@ -131,124 +131,17 @@ export const useZissekiStore = create<ZissekiState>()(
       updateWorkTimes: (newWorkTimes) => {
         set({ workTimes: newWorkTimes });
         storageUtils.save(storageKeys.workTimes, newWorkTimes);
-        console.log('勤務時間データを更新・保存しました:', newWorkTimes.length);
       },
       
-      updateEmployees: (newEmployees) => {
-        set({ employees: newEmployees });
-        storageUtils.save(storageKeys.employees, newEmployees);
-        console.log('従業員データを更新・保存しました:', newEmployees.length);
-      },
-      
-      updateProjects: (newProjects) => {
-        set({ projects: newProjects });
-        storageUtils.save(storageKeys.projects, newProjects);
-        console.log('プロジェクトデータを更新・保存しました:', newProjects.length);
-      },
-      
-      updateCurrentUser: (newUser) => {
-        set({ currentUser: newUser });
-        storageUtils.save(storageKeys.currentUser, newUser);
-        console.log('ユーザーデータを更新・保存しました');
-      },
-      
-      // ========================================
-      // 実績データ専用アクション
-      // ========================================
-      updateWorkTime: (date, startTime, endTime) => {
-        const { workTimes } = get();
-        const existingIndex = workTimes.findIndex(wt => wt.date === date);
-        
-        let newWorkTimes;
-        if (existingIndex >= 0) {
-          // 既存の勤務時間を更新
-          newWorkTimes = workTimes.map((wt, index) => 
-            index === existingIndex 
-              ? { ...wt, startTime, endTime }
-              : wt
-          );
-        } else {
-          // 新しい勤務時間を追加
-          newWorkTimes = [...workTimes, { date, startTime, endTime }];
-        }
-        
-        set({ workTimes: newWorkTimes });
-        storageUtils.save(storageKeys.workTimes, newWorkTimes);
-        console.log('勤務時間を更新しました:', date);
-      },
-      
-      // ========================================
-      // データ管理
-      // ========================================
-      resetData: () => {
-        storageUtils.clearAll();
-        set({
-          workTimes: [],
-          employees: [],
-          projects: [],
-          currentUser: null,
-          error: null,
-          isInitialized: false,
-        });
-        console.log('すべてのデータをリセットしました');
-      },
-      
-      // localStorageから読み込み専用（保存しない）
-      loadFromLocalStorage: () => {
+      // 初期化アクション
+      initializeFromStorage: async () => {
         try {
-          const savedWorkTimes: WorkTimeData[] = storageUtils.load(storageKeys.workTimes, []);
-          const savedEmployees: Employee[] = storageUtils.load(storageKeys.employees, []);
-          const savedProjects: Project[] = storageUtils.load(storageKeys.projects, []);
-          const savedCurrentUser: User | null = storageUtils.load(storageKeys.currentUser, null);
-          
-          console.log('localStorageからデータを読み込みました:', {
-            workTimes: savedWorkTimes.length,
-            employees: savedEmployees.length,
-            projects: savedProjects.length,
-            hasUser: !!savedCurrentUser
-          });
-          
-          set({
-            workTimes: savedWorkTimes,
-            employees: savedEmployees,
-            projects: savedProjects,
-            currentUser: savedCurrentUser,
-            isInitialized: true
-          });
-        } catch (error) {
-          console.error('localStorageからの読み込みに失敗しました:', error);
           set({ isInitialized: true });
-        }
-      },
-      
-      // 初期化（localStorage優先、データがない場合は初期状態）
-      initializeFromStorage: () => {
-        try {
-          const savedWorkTimes: WorkTimeData[] = storageUtils.load(storageKeys.workTimes, []);
-          const savedEmployees: Employee[] = storageUtils.load(storageKeys.employees, []);
-          const savedProjects: Project[] = storageUtils.load(storageKeys.projects, []);
-          const savedCurrentUser: User | null = storageUtils.load(storageKeys.currentUser, null);
-          
-          // localStorageにデータがある場合はそれを使用
-          if (savedWorkTimes.length > 0 || savedEmployees.length > 0 || 
-              savedProjects.length > 0) {
-            console.log('localStorageから既存データを読み込みました');
-            set({
-              workTimes: savedWorkTimes,
-              employees: savedEmployees,
-              projects: savedProjects,
-              currentUser: savedCurrentUser,
-              isInitialized: true
-            });
-          } else {
-            console.log('localStorageにデータがないため、初期状態で開始します');
-            set({ isInitialized: true });
-          }
         } catch (error) {
           console.error('Failed to initialize from storage:', error);
           set({ isInitialized: true });
         }
-      }
+      },
     }),
     { name: 'zisseki-store' }
   )

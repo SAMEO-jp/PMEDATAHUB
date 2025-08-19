@@ -2,15 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { useEventContext } from "../../context/EventContext";
+import { TimeGridEvent } from "../../types";
+import { eventActions } from "../../hooks/reducer/event/eventActions";
 import { 
   SidebarHeader, 
   SidebarEmpty, 
+  SidebarBasic,
+  SidebarActiveCodeEditor,
   DeleteButton,
-  TitleField,
-  DescriptionField,
-  ProjectSelect,
-  ActivityCodeField
-} from "./components";
+  ProjectSelect
+} from "./ui";
 
 interface ZissekiSidebarProps {
   projects: Array<{
@@ -27,7 +28,7 @@ interface ZissekiSidebarProps {
  * - EventFormコンテナを使用しない
  */
 export const ZissekiSidebar = ({ projects }: ZissekiSidebarProps) => {
-  const { selectedEvent, updateEvent, setSelectedEvent, deleteEvent } = useEventContext();
+  const { selectedEvent, handleUpdateEvent: updateEvent, handleDeleteEvent: deleteEvent, dispatch } = useEventContext();
 
   // アクティビティコードからタブ状態を判定
   const getActiveTab = (): 'project' | 'indirect' => {
@@ -39,8 +40,8 @@ export const ZissekiSidebar = ({ projects }: ZissekiSidebarProps) => {
   const activeTab = getActiveTab();
 
   // タブ変更時の処理
-  const handleTabChange = (newTab: 'project' | 'indirect') => {
-    if (selectedEvent) {
+  const handleTabChange = (eventId: string, newTab: 'project' | 'indirect') => {
+    if (selectedEvent && selectedEvent.id === eventId) {
       let newActivityCode = '';
       
       if (newTab === 'project') {
@@ -55,9 +56,9 @@ export const ZissekiSidebar = ({ projects }: ZissekiSidebarProps) => {
         selectedTab: newTab
       };
 
-      // 直接更新とセレクトを実行
-      updateEvent(selectedEvent.id, updatedEvent);
-      setSelectedEvent(updatedEvent);
+      // イベントを更新
+      updateEvent(updatedEvent);
+      dispatch(eventActions.setSelectedEvent(updatedEvent));
     }
   };
 
@@ -68,6 +69,10 @@ export const ZissekiSidebar = ({ projects }: ZissekiSidebarProps) => {
     project: '',
     activityCode: ''
   });
+
+  // サブタブ状態の管理
+  const [selectedProjectSubTab, setSelectedProjectSubTab] = useState<string>('計画');
+  const [selectedIndirectSubTab, setSelectedIndirectSubTab] = useState<string>('目的間接');
 
   // 選択イベントが変わったらローカル状態を更新
   useEffect(() => {
@@ -97,8 +102,8 @@ export const ZissekiSidebar = ({ projects }: ZissekiSidebarProps) => {
       ...selectedEvent,
       [field]: value
     };
-    updateEvent(selectedEvent.id, updatedEvent);
-    setSelectedEvent(updatedEvent);
+    updateEvent(updatedEvent);
+    dispatch(eventActions.setSelectedEvent(updatedEvent));
   };
 
   // セレクトボックスは即座に更新し、再選択
@@ -113,14 +118,22 @@ export const ZissekiSidebar = ({ projects }: ZissekiSidebarProps) => {
       ...selectedEvent,
       [field]: value
     };
-    updateEvent(selectedEvent.id, updatedEvent);
-    setSelectedEvent(updatedEvent);
+    updateEvent(updatedEvent);
+    dispatch(eventActions.setSelectedEvent(updatedEvent));
   };
 
   const handleDeleteEvent = () => {
     if (selectedEvent) {
-      deleteEvent(selectedEvent.id);
-      setSelectedEvent(null);
+      deleteEvent();
+      dispatch(eventActions.setSelectedEvent(null));
+    }
+  };
+
+  // SidebarActiveCodeEditor用のupdateEventラッパー
+  const handleUpdateEvent = (updatedEvent: TimeGridEvent) => {
+    if (selectedEvent) {
+      updateEvent(updatedEvent);
+      dispatch(eventActions.setSelectedEvent(updatedEvent));
     }
   };
 
@@ -130,10 +143,11 @@ export const ZissekiSidebar = ({ projects }: ZissekiSidebarProps) => {
         <div className="bg-white rounded-lg shadow">
           <SidebarHeader 
             title="業務詳細" 
+            eventId=""
             activeTab={activeTab}
             onTabChange={handleTabChange}
           />
-          <div className="p-4">
+          <div className="p-2">
             <SidebarEmpty message="イベントを選択してください" />
           </div>
         </div>
@@ -144,39 +158,52 @@ export const ZissekiSidebar = ({ projects }: ZissekiSidebarProps) => {
   return (
     <div className="w-80 ml-4">
       <div className="bg-white rounded-lg shadow">
+        
         <SidebarHeader 
           title="業務詳細"
+          eventId={selectedEvent.id}
           activeTab={activeTab}
           onTabChange={handleTabChange}
         />
-        
-        <div className="p-4">
-          <div className="space-y-4">
-            <TitleField
-              value={localValues.title}
-              onChange={(value) => handleLocalChange('title', value)}
-              onBlur={(value) => handleFieldBlur('title', value)}
-            />
-            
-            <DescriptionField
-              value={localValues.description}
-              onChange={(value) => handleLocalChange('description', value)}
-              onBlur={(value) => handleFieldBlur('description', value)}
-            />
-            
-            <ProjectSelect
+                <div className="p-2"> 
+      {/* 区切り線 */}
+      <hr className="border-gray-200" />
+          <ProjectSelect
               value={localValues.project}
               onChange={(value) => handleSelectChange('project', value)}
               projects={projects}
             />
-            
-            <ActivityCodeField
-              value={localValues.activityCode}
-            />
 
+        </div>
+      {/* 区切り線 */}
+      <hr className="border-gray-200" />
+        <SidebarBasic
+          title={localValues.title}
+          description={localValues.description}
+          onTitleChange={(value) => handleLocalChange('title', value)}
+          onDescriptionChange={(value) => handleLocalChange('description', value)}
+          onTitleBlur={(value) => handleFieldBlur('title', value)}
+          onDescriptionBlur={(value) => handleFieldBlur('description', value)}
+        />
+        
+
+
+        {/* 業務分類コードエディター */}
+        <SidebarActiveCodeEditor
+          selectedTab={activeTab}
+          selectedProjectSubTab={selectedProjectSubTab}
+          selectedIndirectSubTab={selectedIndirectSubTab}
+          selectedEvent={selectedEvent}
+          updateEvent={handleUpdateEvent}
+        />
+
+        <div className="p-2"> 
+          <div className="space-y-2">
             <DeleteButton onDelete={handleDeleteEvent} />
           </div>
         </div>
+
+
       </div>
     </div>
   );

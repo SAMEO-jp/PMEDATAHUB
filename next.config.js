@@ -5,6 +5,9 @@ const nextConfig = {
   // 本番環境でのソースマップの生成を無効化
   productionBrowserSourceMaps: false,
   
+  // ビルド時のESLintチェックをスキップ（型チェックは別途実行）
+  eslint: { ignoreDuringBuilds: true },
+  
   // 画像の最適化設定
   images: {
     domains: [],

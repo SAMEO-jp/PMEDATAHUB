@@ -3,8 +3,11 @@ import { cn } from "../../lib/utils"
 import { FormField, FormFieldProps } from "./FormField"
 
 export interface TextAreaProps 
-  extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'className'>,
-    Omit<FormFieldProps, 'children'> {
+  extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'onAbort' | 'onAbortCapture'> {
+  label?: string
+  required?: boolean
+  error?: string
+  hint?: string
   resize?: boolean
 }
 

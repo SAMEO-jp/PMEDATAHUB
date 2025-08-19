@@ -11,6 +11,7 @@
     "strict": true,
     "noEmit": true,
     "incremental": true,
+    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo",
     "module": "esnext",
     "esModuleInterop": true,
     "moduleResolution": "bundler",
@@ -54,6 +55,7 @@
   ],
   "exclude": [
     "node_modules",
-    "src/__ignore__"
+    "src/__ignore__",
+    "temp-download"
   ]
 }

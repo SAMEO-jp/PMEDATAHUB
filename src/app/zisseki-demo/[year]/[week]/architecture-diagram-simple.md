@@ -313,3 +313,4 @@ zisseki-demo/[year]/[week]/
 5. **国際化**: i18n対応による多言語化
 
 
+

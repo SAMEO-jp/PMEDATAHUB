@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 
 // スタイルパターンの型定義
-export type StylePattern = 'default' | 'project' | 'table' | 'test' | 'custom';
+export type StylePattern = 'default' | 'project' | 'table' | 'test' | 'demo' | 'custom';
 
 // Cardコンポーネントの型定義
 export interface CardProps {
@@ -146,7 +146,7 @@ export const Card: React.FC<CardProps> = ({
   // スタイルパターンまたはカスタムスタイルの適用
   const appliedStyle = stylePattern === 'custom' 
     ? { backgroundColor, textColor, titleSize, descriptionSize, linkSize, hoverEffect }
-    : stylePatterns[stylePattern] || stylePatterns.default;
+    : (stylePatterns[stylePattern as keyof typeof stylePatterns] || stylePatterns.default);
 
   // インラインスタイルの構築
   const inlineStyles: React.CSSProperties = {};
@@ -179,9 +179,9 @@ export const Card: React.FC<CardProps> = ({
 
   // ベースクラスの構築
   const baseCardClass = `card ${appliedStyle.backgroundColor} ${appliedStyle.textColor} ${className}`;
-  const titleClass = `card-title ${titleSizeClasses[appliedStyle.titleSize]} ${titleClassName}`;
-  const descriptionClass = `card-description ${descriptionSizeClasses[appliedStyle.descriptionSize]} ${descriptionClassName}`;
-  const linkClass = `card-link ${linkSizeClasses[appliedStyle.linkSize]} ${linkClassName} ${appliedStyle.hoverEffect ? 'hover:opacity-80 transition-opacity' : ''}`;
+  const titleClass = `card-title ${titleSizeClasses[appliedStyle.titleSize as keyof typeof titleSizeClasses]} ${titleClassName}`;
+  const descriptionClass = `card-description ${descriptionSizeClasses[appliedStyle.descriptionSize as keyof typeof descriptionSizeClasses]} ${descriptionClassName}`;
+  const linkClass = `card-link ${linkSizeClasses[appliedStyle.linkSize as keyof typeof linkSizeClasses]} ${linkClassName} ${appliedStyle.hoverEffect ? 'hover:opacity-80 transition-opacity' : ''}`;
 
   return (
     <div className={baseCardClass} style={inlineStyles}>

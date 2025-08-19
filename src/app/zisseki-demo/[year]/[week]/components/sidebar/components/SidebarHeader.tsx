@@ -1,17 +1,22 @@
-import { TabSelector } from './TabSelector';
+import { TabSelector } from '../ui/TabSelector';
 
 interface SidebarHeaderProps {
   title: string;
+  eventId: string;
   activeTab: 'project' | 'indirect';
-  onTabChange: (tab: 'project' | 'indirect') => void;
+  onTabChange: (eventId: string, tab: 'project' | 'indirect') => void;
 }
 
-export const SidebarHeader = ({ title, activeTab, onTabChange }: SidebarHeaderProps) => {
+export const SidebarHeader = ({ title, eventId, activeTab, onTabChange }: SidebarHeaderProps) => {
   return (
     <div className="p-3 border-b">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-bold">{title}</h2>
-        <TabSelector activeTab={activeTab} onTabChange={onTabChange} />
+        <TabSelector 
+          eventId={eventId}
+          activeTab={activeTab} 
+          onTabChange={onTabChange} 
+        />
       </div>
     </div>
   );

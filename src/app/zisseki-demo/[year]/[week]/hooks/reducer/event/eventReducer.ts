@@ -68,7 +68,7 @@ export const initialState: EventState = {
   },
   
   // システム状態
-  loading: true,
+  loading: false,
   error: null
 };
 
@@ -287,21 +287,21 @@ export function eventReducer(state: EventState, action: EventAction): EventState
           hierarchy: {
             activeTab: (action.payload.selectedTab as 'project' | 'indirect') || 'project',
             activeSubTabs: {
-              project: action.payload.selectedProjectSubTab || '計画',
-              indirect: action.payload.selectedIndirectSubTab || '純間接'
+              project: (action.payload.selectedProjectSubTab || '計画') as '計画' | '設計' | '会議' | '購入品' | 'その他',
+              indirect: (action.payload.selectedIndirectSubTab || '純間接') as '純間接' | '目的間接' | '控除時間'
             },
             detailTabs: {
               project: {
-                計画: action.payload.planningSubType || '計画図',
-                設計: action.payload.designSubType || '計画図',
-                会議: action.payload.meetingType || '内部会議',
-                購入品: '設備',
-                その他: action.payload.travelType || '出張'
+                計画: (action.payload.planningSubType || '計画図') as '計画図' | '検討書' | '見積り',
+                設計: (action.payload.designSubType || '計画図') as '計画図' | '詳細図' | '組立図' | '改正図',
+                会議: (action.payload.meetingType || '内部会議') as '内部会議' | '外部会議' | '打ち合わせ',
+                購入品: '設備' as '設備' | '材料' | 'その他',
+                その他: (action.payload.travelType || '出張') as '出張' | '研修' | 'その他'
               },
               indirect: {
-                純間接: action.payload.selectedIndirectDetailTab || '日報入力',
-                目的間接: action.payload.selectedOtherSubTab || '〇先対応',
-                控除時間: '休憩'
+                純間接: (action.payload.selectedIndirectDetailTab || '日報入力') as '日報入力' | '報告書作成' | 'その他',
+                目的間接: (action.payload.selectedOtherSubTab || '〇先対応') as '〇先対応' | '品質管理' | '安全管理',
+                控除時間: '休憩' as '休憩' | '私用' | 'その他'
               }
             },
             businessTypes: {

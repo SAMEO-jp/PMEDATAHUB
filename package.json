@@ -7,11 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit --incremental",
+    "lint:cache": "eslint . --cache --cache-location node_modules/.cache/eslint/ --max-warnings=0",
+    "check": "npm run typecheck && npm run lint:cache",
     "starts": "node server.js",
     "build-react": "react-scripts build",
     "pkg": "pkg . --targets node16-win-x64 --output dist/react-app.exe",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "prepare": "husky"
   },
   "pkg": {
     "scripts": "build/**/*",
@@ -121,6 +125,8 @@
     "eslint-plugin-storybook": "^9.1.1",
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^16.2.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.5",
     "postcss": "^8.4.35",
     "storybook": "^9.1.1",
     "tailwindcss": "^3.4.1",
@@ -130,5 +136,10 @@
   },
   "bin": {
     "pme-system": "./sever.ts"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --cache --fix"
+    ]
   }
 }

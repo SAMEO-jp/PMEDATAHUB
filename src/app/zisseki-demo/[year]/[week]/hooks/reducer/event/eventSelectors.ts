@@ -44,23 +44,23 @@ export const eventSelectors = {
   },
 
   getModalState: (state: EventState, modalType: string): boolean => {
-    return state.modals[modalType] || false;
+    return state.ui.modals[modalType] || false;
   },
 
   getDragState: (state: EventState) => {
-    return state.dragState;
+    return state.ui.dragState;
   },
 
   getResizeState: (state: EventState) => {
-    return state.resizeState;
+    return state.ui.resizeState;
   },
 
   getActiveTab: (state: EventState): string => {
-    return state.activeTab;
+    return state.ui.hierarchy.activeTab;
   },
 
   getActiveSubTab: (state: EventState, tab: string): string => {
-    return state.activeSubTabs[tab] || '';
+    return state.ui.hierarchy.activeSubTabs[tab as keyof typeof state.ui.hierarchy.activeSubTabs] || '';
   },
 
   getLoadingState: (state: EventState): boolean => {
@@ -77,35 +77,35 @@ export const eventSelectors = {
   
   // 新規追加（プロジェクト選択状態）
   getSelectedProjectCode: (state: EventState): string => {
-    return state.selectedProjectCode;
+    return state.sidebar.selectedProjectCode;
   },
   
   getPurposeProjectCode: (state: EventState): string => {
-    return state.purposeProjectCode;
+    return state.sidebar.purposeProjectCode;
   },
   
   // 新規追加（タブ詳細状態）
   getTabDetails: (state: EventState) => {
-    return state.tabDetails;
+    return state.sidebar.tabDetails;
   },
   
   getPlanningTabDetails: (state: EventState) => {
-    return state.tabDetails.planning;
+    return state.sidebar.tabDetails.planning;
   },
   
   getDesignTabDetails: (state: EventState) => {
-    return state.tabDetails.design;
+    return state.sidebar.tabDetails.design;
   },
   
   getMeetingTabDetails: (state: EventState) => {
-    return state.tabDetails.meeting;
+    return state.sidebar.tabDetails.meeting;
   },
   
   getOtherTabDetails: (state: EventState) => {
-    return state.tabDetails.other;
+    return state.sidebar.tabDetails.other;
   },
   
   getIndirectTabDetails: (state: EventState) => {
-    return state.tabDetails.indirect;
+    return state.sidebar.tabDetails.indirect;
   }
 }; 

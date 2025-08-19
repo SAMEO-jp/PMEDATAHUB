@@ -94,13 +94,15 @@ export const TimeSlots = ({
             })
             // フィルタリングされたイベントをレンダリング
             .map((event: TimeGridEvent) => {
-              console.log('TimeSlots - イベントをレンダリング:', event);
+
               return (
                 <EventDisplay
                   key={event.id}
                   event={event}
                   selectedEvent={selectedEvent}
                   onClick={onEventClick}
+                  weekDays={weekDays}
+                  dayIndex={dayIndex}
                 />
               );
             })}

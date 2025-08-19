@@ -25,7 +25,6 @@ export interface PurchaseItem {
 // イベント関連の型定義
 export interface Event {
   id: string;
-  keyID?: string;
   title: string;
   description: string;
   project: string;
@@ -166,4 +165,4 @@ export interface RecentItem {
 } 
 
 // 統合サイドバー型定義のエクスポート
-export * from './unifiedSidebar'; 
+// export * from './unifiedSidebar'; 
