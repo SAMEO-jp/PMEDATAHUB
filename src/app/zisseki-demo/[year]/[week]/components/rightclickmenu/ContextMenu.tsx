@@ -31,7 +31,7 @@ export const ContextMenu = ({ children, year, week }: ContextMenuProps) => {
   const resetDataHandler = () => {
     try {
       resetData();
-      console.log('データをリセットしました');
+
     } catch (error) {
       console.error('データのリセットに失敗しました:', error);
     }
@@ -41,7 +41,7 @@ export const ContextMenu = ({ children, year, week }: ContextMenuProps) => {
   const loadFromStorage = () => {
     try {
       loadFromLocalStorage();
-      console.log('localStorageからデータを読み込みました');
+
     } catch (error) {
       console.error('localStorageからの読み込みに失敗しました:', error);
     }

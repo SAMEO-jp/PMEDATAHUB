@@ -113,9 +113,9 @@ export const CardGrid: React.FC<CardGridProps> = ({
   const gridCols = [
     appliedColumns.default && `grid-cols-${appliedColumns.default}`,
     appliedColumns.sm && `sm:grid-cols-${appliedColumns.sm}`,
-    appliedColumns.md && `md:grid-cols-${appliedColumns.md}`,
+    'md' in appliedColumns && appliedColumns.md && `md:grid-cols-${appliedColumns.md}`,
     appliedColumns.lg && `lg:grid-cols-${appliedColumns.lg}`,
-    appliedColumns.xl && `xl:grid-cols-${appliedColumns.xl}`
+    'xl' in appliedColumns && appliedColumns.xl && `xl:grid-cols-${appliedColumns.xl}`
   ].filter(Boolean).join(' ');
 
   const containerClass = `${appliedContainerClass} pt-${appliedPaddingTop} p-${appliedPadding} ${containerClassName}`;

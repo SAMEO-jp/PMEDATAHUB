@@ -28,6 +28,15 @@ export default defineConfig([
       },
     },
   },
+  // JavaScriptファイル用の設定（型チェックなし）
+  {
+    files: ["**/*.{js,mjs,cjs}"],
+    languageOptions: {
+      parserOptions: {
+        project: null, // 型チェックを無効化
+      },
+    },
+  },
   
   // React設定
   pluginReact.configs.flat.recommended,
@@ -36,6 +45,11 @@ export default defineConfig([
     plugins: {
       react: pluginReact,
       "react-hooks": pluginReactHooks,
+    },
+    settings: {
+      react: {
+        version: "detect",
+      },
     },
     rules: {
       ...pluginReactHooks.configs.recommended.rules,

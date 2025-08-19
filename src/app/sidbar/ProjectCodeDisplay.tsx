@@ -1,7 +1,7 @@
 "use client"
 
-import { ProjectSelect } from "../selectors/ProjectSelect"
-import { TimeGridEvent, Project } from "../../../types"
+import { ProjectSelect } from "../zisseki-demo/[year]/[week]/components/sidebar/components/ProjectSelect"
+import { TimeGridEvent, Project } from "../zisseki-demo/[year]/[week]/types"
 
 // プロジェクトコード表示コンポーネントのProps
 interface ProjectCodeDisplayProps {
@@ -37,9 +37,10 @@ export const ProjectCodeDisplay = ({
       */}
       {(selectedTab === "project" || (selectedTab === "indirect" && indirectSubTab === "目的間接")) && (
         <ProjectSelect
+          value={selectedTab === "project" ? selectedProjectCode : purposeProjectCode}
+          onChange={selectedTab === "project" ? setSelectedProjectCode : setPurposeProjectCode}
           projects={projects}
           label={selectedTab === "project" ? "プロジェクトコード" : "目的プロジェクトコード"}
-          isProjectTab={selectedTab === "project"}
         />
       )}
 

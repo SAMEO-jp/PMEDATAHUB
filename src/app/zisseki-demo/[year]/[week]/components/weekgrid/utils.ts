@@ -1,9 +1,10 @@
+import { getWeekStartDate, getWeekDays } from "../../utils/weekUtils";
+
 // 週の日付を計算
 export const getWeekDates = (year: number, week: number) => {
-  const startDate = new Date(year, 0, 1);
-  const weekStart = new Date(startDate.getTime() + (week - 1) * 7 * 24 * 60 * 60 * 1000);
-  const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
-  return { startDate: weekStart, endDate: weekEnd };
+  const startDate = getWeekStartDate(year, week);
+  const weekEnd = new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000);
+  return { startDate, endDate: weekEnd };
 };
 
 export const getWeekDaysArray = (startDate: Date, endDate: Date) => {

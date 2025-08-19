@@ -114,19 +114,16 @@ export const useWorkTimeReducer = () => {
 
   // 勤務時間を更新
   const updateWorkTime = useCallback((date: string, startTime: string, endTime: string) => {
-    console.log('勤務時間更新:', { date, startTime, endTime });
     dispatch({ type: 'UPDATE_WORK_TIME', payload: { date, startTime, endTime } });
   }, []);
 
   // 勤務時間を追加
   const addWorkTime = useCallback((workTime: WorkTimeData) => {
-    console.log('勤務時間追加:', workTime);
     dispatch({ type: 'ADD_WORK_TIME', payload: workTime });
   }, []);
 
   // 勤務時間を削除
   const deleteWorkTime = useCallback((date: string) => {
-    console.log('勤務時間削除:', date);
     dispatch({ type: 'DELETE_WORK_TIME', payload: date });
   }, []);
 

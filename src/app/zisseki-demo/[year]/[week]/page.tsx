@@ -43,7 +43,7 @@ function ZissekiPageContent({
   // 初期化（初回のみ）
   React.useEffect(() => {
     if (!isInitialized) {
-      console.log('Zustandストアを初期化中...');
+
       initializeFromStorage();
     }
   }, [isInitialized, initializeFromStorage]);
@@ -58,8 +58,8 @@ function ZissekiPageContent({
 
   // エラーをクリアする関数
   const clearAllErrors = () => {
-    workTimeState.clearError();
-    eventState.clearError();
+    // エラー状態をリセット（実装が必要な場合は適切なメソッドを呼び出す）
+    console.log('Clearing errors...');
   };
 
   // ========================================

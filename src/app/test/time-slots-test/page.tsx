@@ -67,7 +67,8 @@ export default function TimeSlotsTestPage() {
       subTabType: '詳細図',
       selectedTab: 'project',
       selectedProjectSubTab: '設計',
-      unsaved: false
+      unsaved: false,
+      project: 'PRJ001'
     },
     {
       id: '2',
@@ -82,7 +83,8 @@ export default function TimeSlotsTestPage() {
       subTabType: '計画図',
       selectedTab: 'project',
       selectedProjectSubTab: '計画',
-      unsaved: false
+      unsaved: false,
+      project: 'PRJ002'
     },
     {
       id: '3',
@@ -97,7 +99,8 @@ export default function TimeSlotsTestPage() {
       subTabType: '計画図作成',
       selectedTab: 'project',
       selectedProjectSubTab: '購入品',
-      unsaved: false
+      unsaved: false,
+      project: 'PRJ003'
     },
     {
       id: '4',
@@ -112,9 +115,13 @@ export default function TimeSlotsTestPage() {
       subTabType: '日報入力',
       selectedTab: 'indirect',
       selectedIndirectSubTab: '純間接',
-      unsaved: false
+      unsaved: false,
+      project: 'INDIRECT'
     }
   ])
+
+  // 選択されたイベントの状態
+  const [selectedEvent, setSelectedEvent] = useState<TimeGridEvent | null>(null)
 
   // 時間スロット設定
   const timeSlots = Array.from({ length: 12 }, (_, i) => i + 8) // 8:00-19:00
@@ -122,8 +129,11 @@ export default function TimeSlotsTestPage() {
 
   // イベントクリックハンドラー
   const handleEventClick = (event: TimeGridEvent) => {
+    setSelectedEvent(event)
     console.log('イベントクリック:', event)
-    alert(`イベントクリック: ${event.title}\n業務コード: ${event.activityCode}\nサブタブ: ${event.subTabType}`)
+    alert(`イベントクリック: ${event.title}
+業務コード: ${event.activityCode}
+サブタブ: ${event.subTabType}`)
   }
 
   // タイムスロットクリックハンドラー
@@ -139,6 +149,7 @@ export default function TimeSlotsTestPage() {
       id: Date.now().toString(),
       title: `テストイベント${events.length + 1}`,
       description: 'テスト用のイベント',
+      project: 'TEST_PROJECT',
       startDateTime: '2025-01-06T15:00:00',
       endDateTime: '2025-01-06T16:00:00',
       top: 248, // 15:00の位置
@@ -239,6 +250,7 @@ export default function TimeSlotsTestPage() {
                   minuteSlots={minuteSlots}
                   workTimes={workTimes}
                   events={events}
+                  selectedEvent={selectedEvent}
                   onTimeSlotClick={handleTimeSlotClick}
                   onEventClick={handleEventClick}
                 />
