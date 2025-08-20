@@ -6,8 +6,8 @@
 import React, { Suspense } from 'react';
 import { TimeGrid } from './weekgrid/TimeGrid';
 import { ZissekiSidebar } from './sidebar/ZissekiSidebar';
-import { LoadingSpinner } from './LoadingSpinner';
-import { TimeGridEvent } from '../types';
+import { LoadingSpinner } from './loadingspinner/LoadingSpinner';
+import { TimeGridEvent, WorkTimeData } from '../types';
 import { createEventCreationHandler } from './EventCreationHandler';
 
 /**
@@ -17,7 +17,7 @@ interface MainContentProps {
   year: number;
   week: number;
   events: TimeGridEvent[];
-  workTimes: any[];
+  workTimes: WorkTimeData[];
   selectedEvent: TimeGridEvent | null;
   onEventClick: (event: TimeGridEvent) => void;
   onWorkTimeChange: (date: string, startTime: string, endTime: string) => void;
