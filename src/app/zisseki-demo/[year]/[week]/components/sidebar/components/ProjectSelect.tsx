@@ -1,14 +1,9 @@
-interface Project {
-  projectCode?: string;
-  projectName?: string;
-  name?: string;
-  [key: string]: any;
-}
+import { Project, OnLocalChange, OnCommit } from '../ui/types';
 
 interface ProjectSelectProps {
   value: string;
-  onChange: (value: string) => void;
-  onBlur?: (value: string) => void;
+  onLocalChange: OnLocalChange;
+  onCommit?: OnCommit;
   projects: Project[];
   label?: string;
   placeholder?: string;
@@ -16,8 +11,8 @@ interface ProjectSelectProps {
 
 export const ProjectSelect = ({ 
   value, 
-  onChange, 
-  onBlur,
+  onLocalChange, 
+  onCommit,
   projects,
   label = "プロジェクト", 
   placeholder = "選択してください" 
@@ -29,14 +24,14 @@ export const ProjectSelect = ({
       </label> */}
       <select
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={(e) => onBlur?.(e.target.value)}
+        onChange={(e) => onLocalChange(e.target.value)}
+        onBlur={(e) => onCommit?.(e.target.value)}
         className="w-full p-2 border rounded text-sm"
       >
         <option value="">{placeholder}</option>
         {projects.map((project, index) => (
-          <option key={index} value={project.projectCode || project.name || ""}>
-            {project.projectName || project.name || project.projectCode}
+          <option key={index} value={project.code}>
+            {project.name}
           </option>
         ))}
       </select>
