@@ -10,7 +10,6 @@ export const TitleField = ({
   value, 
   onChange, 
   onBlur,
-  label = "タイトル", 
   placeholder = "タイトルを入力" 
 }: TitleFieldProps) => {
   return (
