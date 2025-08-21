@@ -145,3 +145,4 @@ export function isValidWeek(year: number, week: number): boolean {
   const maxWeeks = getWeeksInYear(year);
   return week <= maxWeeks;
 }
+
