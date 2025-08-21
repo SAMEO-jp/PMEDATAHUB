@@ -1,10 +1,11 @@
 import { TabSelector } from '../ui/TabSelector';
+import { Tab } from '../ui/types';
 
 interface SidebarHeaderProps {
   title: string;
   eventId: string;
-  activeTab: 'project' | 'indirect';
-  onTabChange: (eventId: string, tab: 'project' | 'indirect') => void;
+  activeTab: Tab;
+  onTabChange: (eventId: string, tab: Tab) => void;
 }
 
 export const SidebarHeader = ({ title, eventId, activeTab, onTabChange }: SidebarHeaderProps) => {
