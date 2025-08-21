@@ -10,3 +10,7 @@ export { ContextMenu } from './rightclickmenu/ContextMenu';
 
 // エラー表示コンポーネント
 export { ErrorDisplay } from './ErrorDisplay';
+
+// ページ関連のコンポーネント
+export { ZissekiPageWrapper } from './ZissekiPageWrapper';
+export { ZissekiMainContent } from './ZissekiMainContent';
