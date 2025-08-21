@@ -6,6 +6,7 @@ import { tableManagementRouter } from './db/tableManagement';
 import { zumenAssemblySearchRouter } from './app/zumenAssemblySearch';
 import { paletRouter } from './palet';
 import { photosRouter } from './photos';
+import { zissekiRouter } from './zisseki';
 
 
 /**
@@ -20,6 +21,7 @@ export const appRouter = createTRPCRouter({
   zumenAssemblySearch: zumenAssemblySearchRouter,
   palet: paletRouter,
   photos: photosRouter,
+  zisseki: zissekiRouter,
 });
 
 // export type definition of API
