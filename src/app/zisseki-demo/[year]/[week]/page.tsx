@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { EventProvider } from './context/EventContext';
+import { DatabaseProvider } from './context/DatabaseContext';
 import { ZissekiPageWrapper } from './components/ZissekiPageWrapper';
 import { ZissekiMainContent } from './components/ZissekiMainContent';
 
@@ -17,11 +18,13 @@ function ZissekiPageContent({
   const week = parseInt(params.week);
 
   return (
-    <EventProvider>
-      <ZissekiPageWrapper>
-        <ZissekiMainContent year={year} week={week} />
-      </ZissekiPageWrapper>
-    </EventProvider>
+    <DatabaseProvider year={year} week={week}>
+      <EventProvider>
+        <ZissekiPageWrapper>
+          <ZissekiMainContent year={year} week={week} />
+        </ZissekiPageWrapper>
+      </EventProvider>
+    </DatabaseProvider>
   );
 }
 

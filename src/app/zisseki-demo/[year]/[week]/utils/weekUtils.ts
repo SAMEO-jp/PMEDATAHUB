@@ -19,7 +19,12 @@ export function getISOWeek(date: Date): number {
   yearStart.setDate(yearStart.getDate() + 3 - (yearStart.getDay() + 6) % 7);
   
   // 週番号を計算
-  const week = Math.ceil((d.getTime() - yearStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
+  let week = Math.ceil((d.getTime() - yearStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
+  
+  // 0以下の場合は1に修正
+  if (week <= 0) {
+    week = 1;
+  }
   
   return week;
 }
@@ -118,7 +123,13 @@ export function getNextWeek(year: number, week: number): { year: number; week: n
 export function getCurrentWeek(): { year: number; week: number } {
   const now = new Date();
   const year = now.getFullYear();
-  const week = getISOWeek(now);
+  let week = getISOWeek(now);
+  
+  // 0以下の場合は1に修正
+  if (week <= 0) {
+    week = 1;
+  }
+  
   return { year, week };
 }
 

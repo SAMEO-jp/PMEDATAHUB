@@ -53,9 +53,17 @@ export function createNewEvent(
   } else if (currentTab === "indirect") {
     activityCode = "I001";
   }
+
+  // 新しいID形式: YYYYMMDD-UNIXTIMESTAMP-USERID
+  const dateStr = day.getFullYear().toString() + 
+                  (day.getMonth() + 1).toString().padStart(2, '0') + 
+                  day.getDate().toString().padStart(2, '0');
+  const unixTimestamp = Math.floor(Date.now() / 1000); // UNIXタイムスタンプ（秒）
+  const userId = 'user123'; // 後で認証システムと連携
+  const eventId = `${dateStr}-${unixTimestamp}-${userId}`;
   
   return {
-    id: `event-${Date.now()}`,
+    id: eventId,
     title: "新しいイベント",
     description: "",
     startDateTime: new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour, minute).toISOString(),
