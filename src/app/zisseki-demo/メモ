@@ -9,8 +9,7 @@
 
   レベル3: 詳細タブ (SidebarState.detailTabs)
   - detailTabs.project.計画: "計画図" | "検討書" | "見積り"
-  - detailTabs.project.設計: "計画図" | "詳細図" | "組立図" |
-  "改正図"
+  - detailTabs.project.設計: "計画図" | "詳細図" | "組立図" | "改正図"
 
   レベル4: 業務タイプ (SidebarState.businessTypes)
   - businessTypes.planning.planningSubType: 業務の具体的な種類

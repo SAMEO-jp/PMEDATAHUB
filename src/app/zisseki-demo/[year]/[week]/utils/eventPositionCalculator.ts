@@ -1,48 +1,23 @@
 /**
- * イベント位置計算ユーティリティ
- * startDateTime/endDateTimeからtop/heightを自動計算
+ * イベント日時計算ユーティリティ
+ * startDateTime/endDateTimeとtop/heightの相互変換
  */
 
 // TimeGridのutils.tsと同じ計算ロジック
 const HOUR_HEIGHT = 64; // 1時間 = 64px
 
 /**
- * 時間文字列（HH:MM）を分数に変換
- */
-export const timeToMinutes = (timeStr: string): number => {
-  if (!timeStr) return 0;
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  return hours * 60 + minutes;
-};
-
-/**
- * 時間文字列を位置（px）に変換
- */
-export const timeToPosition = (timeStr: string): number => {
-  const minutes = timeToMinutes(timeStr);
-  const hours = minutes / 60;
-  return hours * HOUR_HEIGHT;
-};
-
-/**
- * DateTimeからHH:MM形式の時間文字列を取得
- */
-export const dateTimeToTimeString = (dateTime: string): string => {
-  const date = new Date(dateTime);
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  return `${hours}:${minutes}`;
-};
-
-/**
  * startDateTime/endDateTimeからtop/heightを計算
  */
 export const calculateEventPosition = (startDateTime: string, endDateTime: string): { top: number; height: number } => {
-  const startTimeStr = dateTimeToTimeString(startDateTime);
-  const endTimeStr = dateTimeToTimeString(endDateTime);
+  const startDate = new Date(startDateTime);
+  const endDate = new Date(endDateTime);
   
-  const startPosition = timeToPosition(startTimeStr);
-  const endPosition = timeToPosition(endTimeStr);
+  const startHours = startDate.getHours() + startDate.getMinutes() / 60;
+  const endHours = endDate.getHours() + endDate.getMinutes() / 60;
+  
+  const startPosition = startHours * HOUR_HEIGHT;
+  const endPosition = endHours * HOUR_HEIGHT;
   
   return {
     top: startPosition,

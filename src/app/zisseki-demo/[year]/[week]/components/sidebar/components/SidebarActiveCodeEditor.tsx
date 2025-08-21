@@ -11,6 +11,7 @@ import {
   DetailClassifications,
   TimeInputField
 } from "../ui";
+import { ActiveCodeEditorProps, TAB } from "../ui/types";
 
 // サブタブ設定の型定義
 interface SubTabConfig {
@@ -41,16 +42,7 @@ import {
  * - リアルタイムでのコード更新
  * - EventContextとの統合
  */
-interface SidebarActiveCodeEditorProps {
-  // 基本状態
-  selectedTab: 'project' | 'indirect';
-  selectedProjectSubTab: string;
-  selectedIndirectSubTab: string;
-  
-  // イベント関連
-  selectedEvent: TimeGridEvent | null;
-  updateEvent?: (event: TimeGridEvent) => void;
-}
+// 既存の型定義を削除し、新しい型を使用
 
 
 
@@ -71,12 +63,11 @@ const INDIRECT_SUBTAB_CONFIGS: Record<string, SubTabConfig> = {
 };
 
 export const SidebarActiveCodeEditor = ({
-  selectedTab,
-  selectedProjectSubTab,
-  selectedIndirectSubTab,
-  selectedEvent,
-  updateEvent
-}: SidebarActiveCodeEditorProps) => {
+  state,
+  event
+}: ActiveCodeEditorProps) => {
+  const { selectedTab, projectSubTab: selectedProjectSubTab, indirectSubTab: selectedIndirectSubTab } = state;
+  const { selectedEvent, updateEvent } = event;
   // Event ContextからhandleUpdateEventを取得（推奨の更新方法）
   const { handleUpdateEvent: contextUpdateEvent } = useEventContext();
 

@@ -4,11 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { TimeGridEvent } from "../../../types";
 import { calculateEventPosition } from "../../../utils/eventPositionCalculator";
 
-interface TimeInputFieldProps {
-  selectedEvent: TimeGridEvent | null;
-  onEventUpdate: (eventId: string, updates: Partial<TimeGridEvent>) => void;
-  label?: string;
-}
+import { TimeInputProps } from './types';
+
+// 既存の型定義を削除し、新しい型を使用
 
 // 時間文字列をDate部分と時間部分に分割
 const parseDateTime = (dateTimeStr: string) => {
@@ -27,7 +25,9 @@ const createDateTime = (originalDate: Date, hours: number, minutes: number): str
   return newDate.toISOString();
 };
 
-export const TimeInputField = ({ selectedEvent, onEventUpdate, label = "時間設定" }: TimeInputFieldProps) => {
+export const TimeInputField = ({ state, actions }: TimeInputProps) => {
+  const { selectedEvent, label = "時間設定" } = state;
+  const { onEventUpdate } = actions;
   const [startTime, setStartTime] = useState({ hours: 9, minutes: 0 });
   const [endTime, setEndTime] = useState({ hours: 10, minutes: 0 });
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);

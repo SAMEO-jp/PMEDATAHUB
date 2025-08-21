@@ -1,9 +1,11 @@
 "use client"
 
+import { Tab, TAB } from './types';
+
 interface TabSelectorProps {
   eventId: string;
-  activeTab: 'project' | 'indirect';
-  onTabChange: (eventId: string, newTab: 'project' | 'indirect') => void;
+  activeTab: Tab;
+  onTabChange: (eventId: string, newTab: Tab) => void;
 }
 
 /**
@@ -20,16 +22,16 @@ export const TabSelector = ({ eventId, activeTab, onTabChange }: TabSelectorProp
    * タブ変更時の処理
    * イベントIDと新しい状態を親コンポーネントに通知
    */
-  const handleTabChange = (newTab: 'project' | 'indirect') => {
+  const handleTabChange = (newTab: Tab) => {
     onTabChange(eventId, newTab);
   };
 
   return (
     <div className="flex space-x-1">
       <button
-        onClick={() => handleTabChange('project')}
+        onClick={() => handleTabChange(TAB.PROJECT)}
         className={`px-3 py-1 text-sm rounded ${
-          activeTab === 'project'
+          activeTab === TAB.PROJECT
             ? 'bg-blue-500 text-white'
             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
         }`}
@@ -37,9 +39,9 @@ export const TabSelector = ({ eventId, activeTab, onTabChange }: TabSelectorProp
         プロジェクト
       </button>
       <button
-        onClick={() => handleTabChange('indirect')}
+        onClick={() => handleTabChange(TAB.INDIRECT)}
         className={`px-3 py-1 text-sm rounded ${
-          activeTab === 'indirect'
+          activeTab === TAB.INDIRECT
             ? 'bg-blue-500 text-white'
             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
         }`}

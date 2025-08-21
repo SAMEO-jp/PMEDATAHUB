@@ -12,41 +12,38 @@ import {
   DeleteButton,
   ProjectSelect
 } from "./ui";
+import { Tab, TAB, Project } from "./ui/types";
 
 interface ZissekiSidebarProps {
-  projects: Array<{
-    projectCode?: string;
-    projectName?: string;
-    name?: string;
-    [key: string]: string | number | boolean | undefined;
-  }>;
+  // projectsはContextから取得するため、Propsから削除
 }
 
 /**
  * 実績入力サイドバー（個別コンポーネント直接使用版）
  * - 各フィールドコンポーネントを直接配置
  * - EventFormコンテナを使用しない
+ * - プロジェクトデータはContextから取得
  */
-export const ZissekiSidebar = ({ projects }: ZissekiSidebarProps) => {
-  const { selectedEvent, handleUpdateEvent: updateEvent, handleDeleteEvent: deleteEvent, dispatch } = useEventContext();
+export const ZissekiSidebar = ({}: ZissekiSidebarProps) => {
+  const { selectedEvent, handleUpdateEvent: updateEvent, handleDeleteEvent: deleteEvent, dispatch, projects } = useEventContext();
 
   // アクティビティコードからタブ状態を判定
-  const getActiveTab = (): 'project' | 'indirect' => {
-    if (!selectedEvent?.activityCode) return 'project';
+  const getActiveTab = (): Tab => {
+    if (!selectedEvent?.activityCode) return TAB.PROJECT;
     const firstChar = selectedEvent.activityCode.charAt(0);
-    return firstChar === 'Z' ? 'indirect' : 'project';
+    return firstChar === 'Z' ? TAB.INDIRECT : TAB.PROJECT;
   };
 
   const activeTab = getActiveTab();
 
   // タブ変更時の処理
-  const handleTabChange = (eventId: string, newTab: 'project' | 'indirect') => {
+  const handleTabChange = (eventId: string, newTab: Tab) => {
     if (selectedEvent && selectedEvent.id === eventId) {
       let newActivityCode = '';
       
-      if (newTab === 'project') {
+      if (newTab === TAB.PROJECT) {
         newActivityCode = 'P000';
-      } else if (newTab === 'indirect') {
+      } else if (newTab === TAB.INDIRECT) {
         newActivityCode = 'Z000';
       }
 
@@ -170,7 +167,7 @@ export const ZissekiSidebar = ({ projects }: ZissekiSidebarProps) => {
       <hr className="border-gray-200" />
           <ProjectSelect
               value={localValues.project}
-              onChange={(value) => handleSelectChange('project', value)}
+              onLocalChange={(value) => handleSelectChange('project', value)}
               projects={projects}
             />
 
@@ -178,23 +175,29 @@ export const ZissekiSidebar = ({ projects }: ZissekiSidebarProps) => {
       {/* 区切り線 */}
       <hr className="border-gray-200" />
         <SidebarBasic
-          title={localValues.title}
-          description={localValues.description}
-          onTitleChange={(value) => handleLocalChange('title', value)}
-          onDescriptionChange={(value) => handleLocalChange('description', value)}
-          onTitleBlur={(value) => handleFieldBlur('title', value)}
-          onDescriptionBlur={(value) => handleFieldBlur('description', value)}
+          form={{
+            title: localValues.title,
+            description: localValues.description,
+            project: localValues.project,
+            activityCode: localValues.activityCode,
+            onLocalChange: (field: string, value: string) => handleLocalChange(field as keyof typeof localValues, value),
+            onCommit: (field: string, value: string) => handleFieldBlur(field, value)
+          }}
         />
         
 
 
         {/* 業務分類コードエディター */}
         <SidebarActiveCodeEditor
-          selectedTab={activeTab}
-          selectedProjectSubTab={selectedProjectSubTab}
-          selectedIndirectSubTab={selectedIndirectSubTab}
-          selectedEvent={selectedEvent}
-          updateEvent={handleUpdateEvent}
+          state={{
+            selectedTab: activeTab,
+            projectSubTab: selectedProjectSubTab,
+            indirectSubTab: selectedIndirectSubTab
+          }}
+          event={{
+            selectedEvent,
+            updateEvent: handleUpdateEvent
+          }}
         />
 
         <div className="p-2"> 

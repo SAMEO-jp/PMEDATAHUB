@@ -3,39 +3,28 @@ import { SubTabButton } from './SubTabButton';
 import { PurchaseDropdown } from './PurchaseDropdown';
 import { ClassificationItem } from '../../../constants/activity-codes';
 import { TimeGridEvent } from '../../../types';
+import { DetailClassificationsProps, TAB } from './types';
 
-interface DetailClassificationsProps {
-  selectedTab: 'project' | 'indirect';
-  currentMainSubTab: string;
-  currentDetailSubTab: string;
-  currentCode: string;
-  onClassificationSelect: (code: string, additionalData: Partial<TimeGridEvent>) => void;
-  getProjectClassifications: () => ClassificationItem[] | null;
-  getIndirectClassifications: () => Record<string, ClassificationItem[]> | null;
-  generateProjectActivityCode: (mainTab: string, detailTab: string, classification: ClassificationItem, subTabType: string) => string;
-  generateIndirectActivityCode: (mainTab: string, detailTab: string, classification: ClassificationItem) => string;
-  getProjectAdditionalData: (classification: ClassificationItem) => Partial<TimeGridEvent>;
-  getIndirectAdditionalData: (detailTab: string, classification: ClassificationItem) => Partial<TimeGridEvent>;
-  getPurchaseClassifications: () => ClassificationItem[];
-}
+// 既存の型定義を削除し、新しい型を使用
 
 /**
  * 詳細分類ボタンをレンダリング
  */
 export const DetailClassifications = ({
-  selectedTab,
-  currentMainSubTab,
-  currentDetailSubTab,
-  currentCode,
-  onClassificationSelect,
-  getProjectClassifications,
-  getIndirectClassifications,
-  generateProjectActivityCode,
-  generateIndirectActivityCode,
-  getProjectAdditionalData,
-  getIndirectAdditionalData,
-  getPurchaseClassifications
+  state,
+  actions
 }: DetailClassificationsProps) => {
+  const { selectedTab, mainSubTab: currentMainSubTab, detailSubTab: currentDetailSubTab, currentCode } = state;
+  const { 
+    onSelect: onClassificationSelect,
+    getProjectClassifications,
+    getIndirectClassifications,
+    generateProjectCode: generateProjectActivityCode,
+    generateIndirectCode: generateIndirectActivityCode,
+    getProjectData: getProjectAdditionalData,
+    getIndirectData: getIndirectAdditionalData,
+    getPurchaseClassifications
+  } = actions;
   if (selectedTab === 'project') {
     // 購入品タブの場合は特別なプルダウンコンポーネントを使用
     if (currentMainSubTab === '購入品') {
