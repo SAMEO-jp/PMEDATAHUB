@@ -60,8 +60,8 @@ export interface ActiveCodeEditorState {
 }
 
 export interface ActiveCodeEditorProps {
-  state: ActiveCodeEditorState;
-  event: EventBinding;
+  state?: ActiveCodeEditorState;
+  event?: EventBinding;
 }
 
 // DetailClassifications用のPropsまとまり
@@ -84,8 +84,8 @@ export interface ClassificationActions {
 }
 
 export interface DetailClassificationsProps {
-  state: ClassificationState;
-  actions: ClassificationActions;
+  state?: ClassificationState;
+  actions?: ClassificationActions;
 }
 
 // TimeInputField用のPropsまとまり
@@ -99,6 +99,6 @@ export interface TimeInputActions {
 }
 
 export interface TimeInputProps {
-  state: TimeInputState;
-  actions: TimeInputActions;
+  state?: TimeInputState;
+  actions?: TimeInputActions;
 }

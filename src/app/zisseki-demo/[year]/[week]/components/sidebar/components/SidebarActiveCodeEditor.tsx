@@ -66,6 +66,15 @@ export const SidebarActiveCodeEditor = ({
   state,
   event
 }: ActiveCodeEditorProps) => {
+  // stateやeventがundefinedの場合は早期リターン
+  if (!state || !event) {
+    return (
+      <div className="p-4 text-center text-gray-500">
+        データを読み込み中...
+      </div>
+    );
+  }
+
   const { selectedTab, projectSubTab: selectedProjectSubTab, indirectSubTab: selectedIndirectSubTab } = state;
   const { selectedEvent, updateEvent } = event;
   // Event ContextからhandleUpdateEventを取得（推奨の更新方法）
@@ -464,18 +473,22 @@ export const SidebarActiveCodeEditor = ({
       {/* 詳細分類タブ */}
       <div className="mb-1.5">
         <DetailClassifications
-          selectedTab={selectedTab}
-          currentMainSubTab={currentMainSubTab}
-          currentDetailSubTab={currentDetailSubTab}
-          currentCode={currentCode}
-          onClassificationSelect={handleClassificationSelect}
-          getProjectClassifications={getProjectClassifications}
-          getIndirectClassifications={getIndirectClassifications}
-          generateProjectActivityCode={generateProjectActivityCode}
-          generateIndirectActivityCode={generateIndirectActivityCode}
-          getProjectAdditionalData={getProjectAdditionalData}
-          getIndirectAdditionalData={getIndirectAdditionalData}
-          getPurchaseClassifications={getPurchaseClassifications}
+          state={{
+            selectedTab: selectedTab,
+            mainSubTab: currentMainSubTab,
+            detailSubTab: currentDetailSubTab,
+            currentCode: currentCode
+          }}
+          actions={{
+            onSelect: handleClassificationSelect,
+            getProjectClassifications: getProjectClassifications,
+            getIndirectClassifications: getIndirectClassifications,
+            generateProjectCode: generateProjectActivityCode,
+            generateIndirectCode: generateIndirectActivityCode,
+            getProjectData: getProjectAdditionalData,
+            getIndirectData: getIndirectAdditionalData,
+            getPurchaseClassifications: getPurchaseClassifications
+          }}
         />
       </div>
 
@@ -485,15 +498,19 @@ export const SidebarActiveCodeEditor = ({
       {/* 時間入力フォーム */}
       <div className="mb-1.5">
         <TimeInputField 
-          selectedEvent={selectedEvent}
-          onEventUpdate={(eventId, updates) => {
-            if (selectedEvent && contextUpdateEvent) {
-              contextUpdateEvent({ ...selectedEvent, ...updates });
-            } else if (selectedEvent && updateEvent) {
-              updateEvent({ ...selectedEvent, ...updates });
+          state={{
+            selectedEvent: selectedEvent,
+            label: "時間設定"
+          }}
+          actions={{
+            onEventUpdate: (eventId, updates) => {
+              if (selectedEvent && contextUpdateEvent) {
+                contextUpdateEvent({ ...selectedEvent, ...updates });
+              } else if (selectedEvent && updateEvent) {
+                updateEvent({ ...selectedEvent, ...updates });
+              }
             }
           }}
-          label="時間設定"
         />
       </div>
 

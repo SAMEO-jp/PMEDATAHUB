@@ -3,6 +3,7 @@
 import React from 'react';
 import { HeaderConfig, HeaderAction } from './header/types';
 import { useHeader } from './header/store/headerStore';
+import { useAuthContext } from '@/src/contexts/AuthContext';
 import { HeaderTitle } from './header/components/HeaderTitle';
 import { HeaderActions } from './header/components/HeaderActions';
 import { HeaderSearch } from './header/components/HeaderSearch';
@@ -11,9 +12,6 @@ import { HeaderNotifications } from './header/components/HeaderNotifications';
 
 interface ModernHeaderProps extends HeaderConfig {
   // 追加のプロパティ
-  userName?: string;
-  userRole?: string;
-  onLogout?: () => void;
   onProfile?: () => void;
   onSettings?: () => void;
 }
@@ -21,7 +19,7 @@ interface ModernHeaderProps extends HeaderConfig {
 /**
  * モダンなヘッダーコンポーネント
  * タイトル、アクションボタン、検索、ユーザーメニュー、通知機能を統合
- * Zustandストアを使用した状態管理
+ * Zustandストアを使用した状態管理 + 認証コンテキスト統合
  */
 export const ModernHeader: React.FC<ModernHeaderProps> = ({
   // 基本設定
@@ -39,9 +37,6 @@ export const ModernHeader: React.FC<ModernHeaderProps> = ({
   children,
   
   // ユーザー情報
-  userName = '担当者 太郎',
-  userRole = 'MENU',
-  onLogout,
   onProfile,
   onSettings,
 }) => {
@@ -59,6 +54,14 @@ export const ModernHeader: React.FC<ModernHeaderProps> = ({
     toggleUserMenu,
     toggleNotifications,
   } = useHeader();
+
+  // 認証コンテキストからユーザー情報とログイン機能を取得
+  const {
+    currentUser,
+    isAuthenticated,
+    logout,
+    openLoginModal,
+  } = useAuthContext();
 
   // アクションボタンのクリックハンドラー
   const handleActionClick = (action: HeaderAction) => {
@@ -82,12 +85,19 @@ export const ModernHeader: React.FC<ModernHeaderProps> = ({
 
   // ログアウトハンドラー
   const handleLogout = () => {
-    if (onLogout) {
-      try {
-        onLogout();
-      } catch (error) {
-        console.error('Header logout error:', error);
-      }
+    try {
+      logout();
+    } catch (error) {
+      console.error('Header logout error:', error);
+    }
+  };
+
+  // ログインハンドラー
+  const handleLogin = () => {
+    try {
+      openLoginModal();
+    } catch (error) {
+      console.error('Header login error:', error);
     }
   };
 
@@ -112,6 +122,10 @@ export const ModernHeader: React.FC<ModernHeaderProps> = ({
       }
     }
   };
+
+  // ユーザー情報の取得（認証状態に応じて）
+  const userName = currentUser?.name || 'ゲスト';
+  const userRole = currentUser?.role || 'GUEST';
 
   return (
     <header className={`header ${className}`}>
@@ -178,6 +192,8 @@ export const ModernHeader: React.FC<ModernHeaderProps> = ({
               onToggle={toggleUserMenu}
               userName={userName}
               userRole={userRole}
+              isAuthenticated={isAuthenticated}
+              onLogin={handleLogin}
               onLogout={handleLogout}
               onProfile={handleProfile}
               onSettings={handleSettings}

@@ -23,6 +23,22 @@ export const useZissekiWeekData = (year: number, week: number) => {
 };
 
 /**
+ * 月単位の実績データを取得するフック
+ */
+export const useZissekiMonthData = (year: number, month: number) => {
+  return trpc.zisseki.getMonthData.useQuery(
+    { year, month },
+    {
+      staleTime: Infinity,
+      cacheTime: Infinity,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+    }
+  );
+};
+
+/**
  * ワークタイムデータを取得するフック
  */
 export const useZissekiWorkTimes = (year: number, week: number) => {

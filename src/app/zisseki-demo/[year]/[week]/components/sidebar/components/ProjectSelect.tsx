@@ -4,7 +4,7 @@ interface ProjectSelectProps {
   value: string;
   onLocalChange: OnLocalChange;
   onCommit?: OnCommit;
-  projects: Project[];
+  projects?: Project[];
   label?: string;
   placeholder?: string;
 }
@@ -13,7 +13,7 @@ export const ProjectSelect = ({
   value, 
   onLocalChange, 
   onCommit,
-  projects,
+  projects = [],
   label = "プロジェクト", 
   placeholder = "選択してください" 
 }: ProjectSelectProps) => {

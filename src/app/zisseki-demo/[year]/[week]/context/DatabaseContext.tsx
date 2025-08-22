@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, ReactNode, useState, useCallback } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useCallback, useEffect } from 'react';
 import { useZissekiOperations } from '@src/hooks/useZissekiData';
 import type { TimeGridEvent, WorkTimeData } from '../types';
 
@@ -50,8 +50,16 @@ export const DatabaseProvider = ({
   // 常にHookを呼び出す（React Hooksのルールに従う）
   const operations = useZissekiOperations(year, week);
   
+  // 自動初期化
+  useEffect(() => {
+    if (!isInitialized) {
+      console.log('DatabaseContext: 自動初期化を開始');
+      setIsInitialized(true);
+    }
+  }, [isInitialized]);
+  
   const initialize = useCallback(() => {
-    console.log('DatabaseContext: 初期化を開始');
+    console.log('DatabaseContext: 手動初期化を開始');
     setIsInitialized(true);
   }, []);
   
@@ -71,12 +79,37 @@ export const DatabaseProvider = ({
     isInitialized,
     
     // 操作
-    saveWeekData: isInitialized ? operations.saveWeekData : (async () => { throw new Error('Database not initialized'); }),
-    updateEvent: isInitialized ? operations.updateEvent : (async () => { throw new Error('Database not initialized'); }),
-    deleteEvent: isInitialized ? operations.deleteEvent : (async () => { throw new Error('Database not initialized'); }),
-    refetch: isInitialized ? operations.refetch : (() => { throw new Error('Database not initialized'); }),
+    saveWeekData: isInitialized ? operations.saveWeekData : (async () => { 
+      console.error('Database not initialized');
+      throw new Error('Database not initialized'); 
+    }),
+    updateEvent: isInitialized ? operations.updateEvent : (async () => { 
+      console.error('Database not initialized');
+      throw new Error('Database not initialized'); 
+    }),
+    deleteEvent: isInitialized ? operations.deleteEvent : (async () => { 
+      console.error('Database not initialized');
+      throw new Error('Database not initialized'); 
+    }),
+    refetch: isInitialized ? operations.refetch : (() => { 
+      console.error('Database not initialized');
+      throw new Error('Database not initialized'); 
+    }),
     initialize,
   };
+
+  // デバッグ用ログ
+  useEffect(() => {
+    if (isInitialized) {
+      console.log('DatabaseContext状態:', {
+        eventsCount: operations.events?.length || 0,
+        isLoading: operations.isLoading,
+        isSaving: operations.isSaving,
+        error: operations.error,
+        metadata: operations.metadata
+      });
+    }
+  }, [isInitialized, operations.events, operations.isLoading, operations.isSaving, operations.error, operations.metadata]);
 
   return (
     <DatabaseContext.Provider value={contextValue}>

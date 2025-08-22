@@ -1,5 +1,6 @@
 import React from 'react';
 import { TRPCProvider } from '@src/lib/trpc/Provider';
+import { AuthProvider } from '@/src/contexts/AuthContext';
 import { ModernLayout } from '@/src/components/layout/ModernLayout';
 import './globals.css';
 
@@ -17,9 +18,11 @@ export default function RootLayout({
     <html lang="ja">
       <body style={{ overflow: 'hidden' }}>
         <TRPCProvider>
-          <ModernLayout>
-            {children}
-          </ModernLayout>
+          <AuthProvider>
+            <ModernLayout>
+              {children}
+            </ModernLayout>
+          </AuthProvider>
         </TRPCProvider>
       </body>
     </html>
