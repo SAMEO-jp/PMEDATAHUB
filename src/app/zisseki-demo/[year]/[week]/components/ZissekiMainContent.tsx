@@ -36,6 +36,7 @@ export function ZissekiMainContent({ year, week }: ZissekiMainContentProps) {
 
   // 初回データ同期フラグ
   const hasInitialized = useRef(false);
+  const lastDatabaseEventsCount = useRef(0);
 
   // ========================================
   // 初期データ読み込み（初回のみ）
@@ -70,6 +71,26 @@ export function ZissekiMainContent({ year, week }: ZissekiMainContentProps) {
         eventState.dispatch(eventActions.setEvents([]));
       }
       hasInitialized.current = true;
+      lastDatabaseEventsCount.current = database.events?.length || 0;
+    }
+  }, [database.events, database.isLoading, database.isInitialized, eventState]);
+
+  // データベースの更新を監視してEventContextに同期
+  useEffect(() => {
+    if (hasInitialized.current && database.isInitialized && !database.isLoading) {
+      const currentDatabaseEventsCount = database.events?.length || 0;
+      
+      // データベースのイベント数が変わった場合のみ同期
+      if (currentDatabaseEventsCount !== lastDatabaseEventsCount.current) {
+        console.log('データベース更新を検出: EventContextに同期中...', {
+          previousCount: lastDatabaseEventsCount.current,
+          currentCount: currentDatabaseEventsCount,
+          databaseEvents: database.events
+        });
+        
+        eventState.dispatch(eventActions.setEvents(database.events || []));
+        lastDatabaseEventsCount.current = currentDatabaseEventsCount;
+      }
     }
   }, [database.events, database.isLoading, database.isInitialized, eventState]);
 
@@ -162,9 +183,7 @@ export function ZissekiMainContent({ year, week }: ZissekiMainContentProps) {
       </div>
       {/* サイドバー */}
       <Suspense fallback={<LoadingSpinner />}>
-        <ZissekiSidebar 
-          projects={projects}
-        />
+        <ZissekiSidebar />
       </Suspense>
     </div>
   );

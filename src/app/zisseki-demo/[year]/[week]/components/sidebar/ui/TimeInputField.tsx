@@ -26,6 +26,20 @@ const createDateTime = (originalDate: Date, hours: number, minutes: number): str
 };
 
 export const TimeInputField = ({ state, actions }: TimeInputProps) => {
+  // stateやactionsがundefinedの場合は早期リターン
+  if (!state || !actions) {
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          ⏰ 時間設定
+        </label>
+        <div className="p-2 border rounded text-sm bg-gray-50 text-gray-500">
+          データを読み込み中...
+        </div>
+      </div>
+    );
+  }
+
   const { selectedEvent, label = "時間設定" } = state;
   const { onEventUpdate } = actions;
   const [startTime, setStartTime] = useState({ hours: 9, minutes: 0 });

@@ -14,6 +14,11 @@ const WeekParamsSchema = z.object({
   week: z.number().min(1, '週番号は1以上である必要があります').max(53, '週番号は53以下である必要があります'),
 });
 
+const MonthParamsSchema = z.object({
+  year: z.number().min(2020).max(2030),
+  month: z.number().min(1, '月は1以上である必要があります').max(12, '月は12以下である必要があります'),
+});
+
 const EventSchema = z.object({
   id: z.string(),
   title: z.string().min(1, 'タイトルは必須です'),
@@ -463,10 +468,8 @@ export const zissekiRouter = createTRPCRouter({
       try {
         const { eventId } = input;
 
-        // 削除を実行
-        const result = await updateDataById('events', eventId, {
-          deleted_at: new Date().toISOString(),
-        });
+        // 実際にレコードを削除（deleted_atカラムが存在しないため）
+        const result = await getAllRecords('events', 'DELETE FROM events WHERE id = ?', [eventId]);
 
         if (!result.success) {
           throw new TRPCError({
@@ -510,6 +513,145 @@ export const zissekiRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'ワークタイムデータの取得に失敗しました',
+        });
+      }
+    }),
+
+  /**
+   * 指定された年・月の実績データを取得するプロシージャ。
+   */
+  getMonthData: publicProcedure
+    .input(MonthParamsSchema)
+    .query(async ({ input }) => {
+      try {
+        // eventsテーブルから該当月のデータを取得
+        const startOfMonth = new Date(input.year, input.month - 1, 1);
+        const endOfMonth = new Date(input.year, input.month, 0, 23, 59, 59, 999);
+
+        const query = `
+          SELECT 
+            id,
+            title,
+            description,
+            project,
+            startDateTime,
+            endDateTime,
+            top,
+            height,
+            color,
+            unsaved,
+            category,
+            employeeNumber,
+            activityCode,
+            purposeProject,
+            departmentCode,
+            equipmentNumber,
+            equipmentName,
+            equipment_id,
+            equipment_Name,
+            itemName,
+            planningSubType,
+            estimateSubType,
+            designSubType,
+            meetingType,
+            travelType,
+            stakeholderType,
+            documentType,
+            documentMaterial,
+            subTabType,
+            activityColumn,
+            indirectType,
+            indirectDetailType,
+            selectedTab,
+            selectedProjectSubTab,
+            selectedIndirectSubTab,
+            selectedIndirectDetailTab,
+            selectedOtherSubTab,
+            status,
+            createdAt,
+            updatedAt
+          FROM events 
+          WHERE startDateTime >= ? 
+            AND startDateTime <= ?
+          ORDER BY startDateTime ASC
+        `;
+
+        const result = await getAllRecords<EventRecord>(
+          'events',
+          query,
+          [startOfMonth.toISOString(), endOfMonth.toISOString()]
+        );
+
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: result.error?.message || 'データの取得に失敗しました',
+          });
+        }
+
+        // 取得したデータをTimeGridEvent形式に変換
+        const events: TimeGridEvent[] = (result.data || []).map((event: EventRecord) => ({
+          id: event.id,
+          title: event.title,
+          description: event.description || '',
+          project: event.project || '',
+          startDateTime: event.startDateTime,
+          endDateTime: event.endDateTime,
+          activityCode: event.activityCode || '',
+          top: event.top || 0,
+          height: event.height || 64,
+          color: event.color || '#3788d8',
+          unsaved: Boolean(event.unsaved),
+          category: event.category || '',
+          employeeNumber: event.employeeNumber || '',
+          // 追加のプロパティ
+          equipmentNumber: event.equipmentNumber || '',
+          equipmentName: event.equipmentName || '',
+          equipment_id: event.equipment_id || '',
+          equipment_Name: event.equipment_Name || '',
+          itemName: event.itemName || '',
+          purposeProject: event.purposeProject || '',
+          departmentCode: event.departmentCode || '',
+          planningSubType: event.planningSubType || '',
+          estimateSubType: event.estimateSubType || '',
+          designSubType: event.designSubType || '',
+          meetingType: event.meetingType || '',
+          travelType: event.travelType || '',
+          stakeholderType: event.stakeholderType || '',
+          documentType: event.documentType || '',
+          documentMaterial: event.documentMaterial || '',
+          subTabType: event.subTabType || '',
+          activityColumn: event.activityColumn || '',
+          indirectType: event.indirectType || '',
+          indirectDetailType: event.indirectDetailType || '',
+          selectedTab: event.selectedTab || '',
+          selectedProjectSubTab: event.selectedProjectSubTab || '',
+          selectedIndirectSubTab: event.selectedIndirectSubTab || '',
+          selectedIndirectDetailTab: event.selectedIndirectDetailTab || '',
+          selectedOtherSubTab: event.selectedOtherSubTab || '',
+          status: event.status || '',
+        }));
+
+        return {
+          success: true,
+          data: {
+            events,
+            metadata: {
+              year: input.year,
+              month: input.month,
+              lastModified: new Date().toISOString(),
+              totalEvents: events.length,
+            },
+          },
+        };
+      } catch (error) {
+        console.error('tRPC zisseki.getMonthData error:', error);
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'データの取得に失敗しました',
         });
       }
     }),

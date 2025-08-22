@@ -5,6 +5,8 @@ interface HeaderUserMenuProps {
   onToggle: () => void;
   userName?: string;
   userRole?: string;
+  isAuthenticated?: boolean;
+  onLogin?: () => void;
   onLogout?: () => void;
   onProfile?: () => void;
   onSettings?: () => void;
@@ -12,12 +14,15 @@ interface HeaderUserMenuProps {
 
 /**
  * ヘッダーのユーザーメニューを表示するコンポーネント
+ * 認証状態に応じてログイン/ログアウトボタンを表示
  */
 export const HeaderUserMenu: React.FC<HeaderUserMenuProps> = ({
   isOpen,
   onToggle,
-  userName = '担当者 太郎',
-  userRole = 'MENU',
+  userName = 'ゲスト',
+  userRole = 'GUEST',
+  isAuthenticated = false,
+  onLogin,
   onLogout,
   onProfile,
   onSettings,
@@ -40,6 +45,13 @@ export const HeaderUserMenu: React.FC<HeaderUserMenuProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen, onToggle]);
+
+  const handleLogin = () => {
+    if (onLogin) {
+      onLogin();
+    }
+    onToggle();
+  };
 
   const handleLogout = () => {
     if (onLogout) {
@@ -72,7 +84,7 @@ export const HeaderUserMenu: React.FC<HeaderUserMenuProps> = ({
         aria-expanded={isOpen}
       >
         <span className="material-symbols-outlined header-user-icon">
-          account_circle
+          {isAuthenticated ? 'account_circle' : 'person'}
         </span>
         <div className="header-user-info">
           <span className="header-user-name">{userName}</span>
@@ -88,7 +100,7 @@ export const HeaderUserMenu: React.FC<HeaderUserMenuProps> = ({
         <div className="header-user-dropdown">
           <div className="header-user-dropdown-header">
             <span className="material-symbols-outlined header-user-dropdown-icon">
-              account_circle
+              {isAuthenticated ? 'account_circle' : 'person'}
             </span>
             <div className="header-user-dropdown-info">
               <span className="header-user-dropdown-name">{userName}</span>
@@ -97,7 +109,8 @@ export const HeaderUserMenu: React.FC<HeaderUserMenuProps> = ({
           </div>
           
           <div className="header-user-dropdown-actions">
-            {onProfile && (
+            {/* 認証済みの場合のみ表示 */}
+            {isAuthenticated && onProfile && (
               <button
                 className="header-user-dropdown-action"
                 onClick={handleProfile}
@@ -107,7 +120,7 @@ export const HeaderUserMenu: React.FC<HeaderUserMenuProps> = ({
               </button>
             )}
             
-            {onSettings && (
+            {isAuthenticated && onSettings && (
               <button
                 className="header-user-dropdown-action"
                 onClick={handleSettings}
@@ -117,14 +130,27 @@ export const HeaderUserMenu: React.FC<HeaderUserMenuProps> = ({
               </button>
             )}
             
-            {onLogout && (
-              <button
-                className="header-user-dropdown-action header-user-dropdown-logout"
-                onClick={handleLogout}
-              >
-                <span className="material-symbols-outlined">logout</span>
-                <span>ログアウト</span>
-              </button>
+            {/* 認証状態に応じてログイン/ログアウトボタンを表示 */}
+            {isAuthenticated ? (
+              onLogout && (
+                <button
+                  className="header-user-dropdown-action header-user-dropdown-logout"
+                  onClick={handleLogout}
+                >
+                  <span className="material-symbols-outlined">logout</span>
+                  <span>ログアウト</span>
+                </button>
+              )
+            ) : (
+              onLogin && (
+                <button
+                  className="header-user-dropdown-action header-user-dropdown-login"
+                  onClick={handleLogin}
+                >
+                  <span className="material-symbols-outlined">login</span>
+                  <span>ログイン</span>
+                </button>
+              )
             )}
           </div>
         </div>

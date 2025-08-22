@@ -14,6 +14,11 @@ export const DetailClassifications = ({
   state,
   actions
 }: DetailClassificationsProps) => {
+  // stateやactionsがundefinedの場合は早期リターン
+  if (!state || !actions) {
+    return null;
+  }
+
   const { selectedTab, mainSubTab: currentMainSubTab, detailSubTab: currentDetailSubTab, currentCode } = state;
   const { 
     onSelect: onClassificationSelect,

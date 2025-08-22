@@ -7,6 +7,11 @@ import { Card } from '../components/cusutom_ui/Card';
 import { CardGrid } from '../components/cusutom_ui/CardGrid';
 
 export default function HomePage() {
+  // 現在の年と月を取得
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1; // getMonth()は0ベースなので+1
+
   const cardData = [
     { 
       title: "プロジェクト管理", 
@@ -14,6 +19,13 @@ export default function HomePage() {
       linkText: "プロジェクト管理を開く",
       href: "/app_project",
       stylePattern: 'project' as const
+    },
+    { 
+      title: "データ表示", 
+      description: "月別の実績データを表形式で表示・分析します。フィルタリング、ソート、CSVダウンロード機能を提供します。", 
+      linkText: "データ表示を開く",
+      href: `/data-display/${currentYear}/${currentMonth}`,
+      stylePattern: 'data' as const
     },
     { 
       title: "テーブル管理", 

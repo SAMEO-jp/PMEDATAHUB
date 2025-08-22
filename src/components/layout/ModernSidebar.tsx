@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useAuthContext } from '@/src/contexts/AuthContext';
 
 // Material Symbols のフォールバック用アイコンマッピング
 const iconFallbacks: Record<string, string> = {
@@ -17,6 +18,7 @@ const iconFallbacks: Record<string, string> = {
   'data_object': '📦',
   'account_circle': '👤',
   'logout': '🚪',
+  'login': '🔑',
   'description': '📄',
   'image': '🖼️',
   'notes': '📝',
@@ -106,6 +108,14 @@ export const ModernSidebar: React.FC = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const footerRef = useRef<HTMLDivElement>(null);
 
+  // 認証コンテキストからユーザー情報とログイン機能を取得
+  const {
+    currentUser,
+    isAuthenticated,
+    logout,
+    openLoginModal,
+  } = useAuthContext();
+
   // プロジェクトIDを取得
   const projectId = params?.project_id as string;
 
@@ -150,11 +160,30 @@ export const ModernSidebar: React.FC = () => {
     };
   }, [footerRef]);
 
-  const handleLogout = () => {
-    // ログアウト処理をここに実装
-    console.log('ログアウト処理');
-    setIsPopupOpen(false);
+  // ログインハンドラー
+  const handleLogin = () => {
+    try {
+      openLoginModal();
+      setIsPopupOpen(false);
+    } catch (error) {
+      console.error('Sidebar login error:', error);
+    }
   };
+
+  // ログアウトハンドラー
+  const handleLogout = () => {
+    try {
+      logout();
+      setIsPopupOpen(false);
+    } catch (error) {
+      console.error('Sidebar logout error:', error);
+    }
+  };
+
+  // ユーザー情報の取得（認証状態に応じて）
+  const userName = currentUser?.name || 'ゲスト';
+  const userRole = currentUser?.role || 'GUEST';
+  const userIcon = isAuthenticated ? 'account_circle' : 'person';
 
   return (
     <aside className="sidebar">
@@ -215,19 +244,30 @@ export const ModernSidebar: React.FC = () => {
             )
           )}
         </div>
+        
+        {/* 認証状態に応じたポップアップ */}
         {isPopupOpen && (
           <div className="logout-popup">
-            <button className="logout-button" onClick={handleLogout}>
-              <IconComponent iconName="logout" />
-              <span>ログアウト</span>
-            </button>
+            {isAuthenticated ? (
+              <button className="logout-button" onClick={handleLogout}>
+                <IconComponent iconName="logout" />
+                <span>ログアウト</span>
+              </button>
+            ) : (
+              <button className="login-button" onClick={handleLogin}>
+                <IconComponent iconName="login" />
+                <span>ログイン</span>
+              </button>
+            )}
           </div>
         )}
+        
+        {/* ユーザー情報表示 */}
         <div className="user-info" onClick={() => setIsPopupOpen(!isPopupOpen)}>
-          <IconComponent iconName="account_circle" className="user-icon" />
+          <IconComponent iconName={userIcon} className="user-icon" />
           <div>
-            <div className="name">担当者 太郎</div>
-            <div className="role">MENU</div>
+            <div className="name">{userName}</div>
+            <div className="role">{userRole}</div>
           </div>
         </div>
       </div>
