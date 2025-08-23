@@ -4,11 +4,11 @@
  */
 
 import React, { Suspense } from 'react';
-import { TimeGrid } from './weekgrid/TimeGrid';
-import { ZissekiSidebar } from './sidebar/ZissekiSidebar';
-import { LoadingSpinner } from './loadingspinner/LoadingSpinner';
-import { TimeGridEvent, WorkTimeData } from '../types';
-import { createEventCreationHandler } from './EventCreationHandler';
+import { TimeGrid } from '../weekgrid/TimeGrid';
+import { ZissekiSidebar } from '../sidebar/ZissekiSidebar';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { TimeGridEvent, WorkTimeData } from '../../types';
+import { createEventCreationHandler } from '../EventCreationHandler';
 
 /**
  * メインコンテンツのProps型定義

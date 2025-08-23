@@ -1,16 +1,16 @@
 'use client';
 
 import React, { Suspense, useEffect, useRef } from 'react';
-import { TimeGrid } from './weekgrid/TimeGrid';
-import { ZissekiSidebar } from './sidebar/ZissekiSidebar';
-import { LoadingSpinner } from './loadingspinner/LoadingSpinner';
-import { TimeGridHeader } from './TimeGridHeader';
-import { useEventContext } from '../context/EventContext';
-import { useDatabase } from '../context/DatabaseContext';
-import { useWorkTimeReducer } from '../hooks/reducer/useWorkTimeReducer';
-import { useZissekiStore } from '../store/zissekiStore';
-import { createNewEvent } from '../utils/eventUtils';
-import { eventActions } from '../hooks/reducer/event/eventActions';
+import { TimeGrid } from '../weekgrid/TimeGrid';
+import { ZissekiSidebar } from '../sidebar/ZissekiSidebar';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { TimeGridHeader } from '../TimeGridHeader';
+import { useEventContext } from '../../context/EventContext';
+import { useDatabase } from '../../context/DatabaseContext';
+import { useWorkTimeReducer } from '../../hooks/reducer/useWorkTimeReducer';
+import { useZissekiStore } from '../../store/zissekiStore';
+import { createNewEvent } from '../../utils/eventUtils';
+import { eventActions } from '../../hooks/reducer/event/eventActions';
 
 interface ZissekiMainContentProps {
   year: number;
