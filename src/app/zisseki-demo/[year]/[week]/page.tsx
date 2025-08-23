@@ -3,8 +3,8 @@
 import React from 'react';
 import { EventProvider } from './context/EventContext';
 import { DatabaseProvider } from './context/DatabaseContext';
-import { ZissekiPageWrapper } from './components/ZissekiPageWrapper';
-import { ZissekiMainContent } from './components/ZissekiMainContent';
+import { ZissekiPageWrapper } from './components/layout/ZissekiPageWrapper';
+import { ZissekiMainContent } from './components/layout/ZissekiMainContent';
 
 // ========================================
 // メインページコンポーネント

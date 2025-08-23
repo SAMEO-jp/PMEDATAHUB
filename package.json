@@ -137,5 +137,10 @@
   "bin": {
     "pme-system": "./sever.ts"
   },
-  "lint-staged": {}
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "git add"
+    ]
+  }
 }
