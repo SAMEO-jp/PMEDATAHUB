@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { ErrorDisplay } from './ErrorDisplay';
-import { LoadingSpinner } from './loadingspinner/LoadingSpinner';
-import { useEventContext } from '../context/EventContext';
-import { useWorkTimeReducer } from '../hooks/reducer/useWorkTimeReducer';
-import { useZissekiStore } from '../store/zissekiStore';
+import { ErrorDisplay } from '../ui/ErrorDisplay';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { useEventContext } from '../../context/EventContext';
+import { useWorkTimeReducer } from '../../hooks/reducer/useWorkTimeReducer';
+import { useZissekiStore } from '../../store/zissekiStore';
 
 interface ZissekiPageWrapperProps {
   children: React.ReactNode;
