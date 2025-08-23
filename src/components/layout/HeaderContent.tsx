@@ -10,18 +10,18 @@ import { HeaderSearch } from './header/components/HeaderSearch';
 import { HeaderUserMenu } from './header/components/HeaderUserMenu';
 import { HeaderNotifications } from './header/components/HeaderNotifications';
 
-interface ModernHeaderProps extends HeaderConfig {
+interface HeaderContentProps extends HeaderConfig {
   // 追加のプロパティ
   onProfile?: () => void;
   onSettings?: () => void;
 }
 
 /**
- * モダンなヘッダーコンポーネント
+ * ヘッダーコンテンツコンポーネント
  * タイトル、アクションボタン、検索、ユーザーメニュー、通知機能を統合
  * Zustandストアを使用した状態管理 + 認証コンテキスト統合
  */
-export const ModernHeader: React.FC<ModernHeaderProps> = ({
+export const HeaderContent: React.FC<HeaderContentProps> = ({
   // 基本設定
   title,
   subtitle,
@@ -203,4 +203,4 @@ export const ModernHeader: React.FC<ModernHeaderProps> = ({
       </div>
     </header>
   );
-}; 
+};

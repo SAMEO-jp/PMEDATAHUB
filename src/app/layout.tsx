@@ -1,7 +1,8 @@
 import React from 'react';
 import { TRPCProvider } from '@src/lib/trpc/Provider';
 import { AuthProvider } from '@/src/contexts/AuthContext';
-import { ModernLayout } from '@/src/components/layout/ModernLayout';
+import { HeaderSidbarLayout } from '@/src/components/layout/HeaderSidbarLayout';
+import { MainLayout } from '@/src/components/layout-main';
 import './globals.css';
 
 export const metadata = {
@@ -19,9 +20,11 @@ export default function RootLayout({
       <body style={{ overflow: 'hidden' }}>
         <TRPCProvider>
           <AuthProvider>
-            <ModernLayout>
-              {children}
-            </ModernLayout>
+            <HeaderSidbarLayout>
+              <MainLayout>
+                {children}
+              </MainLayout>
+            </HeaderSidbarLayout>
           </AuthProvider>
         </TRPCProvider>
       </body>

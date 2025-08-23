@@ -1,19 +1,19 @@
 'use client';
 
 import React from 'react';
-import { ModernSidebar } from './ModernSidebar';
-import { ModernHeader } from './ModernHeader';
+import { SidebarContent } from './SidebarContent';
+import { HeaderContent } from './HeaderContent';
 import { LoginModal } from '@/src/components/auth/LoginModal';
 
-interface ModernLayoutProps {
+interface HeaderSidbarLayoutProps {
   children: React.ReactNode;
 }
 
-export const ModernLayout: React.FC<ModernLayoutProps> = ({ children }) => {
+export const HeaderSidbarLayout: React.FC<HeaderSidbarLayoutProps> = ({ children }) => {
   return (
     <div className="app-container">
-      <ModernSidebar />
-      <ModernHeader />
+      <SidebarContent />
+      <HeaderContent />
       <div className="main-content-wrapper">
         <main className="main-content">
           {children}
@@ -24,4 +24,4 @@ export const ModernLayout: React.FC<ModernLayoutProps> = ({ children }) => {
       <LoginModal />
     </div>
   );
-}; 
+};

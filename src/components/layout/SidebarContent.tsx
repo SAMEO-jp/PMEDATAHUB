@@ -97,7 +97,7 @@ const useSidebarStore = () => {
   };
 };
 
-export const ModernSidebar: React.FC = () => {
+export const SidebarContent: React.FC = () => {
   const pathname = usePathname();
   const params = useParams();
   const { 

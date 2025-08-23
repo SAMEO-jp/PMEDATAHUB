@@ -1,3 +1,3 @@
-export { ModernLayout } from './ModernLayout';
-export { ModernHeader } from './ModernHeader';
-export { ModernSidebar } from './ModernSidebar'; 
+export { HeaderSidbarLayout } from './HeaderSidbarLayout';
+export { HeaderContent } from './HeaderContent';
+export { SidebarContent } from './SidebarContent'; 
