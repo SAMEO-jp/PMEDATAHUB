@@ -114,7 +114,7 @@ export type EventAction =
   // イベントデータ関連
   | { type: 'SET_EVENTS'; payload: TimeGridEvent[] }
   | { type: 'ADD_EVENT'; payload: TimeGridEvent }
-  | { type: 'UPDATE_EVENT'; payload: { eventId: string; event: TimeGridEvent } }
+  | { type: 'UPDATE_EVENT'; payload: { eventId: string; event: Partial<TimeGridEvent> } }
   | { type: 'DELETE_EVENT'; payload: string }
   | { type: 'SET_SELECTED_EVENT'; payload: TimeGridEvent | null }
   

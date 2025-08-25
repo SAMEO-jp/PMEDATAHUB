@@ -115,7 +115,7 @@ export type ZissekiSidebarProps = {
   selectedEvent: TimeGridEvent | null;
   _hasChanges: boolean;
   handleDeleteEvent: () => void;
-  updateEvent: (updatedEvent: TimeGridEvent) => void;
+  updateEvent: (updatedEvent: Partial<TimeGridEvent>) => void;
   _employees: Employee[];
   projects: Project[];
   setSelectedEvent: (event: TimeGridEvent | null) => void;
@@ -132,7 +132,7 @@ export type ProjectSelectProps = {
   onChange: (projectCode: string) => void;
   label: string;
   selectedEvent: TimeGridEvent | null;
-  updateEvent: (event: TimeGridEvent) => void;
+  updateEvent: (event: Partial<TimeGridEvent>) => void;
   isProjectTab: boolean;
 };
 

@@ -5,7 +5,7 @@ import { eventActions } from './eventActions';
 export interface EventHandlers {
   handleEventClick: (event: TimeGridEvent) => void;
   handleDeleteEvent: () => void;
-  handleUpdateEvent: (updatedEvent: TimeGridEvent) => void;
+  handleUpdateEvent: (updatedEvent: Partial<TimeGridEvent>) => void;
   // サイドバーとイベントの同期操作
   syncSidebarToSelectedEvent: () => void;
   // 階層状態の操作
@@ -38,8 +38,11 @@ export const createEventHandlers = (
       }
     },
     
-    handleUpdateEvent: (updatedEvent: TimeGridEvent) => {
-      dispatch(eventActions.updateEvent(updatedEvent.id, updatedEvent));
+    handleUpdateEvent: (updatedEvent: Partial<TimeGridEvent>) => {
+      if (state.selectedEvent) {
+        const mergedEvent = { ...state.selectedEvent, ...updatedEvent };
+        dispatch(eventActions.updateEvent(mergedEvent.id, updatedEvent));
+      }
     },
     
     syncSidebarToSelectedEvent: () => {

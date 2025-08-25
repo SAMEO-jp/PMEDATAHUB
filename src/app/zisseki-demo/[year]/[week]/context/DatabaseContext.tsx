@@ -18,16 +18,16 @@ type DatabaseContextType = {
   
   // 状態
   isLoading: boolean;
-  error: any;
+  error: unknown;
   isSaving: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
   isInitialized: boolean;
   
   // 操作
-  saveWeekData: (events: TimeGridEvent[], workTimes: WorkTimeData[]) => Promise<any>;
-  updateEvent: (eventId: string, event: Partial<TimeGridEvent>) => Promise<any>;
-  deleteEvent: (eventId: string) => Promise<any>;
+  saveWeekData: (events: TimeGridEvent[], workTimes: WorkTimeData[]) => Promise<unknown>;
+  updateEvent: (eventId: string, event: Partial<TimeGridEvent>) => Promise<unknown>;
+  deleteEvent: (eventId: string) => Promise<unknown>;
   refetch: () => void;
   initialize: () => void;
 };
@@ -93,7 +93,6 @@ export const DatabaseProvider = ({
     }),
     refetch: isInitialized ? operations.refetch : (() => { 
       console.error('Database not initialized');
-      throw new Error('Database not initialized'); 
     }),
     initialize,
   };

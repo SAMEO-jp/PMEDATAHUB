@@ -66,17 +66,6 @@ export const SidebarActiveCodeEditor = ({
   state,
   event
 }: ActiveCodeEditorProps) => {
-  // stateやeventがundefinedの場合は早期リターン
-  if (!state || !event) {
-    return (
-      <div className="p-4 text-center text-gray-500">
-        データを読み込み中...
-      </div>
-    );
-  }
-
-  const { selectedTab, projectSubTab: selectedProjectSubTab, indirectSubTab: selectedIndirectSubTab } = state;
-  const { selectedEvent, updateEvent } = event;
   // Event ContextからhandleUpdateEventを取得（推奨の更新方法）
   const { handleUpdateEvent: contextUpdateEvent } = useEventContext();
 
@@ -92,6 +81,18 @@ export const SidebarActiveCodeEditor = ({
 
   // ローカル状態で現在のコードを管理
   const [currentCode, setCurrentCode] = useState<string>('');
+
+  // stateやeventがundefinedの場合は条件付きレンダリング
+  if (!state || !event) {
+    return (
+      <div className="p-4 text-center text-gray-500">
+        データを読み込み中...
+      </div>
+    );
+  }
+
+  const { selectedTab, projectSubTab: selectedProjectSubTab, indirectSubTab: selectedIndirectSubTab } = state;
+  const { selectedEvent, updateEvent } = event;
 
   /**
    * サブタブ状態を更新する関数
@@ -267,18 +268,30 @@ export const SidebarActiveCodeEditor = ({
   const updateEventWithCode = (newCode: string, additionalData: Partial<TimeGridEvent> = {}) => {
     if (!selectedEvent) return;
 
+    // selectedEventをTimeGridEvent型としてキャスト
+    const eventAsTimeGrid = selectedEvent as TimeGridEvent;
+
     const updatedEvent: TimeGridEvent = {
-      ...selectedEvent,
+      ...eventAsTimeGrid,
+      activityCode: newCode,
+      top: eventAsTimeGrid.top ?? 0,
+      height: eventAsTimeGrid.height ?? 64,
+      color: eventAsTimeGrid.color ?? '#3788d8',
+      ...additionalData
+    };
+
+    // selectedEventとの差分のみを渡す
+    const updates: Partial<TimeGridEvent> = {
       activityCode: newCode,
       ...additionalData
     };
 
     // Event ContextのupdateEventを使用（推奨）
     if (contextUpdateEvent && selectedEvent?.id) {
-      contextUpdateEvent(updatedEvent);
+      contextUpdateEvent(updates);
     } else if (updateEvent) {
       // フォールバック: propsから渡されたupdateEventを使用
-      updateEvent(updatedEvent);
+      updateEvent(updates);
     }
   };
 
@@ -505,9 +518,21 @@ export const SidebarActiveCodeEditor = ({
           actions={{
             onEventUpdate: (eventId, updates) => {
               if (selectedEvent && contextUpdateEvent) {
-                contextUpdateEvent({ ...selectedEvent, ...updates });
+                // selectedEventをTimeGridEvent型としてキャストし、colorプロパティを追加
+                const eventAsTimeGrid = selectedEvent as TimeGridEvent;
+                contextUpdateEvent({ 
+                  ...eventAsTimeGrid, 
+                  ...updates,
+                  color: eventAsTimeGrid.color ?? '#3788d8'
+                });
               } else if (selectedEvent && updateEvent) {
-                updateEvent({ ...selectedEvent, ...updates });
+                // selectedEventをTimeGridEvent型としてキャストし、colorプロパティを追加
+                const eventAsTimeGrid = selectedEvent as TimeGridEvent;
+                updateEvent({ 
+                  ...eventAsTimeGrid, 
+                  ...updates,
+                  color: eventAsTimeGrid.color ?? '#3788d8'
+                });
               }
             }
           }}

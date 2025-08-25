@@ -13,6 +13,7 @@ import {
   ProjectSelect
 } from "./ui";
 import { Tab, TAB, Project } from "./ui/types";
+import { useZissekiStore } from "../../store/zissekiStore";
 
 interface ZissekiSidebarProps {
   // projectsはContextから取得するため、Propsから削除
@@ -25,7 +26,8 @@ interface ZissekiSidebarProps {
  * - プロジェクトデータはContextから取得
  */
 export const ZissekiSidebar = ({}: ZissekiSidebarProps) => {
-  const { selectedEvent, handleUpdateEvent: updateEvent, handleDeleteEvent: deleteEvent, dispatch, projects } = useEventContext();
+  const { selectedEvent, handleUpdateEvent: updateEvent, handleDeleteEvent: deleteEvent, dispatch } = useEventContext();
+  const { projects } = useZissekiStore();
 
   // アクティビティコードからタブ状態を判定
   const getActiveTab = (): Tab => {
@@ -127,8 +129,9 @@ export const ZissekiSidebar = ({}: ZissekiSidebarProps) => {
   };
 
   // SidebarActiveCodeEditor用のupdateEventラッパー
-  const handleUpdateEvent = (updatedEvent: TimeGridEvent) => {
+  const handleUpdateEvent = (updates: Partial<TimeGridEvent>) => {
     if (selectedEvent) {
+      const updatedEvent = { ...selectedEvent, ...updates };
       updateEvent(updatedEvent);
       dispatch(eventActions.setSelectedEvent(updatedEvent));
     }
