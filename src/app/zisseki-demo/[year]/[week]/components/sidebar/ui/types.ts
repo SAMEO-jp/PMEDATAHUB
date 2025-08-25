@@ -1,3 +1,5 @@
+import { ClassificationItem } from '../../../constants/activity-codes';
+
 // タブ型の集中管理
 export const TAB = { PROJECT: 'project', INDIRECT: 'indirect' } as const;
 export type Tab = typeof TAB[keyof typeof TAB];
@@ -24,7 +26,25 @@ export interface Project {
 }
 
 // イベント更新の型定義
-export type UpdateEvent = (patch: any) => void;
+export type UpdateEvent = (patch: Partial<{
+  id: string;
+  title: string;
+  description: string;
+  project: string;
+  startDateTime: string;
+  endDateTime: string;
+  activityCode?: string;
+  employeeNumber?: string;
+  equipmentNumber?: string;
+  equipmentName?: string;
+  purposeProject?: string;
+  departmentCode?: string;
+  status?: string;
+  category?: string;
+  selectedTab?: string;
+  selectedProjectSubTab?: string;
+  selectedIndirectSubTab?: string;
+}>) => void;
 
 // ローカル変更と確定の型定義
 export type OnLocalChange = (value: string) => void;
@@ -39,8 +59,52 @@ export interface TabState {
 }
 
 export interface EventBinding {
-  selectedEvent: any | null;
-  updateEvent: (event: any) => void;
+  selectedEvent: {
+    id: string;
+    title: string;
+    description: string;
+    project: string;
+    startDateTime: string;
+    endDateTime: string;
+    activityCode?: string;
+    employeeNumber?: string;
+    equipmentNumber?: string;
+    equipmentName?: string;
+    purposeProject?: string;
+    departmentCode?: string;
+    status?: string;
+    category?: string;
+    selectedTab?: string;
+    selectedProjectSubTab?: string;
+    selectedIndirectSubTab?: string;
+    color?: string;
+    top?: number;
+    height?: number;
+    unsaved?: boolean;
+  } | null;
+  updateEvent: (event: Partial<{
+    id: string;
+    title: string;
+    description: string;
+    project: string;
+    startDateTime: string;
+    endDateTime: string;
+    activityCode?: string;
+    employeeNumber?: string;
+    equipmentNumber?: string;
+    equipmentName?: string;
+    purposeProject?: string;
+    departmentCode?: string;
+    status?: string;
+    category?: string;
+    selectedTab?: string;
+    selectedProjectSubTab?: string;
+    selectedIndirectSubTab?: string;
+    color?: string;
+    top?: number;
+    height?: number;
+    unsaved?: boolean;
+  }>) => void;
 }
 
 export interface FormState {
@@ -73,14 +137,14 @@ export interface ClassificationState {
 }
 
 export interface ClassificationActions {
-  onSelect: (code: string, additionalData: any) => void;
-  getProjectClassifications: () => any[] | null;
-  getIndirectClassifications: () => Record<string, any[]> | null;
-  generateProjectCode: (mainTab: string, detailTab: string, classification: any, subTabType: string) => string;
-  generateIndirectCode: (mainTab: string, detailTab: string, classification: any) => string;
-  getProjectData: (classification: any) => any;
-  getIndirectData: (detailTab: string, classification: any) => any;
-  getPurchaseClassifications: () => any[];
+  onSelect: (code: string, additionalData: Record<string, unknown>) => void;
+  getProjectClassifications: () => ClassificationItem[] | null;
+  getIndirectClassifications: () => Record<string, ClassificationItem[]> | null;
+  generateProjectCode: (mainTab: string, detailTab: string, classification: ClassificationItem, subTabType: string) => string;
+  generateIndirectCode: (mainTab: string, detailTab: string, classification: ClassificationItem) => string;
+  getProjectData: (classification: ClassificationItem) => Record<string, unknown>;
+  getIndirectData: (detailTab: string, classification: ClassificationItem) => Record<string, unknown>;
+  getPurchaseClassifications: () => ClassificationItem[];
 }
 
 export interface DetailClassificationsProps {
@@ -90,12 +154,22 @@ export interface DetailClassificationsProps {
 
 // TimeInputField用のPropsまとまり
 export interface TimeInputState {
-  selectedEvent: Record<string, unknown> | null;
+  selectedEvent: {
+    id: string;
+    startDateTime: string;
+    endDateTime: string;
+  } | null;
   label?: string;
 }
 
 export interface TimeInputActions {
-  onEventUpdate: (eventId: string, updates: any) => void;
+  onEventUpdate: (eventId: string, updates: Partial<{
+    startDateTime: string;
+    endDateTime: string;
+    top: number;
+    height: number;
+    unsaved: boolean;
+  }>) => void;
 }
 
 export interface TimeInputProps {

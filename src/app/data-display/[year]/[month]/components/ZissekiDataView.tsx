@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useZissekiMonthData } from '@src/hooks/useZissekiData'
 import type { TimeGridEvent } from '@src/app/zisseki-demo/[year]/[week]/types'
 
@@ -8,6 +8,8 @@ interface ZissekiDataViewProps {
   year: number
   month: number
 }
+
+
 
 interface ZissekiDataRow {
   id: string
@@ -39,7 +41,7 @@ export default function ZissekiDataView({ year, month }: ZissekiDataViewProps) {
   const [showFilters, setShowFilters] = useState(false) // フィルター表示状態
 
   // zissekiデータを表示用の形式に変換
-  const convertToDisplayData = (events: TimeGridEvent[]): ZissekiDataRow[] => {
+  const convertToDisplayData = (events: (TimeGridEvent & { createdAt: string; updatedAt: string })[]): ZissekiDataRow[] => {
     return events.map((event) => ({
       id: event.id,
       title: event.title,
@@ -47,17 +49,17 @@ export default function ZissekiDataView({ year, month }: ZissekiDataViewProps) {
       project: event.project,
       startDateTime: event.startDateTime,
       endDateTime: event.endDateTime,
-      activityCode: event.activityCode,
-      employeeNumber: event.employeeNumber,
-      equipmentNumber: event.equipmentNumber,
-      equipmentName: event.equipmentName,
-      purposeProject: event.purposeProject,
-      departmentCode: event.departmentCode,
-      status: event.status,
-      category: event.category,
-      selectedTab: event.selectedTab,
-      selectedProjectSubTab: event.selectedProjectSubTab,
-      selectedIndirectSubTab: event.selectedIndirectSubTab,
+      activityCode: event.activityCode || '',
+      employeeNumber: event.employeeNumber || '',
+      equipmentNumber: event.equipmentNumber || '',
+      equipmentName: event.equipmentName || '',
+      purposeProject: event.purposeProject || '',
+      departmentCode: event.departmentCode || '',
+      status: event.status || '',
+      category: event.category || '',
+      selectedTab: event.selectedTab || '',
+      selectedProjectSubTab: event.selectedProjectSubTab || '',
+      selectedIndirectSubTab: event.selectedIndirectSubTab || '',
       createdAt: event.createdAt || '',
       updatedAt: event.updatedAt || '',
     }))
@@ -97,7 +99,7 @@ export default function ZissekiDataView({ year, month }: ZissekiDataViewProps) {
 
   // CSVダウンロード
   const downloadCSV = () => {
-    const events = data?.data?.events || []
+    const events = (data?.data?.events || []) as (TimeGridEvent & { createdAt: string; updatedAt: string })[]
     const displayData = convertToDisplayData(events)
     const processedData = filterData(sortData(displayData))
     
@@ -161,7 +163,7 @@ export default function ZissekiDataView({ year, month }: ZissekiDataViewProps) {
     )
   }
 
-  const events = data?.data?.events || []
+  const events = (data?.data?.events || []) as (TimeGridEvent & { createdAt: string; updatedAt: string })[]
   const displayData = convertToDisplayData(events)
   const processedData = filterData(sortData(displayData))
 

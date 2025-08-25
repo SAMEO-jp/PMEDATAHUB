@@ -12,7 +12,7 @@ export const eventActions = {
     payload: event
   }),
 
-  updateEvent: (eventId: string, event: TimeGridEvent): EventAction => ({
+  updateEvent: (eventId: string, event: Partial<TimeGridEvent>): EventAction => ({
     type: 'UPDATE_EVENT',
     payload: { eventId, event }
   }),

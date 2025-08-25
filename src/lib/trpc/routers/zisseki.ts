@@ -193,8 +193,8 @@ export const zissekiRouter = createTRPCRouter({
           });
         }
 
-        // 取得したデータをTimeGridEvent形式に変換
-        const events: TimeGridEvent[] = (result.data || []).map((event: EventRecord) => ({
+        // 取得したデータをTimeGridEvent形式に変換（createdAtとupdatedAtを含む）
+        const events: (TimeGridEvent & { createdAt: string; updatedAt: string })[] = (result.data || []).map((event: EventRecord) => ({
           id: event.id,
           title: event.title,
           description: event.description || '',
@@ -234,6 +234,8 @@ export const zissekiRouter = createTRPCRouter({
           selectedIndirectDetailTab: event.selectedIndirectDetailTab || '',
           selectedOtherSubTab: event.selectedOtherSubTab || '',
           status: event.status || '',
+          createdAt: event.createdAt,
+          updatedAt: event.updatedAt,
         }));
 
         // ワークタイムは一旦空配列を返す（後で実装）
@@ -472,9 +474,12 @@ export const zissekiRouter = createTRPCRouter({
         const result = await getAllRecords('events', 'DELETE FROM events WHERE id = ?', [eventId]);
 
         if (!result.success) {
+          const errorMessage = typeof result.error === 'string' 
+            ? result.error 
+            : result.error?.message || 'イベントが見つかりません';
           throw new TRPCError({
             code: 'NOT_FOUND',
-            message: result.error || 'イベントが見つかりません',
+            message: errorMessage,
           });
         }
 
@@ -589,8 +594,8 @@ export const zissekiRouter = createTRPCRouter({
           });
         }
 
-        // 取得したデータをTimeGridEvent形式に変換
-        const events: TimeGridEvent[] = (result.data || []).map((event: EventRecord) => ({
+        // 取得したデータをTimeGridEvent形式に変換（createdAtとupdatedAtを含む）
+        const events: (TimeGridEvent & { createdAt: string; updatedAt: string })[] = (result.data || []).map((event: EventRecord) => ({
           id: event.id,
           title: event.title,
           description: event.description || '',
@@ -630,6 +635,8 @@ export const zissekiRouter = createTRPCRouter({
           selectedIndirectDetailTab: event.selectedIndirectDetailTab || '',
           selectedOtherSubTab: event.selectedOtherSubTab || '',
           status: event.status || '',
+          createdAt: event.createdAt,
+          updatedAt: event.updatedAt,
         }));
 
         return {

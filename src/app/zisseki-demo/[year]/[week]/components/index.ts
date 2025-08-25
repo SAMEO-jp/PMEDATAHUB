@@ -7,5 +7,5 @@ export * from './ui';
 // 既存コンポーネント（後で整理予定）
 export { TimeGrid } from './weekgrid/TimeGrid';
 export { ZissekiSidebar } from './sidebar/ZissekiSidebar';
-export { EventCreationHandler } from './EventCreationHandler';
+export { createEventCreationHandler } from './EventCreationHandler';
 export { TimeGridHeader } from './TimeGridHeader';

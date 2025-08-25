@@ -21,6 +21,13 @@ export default function HomePage() {
       stylePattern: 'project' as const
     },
     { 
+      title: "プロジェクト管理アプリ仕様書", 
+      description: "プロジェクト管理アプリの仕様書とデモページです。設計内容と機能を確認できます。", 
+      linkText: "仕様書・デモを見る",
+      href: "/project",
+      stylePattern: 'project' as const
+    },
+    { 
       title: "データ表示", 
       description: "月別の実績データを表形式で表示・分析します。フィルタリング、ソート、CSVダウンロード機能を提供します。", 
       linkText: "データ表示を開く",
@@ -40,14 +47,8 @@ export default function HomePage() {
       linkText: "実績デモを開く",
       href: "/zisseki-demo/2024/1",
       stylePattern: 'demo' as const
-    },
-    { 
-      title: "テストページ", 
-      description: "各機能のテストページです。", 
-      linkText: "テストページを開く",
-      href: "/test",
-      stylePattern: 'test' as const
     }
+
   ];
 
   return (

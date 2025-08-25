@@ -48,7 +48,7 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
 
   // 選択されたイベントが変更されたとき、時間を初期化
   useEffect(() => {
-    if (selectedEvent?.startDateTime && selectedEvent?.endDateTime) {
+    if (selectedEvent?.startDateTime && selectedEvent?.endDateTime && typeof selectedEvent.startDateTime === 'string' && typeof selectedEvent.endDateTime === 'string') {
       const start = parseDateTime(selectedEvent.startDateTime);
       const end = parseDateTime(selectedEvent.endDateTime);
       
@@ -80,7 +80,7 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
 
   // 時間を適用
   const applyTimeChanges = () => {
-    if (!selectedEvent) return;
+    if (!selectedEvent || typeof selectedEvent.startDateTime !== 'string' || typeof selectedEvent.endDateTime !== 'string') return;
 
     const startDate = new Date(selectedEvent.startDateTime);
     const endDate = new Date(selectedEvent.endDateTime);

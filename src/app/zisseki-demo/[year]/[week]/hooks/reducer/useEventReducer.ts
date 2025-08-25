@@ -101,7 +101,7 @@ export const useEventReducer = () => {
     return event;
   }, []);
 
-  const updateEvent = useCallback((id: string, updates: any) => {
+  const updateEvent = useCallback((id: string, updates: Partial<TimeGridEvent>) => {
     dispatch(eventActions.updateEvent(id, updates));
   }, []);
 

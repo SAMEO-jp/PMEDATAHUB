@@ -99,3 +99,4 @@
 - クリーンアーキテクチャ（Robert C. Martin）
 - ドメイン駆動設計（Eric Evans）
 - 責任分離の原則（Single Responsibility Principle）
+

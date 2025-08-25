@@ -94,7 +94,7 @@ export function eventReducer(state: EventState, action: EventAction): EventState
       return {
         ...state,
         events: state.events.map(event =>
-          event.id === action.payload.eventId ? action.payload.event : event
+          event.id === action.payload.eventId ? { ...event, ...action.payload.event } : event
         ),
         error: null
       };

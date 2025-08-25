@@ -14,7 +14,7 @@ export const useZissekiWeekData = (year: number, week: number) => {
     { year, week },
     {
       staleTime: Infinity, // キャッシュを無期限に設定（手動で無効化するまで再取得しない）
-      cacheTime: Infinity, // キャッシュ保持も無期限
+      gcTime: Infinity, // キャッシュ保持も無期限
       refetchOnWindowFocus: false,
       refetchOnMount: false, // マウント時の再取得を無効化
       refetchOnReconnect: false, // 再接続時の再取得を無効化
@@ -30,7 +30,7 @@ export const useZissekiMonthData = (year: number, month: number) => {
     { year, month },
     {
       staleTime: Infinity,
-      cacheTime: Infinity,
+      gcTime: Infinity,
       refetchOnWindowFocus: false,
       refetchOnMount: false,
       refetchOnReconnect: false,
@@ -46,7 +46,7 @@ export const useZissekiWorkTimes = (year: number, week: number) => {
     { year, week },
     {
       staleTime: Infinity,
-      cacheTime: Infinity,
+      gcTime: Infinity,
       refetchOnWindowFocus: false,
       refetchOnMount: false,
       refetchOnReconnect: false,
