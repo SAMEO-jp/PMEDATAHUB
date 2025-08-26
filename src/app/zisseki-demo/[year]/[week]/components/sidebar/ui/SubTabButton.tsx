@@ -17,11 +17,7 @@ export const SubTabButton = ({
   color = 'blue' 
 }: SubTabButtonProps) => (
   <button
-    className={`px-2 py-1 rounded-lg text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
-      isSelected 
-        ? `bg-${color}-500 text-white shadow-md` 
-        : "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
-    }`}
+    className={`sub-tab-button ${isSelected ? 'selected' : ''}`}
     onClick={onClick}
   >
     {tab}

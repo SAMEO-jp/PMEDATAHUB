@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { TimeGridEvent } from "../../../types";
 import { calculateEventPosition } from "../../../utils/eventPositionCalculator";
 
 import { TimeInputProps } from './types';
@@ -30,10 +29,10 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
   if (!state || !actions) {
     return (
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="field-label">
           ⏰ 時間設定
         </label>
-        <div className="p-2 border rounded text-sm bg-gray-50 text-gray-500">
+        <div className="activity-code-field">
           データを読み込み中...
         </div>
       </div>
@@ -127,10 +126,10 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
   if (!selectedEvent) {
     return (
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="field-label">
           ⏰ {label}
         </label>
-        <div className="p-2 border rounded text-sm bg-gray-50 text-gray-500">
+        <div className="activity-code-field">
           イベントを選択してください
         </div>
       </div>
@@ -139,19 +138,19 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="field-label">
         ⏰ {label}
         {hasUnsavedChanges && (
           <button
             onClick={applyTimeChanges}
-            className="ml-2 px-2 py-0.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="btn btn-sm btn-primary ml-2"
           >
             適用
           </button>
         )}
       </label>
       
-      <div className="p-3 border rounded bg-white">
+      <div className="sidebar-section bg-white border rounded">
         {/* 時間入力行 */}
         <div className="grid grid-cols-2 gap-4">
           {/* 開始時間 */}
@@ -164,7 +163,7 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
                 max="23"
                 value={startTime.hours}
                 onChange={(e) => handleTimeChange('start', 'hours', e.target.value)}
-                className="w-12 px-2 py-1 text-sm text-center border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="time-input-field w-12 text-center"
               />
               <span className="mx-2 text-sm">:</span>
               <input
@@ -174,7 +173,7 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
                 step="10"
                 value={startTime.minutes}
                 onChange={(e) => handleTimeChange('start', 'minutes', e.target.value)}
-                className="w-12 px-2 py-1 text-sm text-center border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="time-input-field w-12 text-center"
               />
             </div>
           </div>
@@ -189,7 +188,7 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
                 max="23"
                 value={endTime.hours}
                 onChange={(e) => handleTimeChange('end', 'hours', e.target.value)}
-                className="w-12 px-2 py-1 text-sm text-center border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="time-input-field w-12 text-center"
               />
               <span className="mx-2 text-sm">:</span>
               <input
@@ -199,7 +198,7 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
                 step="10"
                 value={endTime.minutes}
                 onChange={(e) => handleTimeChange('end', 'minutes', e.target.value)}
-                className="w-12 px-2 py-1 text-sm text-center border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="time-input-field w-12 text-center"
               />
             </div>
           </div>

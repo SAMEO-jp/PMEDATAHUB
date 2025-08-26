@@ -29,12 +29,14 @@ export const DetailSubTabs = ({
   if (!config?.subTabs || config.subTabs.length === 0) return null;
 
   return (
-    <SubTabGroup
-      title={`${currentMainSubTab}分類`}
-      tabs={config.subTabs}
-      selectedTab={currentDetailSubTab}
-      onTabSelect={onTabSelect}
-      color="green"
-    />
+    <div className="detail-sub-tabs">
+      <SubTabGroup
+        title={`${currentMainSubTab}分類`}
+        tabs={config.subTabs}
+        selectedTab={currentDetailSubTab}
+        onTabSelect={onTabSelect}
+        color="green"
+      />
+    </div>
   );
 };

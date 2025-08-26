@@ -4,7 +4,7 @@ import React from 'react';
  * 操作説明コンポーネント
  */
 export const Instructions = () => (
-  <div className="text-xs text-gray-500 space-y-1">
+  <div className="instructions">
     <div>• プロジェクトタブを選択してからサブタブを選択</div>
     <div>• サブタブ選択後に詳細分類を選択</div>
     <div>• 詳細分類ボタンをクリックして自動生成</div>

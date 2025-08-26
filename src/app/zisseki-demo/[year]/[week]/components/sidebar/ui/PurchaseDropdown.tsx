@@ -39,10 +39,10 @@ export const PurchaseDropdown = ({
   };
 
   return (
-    <div className="space-y-3">
-      <div className="text-sm font-medium text-gray-700">詳細分類</div>
+    <div className="sidebar-spacing">
+      <div className="field-label">詳細分類</div>
       <select
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+        className="purchase-dropdown"
         value={getCurrentIndex()}
         onChange={handleSelectChange}
         size={Math.min(purchaseClassifications.length + 1, 8)} // 最大8項目まで表示、それ以上はスクロール
