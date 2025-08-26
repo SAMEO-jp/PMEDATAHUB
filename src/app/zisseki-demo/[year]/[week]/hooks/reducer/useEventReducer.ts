@@ -20,7 +20,7 @@
 import { useReducer, useEffect, useCallback, useMemo } from 'react';
 import { eventReducer, initialState } from './event/eventReducer';
 import { eventActions } from './event/eventActions';
-import { eventStorage } from './event/eventStorage';
+// import { eventStorage } from './event/eventStorage';
 import { createEventHandlers } from './event/eventHandlers';
 import { TimeGridEvent } from './event/types';
 
