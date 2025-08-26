@@ -19,9 +19,9 @@ export const SubTabGroup = ({
   onTabSelect,
   color = 'blue'
 }: SubTabGroupProps) => (
-  <div className="space-y-3">
-    <div className="text-sm font-medium text-gray-700">{title}</div>
-    <div className="flex gap-1 overflow-x-auto pb-2">
+  <div className="sidebar-spacing">
+    <div className="field-label">{title}</div>
+    <div className="sub-tab-group">
       {tabs.map((tab: string) => (
         <SubTabButton
           key={tab}

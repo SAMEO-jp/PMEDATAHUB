@@ -27,24 +27,16 @@ export const TabSelector = ({ eventId, activeTab, onTabChange }: TabSelectorProp
   };
 
   return (
-    <div className="flex space-x-1">
+    <div className="tab-selector">
       <button
         onClick={() => handleTabChange(TAB.PROJECT)}
-        className={`px-3 py-1 text-sm rounded ${
-          activeTab === TAB.PROJECT
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-        }`}
+        className={`tab-selector-button ${activeTab === TAB.PROJECT ? 'active' : ''}`}
       >
         プロジェクト
       </button>
       <button
         onClick={() => handleTabChange(TAB.INDIRECT)}
-        className={`px-3 py-1 text-sm rounded ${
-          activeTab === TAB.INDIRECT
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-        }`}
+        className={`tab-selector-button ${activeTab === TAB.INDIRECT ? 'active' : ''}`}
       >
         間接業務
       </button>

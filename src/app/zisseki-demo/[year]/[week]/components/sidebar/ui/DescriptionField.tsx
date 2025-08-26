@@ -24,7 +24,7 @@ export const DescriptionField = ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onBlur={(e) => onBlur?.(e.target.value)}
-        className="w-full p-2 border rounded text-sm"
+        className="description-field"
         rows={rows}
         placeholder={placeholder}
       />

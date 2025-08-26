@@ -29,21 +29,13 @@ import { TimeGridEvent } from './event/types';
  * 
  * 機能:
  * - イベントデータの管理（CRUD操作）
- * - UI状態の管理（選択、モーダル、ドラッグ、タブ等）
- * - 4段階階層状態の管理
+ * - UI状態の管理（選択、モーダル、ドラッグ等）
  * - localStorageとの同期
  * - エラーハンドリング
  * - セレクター機能
  */
 export const useEventReducer = () => {
   const [state, dispatch] = useReducer(eventReducer, initialState);
-
-  // デバッグ用: 状態の変更を追跡
-  useEffect(() => {
-    if (state.selectedEvent && state.selectedEvent.id) {
-      dispatch(eventActions.syncHierarchyToEvent(state.selectedEvent.id, state.ui.hierarchy));
-    }
-  }, [state.selectedEvent, state.ui.hierarchy, dispatch]);
 
   // イベントハンドラーをメモ化
   const handlers = useMemo(() => 
@@ -57,34 +49,8 @@ export const useEventReducer = () => {
     getEventById: (eventId: string) => state.events.find(event => event.id === eventId),
     getSelectedEvent: () => state.selectedEvent,
     
-    // サイドバー状態セレクター
-    getSidebarState: () => state.sidebar,
-    getSelectedProjectCode: () => state.sidebar.selectedProjectCode,
-    getPurposeProjectCode: () => state.sidebar.purposeProjectCode,
-    getTabDetails: () => state.sidebar.tabDetails,
-    
-    // UI状態セレクター（階層構造を含む）
+    // UI状態セレクター
     getUIState: () => state.ui,
-    getHierarchyState: () => state.ui.hierarchy,
-    getActiveTab: () => state.ui.hierarchy.activeTab,
-    getActiveSubTab: (tab: 'project' | 'indirect') => state.ui.hierarchy.activeSubTabs[tab],
-    getDetailTab: (mainTab: string, subTab: string) => {
-      const detailTabs = state.ui.hierarchy.detailTabs;
-      if (mainTab === 'project' && 'project' in detailTabs) {
-        return (detailTabs.project as any)[subTab];
-      }
-      if (mainTab === 'indirect' && 'indirect' in detailTabs) {
-        return (detailTabs.indirect as any)[subTab];
-      }
-      return undefined;
-    },
-    getBusinessType: (businessType: string, subType: string) => {
-      const businessTypes = state.ui.hierarchy.businessTypes;
-      if (businessType in businessTypes) {
-        return (businessTypes as any)[businessType][subType];
-      }
-      return undefined;
-    },
     
     // システム状態
     getLoadingState: () => state.loading,
@@ -105,10 +71,6 @@ export const useEventReducer = () => {
     dispatch(eventActions.updateEvent(id, updates));
   }, []);
 
-  const setTabDetail = useCallback((tab: string, detail: string, value: string) => {
-    dispatch(eventActions.setTabDetail(tab, detail, value));
-  }, []);
-
   return {
     // 状態
     ...state,
@@ -117,7 +79,6 @@ export const useEventReducer = () => {
     setSelectedEvent,
     createEvent,
     updateEvent,
-    setTabDetail,
     // ハンドラー
     ...handlers,
     // セレクター

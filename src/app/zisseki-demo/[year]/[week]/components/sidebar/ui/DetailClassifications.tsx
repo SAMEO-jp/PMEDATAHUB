@@ -2,8 +2,7 @@ import React from 'react';
 import { SubTabButton } from './SubTabButton';
 import { PurchaseDropdown } from './PurchaseDropdown';
 import { ClassificationItem } from '../../../constants/activity-codes';
-import { TimeGridEvent } from '../../../types';
-import { DetailClassificationsProps, TAB } from './types';
+import { DetailClassificationsProps } from './types';
 
 // 既存の型定義を削除し、新しい型を使用
 
@@ -89,8 +88,8 @@ const ProjectDetailClassifications = ({
   if (!classifications) return null;
 
   return (
-    <div className="space-y-3">
-      <div className="text-sm font-medium text-gray-700">詳細分類</div>
+    <div className="detail-classifications">
+      <div className="classification-label">詳細分類</div>
       <div className="flex flex-wrap gap-2">
         {classifications.map((classification: ClassificationItem) => {
           const newCode = generateProjectActivityCode(
@@ -140,12 +139,12 @@ const IndirectDetailClassifications = ({
   if (!classifications) return null;
 
   return (
-    <div className="space-y-3">
-      <div className="text-sm font-medium text-gray-700">詳細分類</div>
+    <div className="detail-classifications">
+      <div className="classification-label">詳細分類</div>
       <div className="flex flex-wrap gap-2">
         {Object.entries(classifications).map(([detailTab, detailClassifications]) => (
           <div key={detailTab} className="w-full">
-            <div className="text-xs font-medium text-gray-600 mb-2">{detailTab}</div>
+            <div className="text-xs font-medium text-secondary mb-2">{detailTab}</div>
             <div className="flex flex-wrap gap-2">
               {detailClassifications.map((classification: ClassificationItem) => {
                 const newCode = generateIndirectActivityCode(currentMainSubTab, detailTab, classification);

@@ -1,4 +1,4 @@
-import { EventAction, TimeGridEvent, SidebarState, HierarchyState } from './types';
+import { EventAction, TimeGridEvent } from './types';
 
 export const eventActions = {
   // イベントデータ関連
@@ -43,28 +43,7 @@ export const eventActions = {
     payload: { isResizing, resizedEvent }
   }),
 
-  // 階層状態関連
-  setActiveTab: (tab: 'project' | 'indirect'): EventAction => ({
-    type: 'SET_ACTIVE_TAB',
-    payload: tab
-  }),
-
-  setActiveSubTab: (tab: 'project' | 'indirect', subTab: string): EventAction => ({
-    type: 'SET_ACTIVE_SUBTAB',
-    payload: { tab, subTab }
-  }),
-
-  setDetailTab: (mainTab: string, subTab: string, detailTab: string): EventAction => ({
-    type: 'SET_DETAIL_TAB',
-    payload: { mainTab, subTab, detailTab }
-  }),
-
-  setBusinessType: (businessType: string, subType: string, value: string): EventAction => ({
-    type: 'SET_BUSINESS_TYPE',
-    payload: { businessType, subType, value }
-  }),
-
-  // 共通状態
+  // システム状態
   setLoading: (loading: boolean): EventAction => ({
     type: 'SET_LOADING',
     payload: loading
@@ -78,47 +57,5 @@ export const eventActions = {
   clearError: (): EventAction => ({
     type: 'CLEAR_ERROR',
     payload: undefined
-  }),
-  
-  // サイドバー状態関連
-  setSelectedProjectCode: (code: string): EventAction => ({
-    type: 'SET_SELECTED_PROJECT_CODE',
-    payload: code
-  }),
-
-  setPurposeProjectCode: (code: string): EventAction => ({
-    type: 'SET_PURPOSE_PROJECT_CODE',
-    payload: code
-  }),
-
-  setTabDetail: (tab: string, detail: string, value: string): EventAction => ({
-    type: 'SET_TAB_DETAIL',
-    payload: { tab, detail, value }
-  }),
-
-  setIndirectDetail: (detail: string, value: string): EventAction => ({
-    type: 'SET_INDIRECT_DETAIL',
-    payload: { detail, value }
-  }),
-
-  updateSidebarState: (sidebarState: Partial<SidebarState>): EventAction => ({
-    type: 'UPDATE_SIDEBAR_STATE',
-    payload: sidebarState
-  }),
-
-  // 統合操作
-  syncEventToSidebar: (event: TimeGridEvent): EventAction => ({
-    type: 'SYNC_EVENT_TO_SIDEBAR',
-    payload: event
-  }),
-
-  syncSidebarToEvent: (eventId: string, sidebarState: Partial<SidebarState>): EventAction => ({
-    type: 'SYNC_SIDEBAR_TO_EVENT',
-    payload: { eventId, sidebarState }
-  }),
-
-  syncHierarchyToEvent: (eventId: string, hierarchyState: Partial<HierarchyState>): EventAction => ({
-    type: 'SYNC_HIERARCHY_TO_EVENT',
-    payload: { eventId, hierarchyState }
   })
 }; 

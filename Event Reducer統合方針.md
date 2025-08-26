@@ -1,128 +1,70 @@
 # Event Reducer統合方針
 
 ## 概要
-サイドバーの状態管理をEvent Reducerに統合し、双方向連携を実現する。
+サイドバーの状態管理をEvent Reducerから削除し、シンプルな構造に変更する。
 
-## 現在の状態管理の課題
-1. **状態の分散**: サイドバー関連の状態が複数の場所に分散
-   - `useSidebarState` (Zustand)
-   - `useState` (各タブコンテンツ)
-   - `Event Reducer` (一部のUI状態)
-2. **双方向連携の不足**: サイドバーの操作とイベントの属性が独立して管理されている
+## 変更の背景
+- サイドバーは`activityCode`から動的に状態を生成するため、イベント側でサイドバー状態を保持する必要がない
+- 状態管理の複雑性を削減し、保守性を向上させる
 
-## 統合方針
+## 実施した変更
 
-### Phase 1-4: ✅ 完了済み
-- [x] EventStateの拡張（selectedProjectCode, purposeProjectCode, tabDetails追加）
-- [x] EventActionの拡張（新しいアクションタイプ追加）
-- [x] eventReducerの拡張（新しいケース追加）
-- [x] eventActionsの拡張（新しいアクションクリエーター追加）
-- [x] eventSelectorsの拡張（新しいセレクター追加）
-- [x] eventHandlersの更新（syncEventToSidebar実装）
-- [x] useEventReducerの更新（新しい状態とアクションを公開）
+### ✅ 完了済み
+- [x] TimeGridEvent型からサイドバー関連プロパティを削除
+- [x] EventStateからサイドバー状態と階層状態を削除
+- [x] EventActionからサイドバー関連アクションを削除
+- [x] eventReducerからサイドバー関連ケースを削除
+- [x] eventActionsからサイドバー関連アクションを削除
+- [x] useEventReducerからサイドバー関連セレクターを削除
 
-### Phase 5: ✅ 完了済み
-- [x] useSidebarProps.tsの更新（Event Contextから新しい状態を取得）
-- [x] PlanningTabContent.tsxの更新（Event Context使用、双方向連携実装）
-- [x] DesignTabContent.tsxの更新（Event Context使用、双方向連携実装）
-- [x] MeetingTabContent.tsxの更新（Event Context使用、双方向連携実装）
-- [x] OtherTabContent.tsxの更新（Event Context使用、双方向連携実装）
-- [x] ZissekiSidebar.tsxの更新（useSidebarState削除、Event Context使用）
+## 現在の状態管理構造
 
-### Phase 6: ✅ 完了済み
-- [x] useSidebarState.tsの削除
-- [x] zissekiStore.tsの確認（削除すべき状態なし）
-
-### Phase 7: 🔄 進行中
-- [ ] 動作確認
-- [ ] エラーハンドリングの確認
-- [ ] データの整合性確認
-
-## サイドバーとイベントの関係性
-
-### 双方向連携の実現
-1. **イベント選択時**: イベントの属性でサイドバーの状態を初期化
-   ```typescript
-   // handleEventClick内で実行
-   dispatch(eventActions.syncEventToSidebar(event));
-   ```
-
-2. **サイドバー操作時**: サイドバーの変更でイベントの属性を更新
-   ```typescript
-   // PlanningTabContent.tsx内の例
-   const handlePlanningSubTypeChange = (subType) => {
-     // Event Contextの状態を更新
-     setTabDetail('planning', 'planningSubType', subType.name);
-     
-     // 選択中のイベントの属性も同時に更新
-     if (selectedEvent) {
-       const updatedEvent = {
-         ...selectedEvent,
-         planningSubType: subType.name,
-         activityCode: newCode,
-         businessCode: newCode,
-       };
-       updateEvent(updatedEvent);
-     }
-   };
-   ```
-
-## 実装された機能
-
-### 1. 統合された状態管理
-- **Event Context**: サイドバー関連の状態を一元管理
-- **双方向連携**: イベント選択 ↔ サイドバー状態の同期
-- **型安全性**: TypeScriptによる完全な型チェック
-
-### 2. 更新されたコンポーネント
-- **タブコンテンツ**: すべてEvent Contextを使用
-- **メインサイドバー**: useSidebarState削除、Event Context統合
-- **Props生成**: 新しい状態とアクションを提供
-
-### 3. 削除されたファイル
-- **useSidebarState.ts**: 不要になったZustand Store
-
-## 次のステップ
-1. **動作確認**: イベント選択時のサイドバー状態反映
-2. **双方向連携テスト**: サイドバー操作時のイベント属性更新
-3. **エラーハンドリング**: エラー状態の適切な処理
-4. **パフォーマンス確認**: 状態更新の効率性
-
-## 技術的詳細
-
-### EventStateの拡張
+### イベント側（シンプル化）
 ```typescript
-export interface EventState {
-  // ... 既存のプロパティ
-  
-  // 新規追加（Zustand Storeから統合）
-  selectedProjectCode: string;
-  purposeProjectCode: string;
-  
-  // 新規追加（useStateから統合）
-  tabDetails: {
-    planning: { planningSubType: string; estimateSubType: string; };
-    design: { designSubType: string; };
-    meeting: { meetingType: string; };
-    other: { travelType: string; stakeholderType: string; documentType: string; };
-    indirect: { otherSubTab: string; indirectDetailTab: string; };
+interface EventState {
+  events: TimeGridEvent[];
+  selectedEvent: TimeGridEvent | null;
+  ui: {
+    modals: Record<string, boolean>;
+    dragState: { isDragging: boolean; draggedEvent: TimeGridEvent | null };
+    resizeState: { isResizing: boolean; resizedEvent: TimeGridEvent | null };
   };
+  loading: boolean;
+  error: string | null;
 }
 ```
 
-### 新しいアクション
-```typescript
-export type EventAction = 
-  // ... 既存のアクション
-  
-  // 新規追加
-  | { type: 'SET_SELECTED_PROJECT_CODE'; payload: string }
-  | { type: 'SET_PURPOSE_PROJECT_CODE'; payload: string }
-  | { type: 'SET_TAB_DETAIL'; payload: { tab: string; detail: string; value: string } }
-  | { type: 'SET_INDIRECT_DETAIL'; payload: { detail: string; value: string } }
-  | { type: 'SYNC_EVENT_TO_SIDEBAR'; payload: TimeGridEvent };
-```
+### サイドバー側（ローカル状態管理）
+- `activityCode`から動的に状態を生成
+- ローカル状態でUI操作を管理
+- 変更時に`activityCode`のみをイベント側に送信
 
-## 注意事項
-- インポートパスのエラーが残っているため、正しいパスに修正が必要
-- 動作確認後に必要に応じて微調整を行う 
+## 利点
+
+### ✅ シンプルなデータ構造
+- イベントは`activityCode`文字列のみ保持
+- 不要な状態同期が不要
+
+### ✅ 責任の分離
+- サイドバーは独自の状態管理を持つ
+- イベント側は本質的なデータのみ管理
+
+### ✅ 保守性の向上
+- サイドバーのUI状態変更がイベントに影響しない
+- 状態管理の複雑性が大幅に削減
+
+### ✅ パフォーマンスの向上
+- 不要な状態更新が発生しない
+- レンダリングの最適化が容易
+
+## 今後の方針
+
+### サイドバーの分割
+- `utils/activityCodeParser.ts`: コード解析ロジック
+- `utils/activityCodeGenerator.ts`: コード生成ロジック
+- `hooks/useActivityCodeState.ts`: 状態管理ロジック
+- `hooks/useActivityCodeHandlers.ts`: イベントハンドラー
+- `hooks/useActivityCodeData.ts`: データ準備ロジック
+- `components/ActivityCodeDisplay.tsx`: 表示部分
+- `components/ActivityCodeControls.tsx`: 制御部分
+- `types/ActiveCodeEditorTypes.ts`: 型定義 

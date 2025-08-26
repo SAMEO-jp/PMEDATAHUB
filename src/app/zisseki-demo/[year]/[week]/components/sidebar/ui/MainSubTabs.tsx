@@ -25,11 +25,13 @@ export const MainSubTabs = ({
   const selectedTabValue = currentMainSubTab;
 
   return (
-    <SubTabGroup
-      title={selectedTab === 'project' ? 'プロジェクト分類' : '間接業務分類'}
-      tabs={tabs}
-      selectedTab={selectedTabValue}
-      onTabSelect={onTabSelect}
-    />
+    <div className="main-sub-tabs">
+      <SubTabGroup
+        title={selectedTab === 'project' ? 'プロジェクト分類' : '間接業務分類'}
+        tabs={tabs}
+        selectedTab={selectedTabValue}
+        onTabSelect={onTabSelect}
+      />
+    </div>
   );
 };
