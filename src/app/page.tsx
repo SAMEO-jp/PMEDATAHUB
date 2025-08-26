@@ -24,8 +24,29 @@ export default function HomePage() {
       title: "プロジェクト管理アプリ仕様書", 
       description: "プロジェクト管理アプリの仕様書とデモページです。設計内容と機能を確認できます。", 
       linkText: "仕様書・デモを見る",
-      href: "/project",
+      href: "/specifications/doc1-project-management/project",
       stylePattern: 'project' as const
+    },
+    { 
+      title: "検討書管理システム仕様書", 
+      description: "検討書管理システムの仕様書です。プロジェクト実績としての検討書管理の設計と実装仕様を確認できます。", 
+      linkText: "仕様書を見る",
+      href: "/specifications/doc2-kentosho-management",
+      stylePattern: 'project' as const
+    },
+    { 
+      title: "ナレッジ管理", 
+      description: "技術文書、図面、検討書、要素技術MAPなどを一元管理し、効率的にナレッジを活用できます。", 
+      linkText: "ナレッジ管理を開く",
+      href: "/knowledge",
+      stylePattern: 'default' as const
+    },
+    { 
+      title: "部署管理", 
+      description: "製銑・精錬部署と連鋳・圧延プラント設計部署の情報を管理し、組織構造を把握できます。", 
+      linkText: "部署管理を開く",
+      href: "/busho",
+      stylePattern: 'data' as const
     },
     { 
       title: "データ表示", 
