@@ -1,6 +1,7 @@
 "use client"
 
 import React from 'react';
+import './styles.css';
 import { EventProvider } from './context/EventContext';
 import { DatabaseProvider } from './context/DatabaseContext';
 import { ZissekiPageWrapper } from './components/layout/ZissekiPageWrapper';
@@ -19,7 +20,7 @@ function ZissekiPageContent({
 
   return (
     <DatabaseProvider year={year} week={week}>
-      <EventProvider>
+      <EventProvider year={year} week={week}>
         <ZissekiPageWrapper>
           <ZissekiMainContent year={year} week={week} />
         </ZissekiPageWrapper>

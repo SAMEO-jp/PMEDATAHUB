@@ -68,7 +68,7 @@ export const TimeGridHeader: React.FC<TimeGridHeaderProps> = ({ year, week }) =>
   const handleCreateTestData = () => {
     try {
       const today = new Date();
-      const testEvent = createNewEvent(today, 9, 0, eventState.ui?.hierarchy || { activeTab: 'project', activeSubTabs: { project: '計画', indirect: '目的間接' }, detailTabs: {}, businessTypes: {} });
+      const testEvent = createNewEvent(today, 9, 0);
       testEvent.title = 'テストイベント';
       testEvent.description = '保存機能のテスト用データ';
       testEvent.project = 'テストプロジェクト';

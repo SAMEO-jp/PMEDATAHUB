@@ -56,11 +56,13 @@ export const eventSelectors = {
   },
 
   getActiveTab: (state: EventState): string => {
-    return state.ui.hierarchy.activeTab;
+    // TODO: hierarchy property is not available, returning default
+    return 'project';
   },
 
   getActiveSubTab: (state: EventState, tab: string): string => {
-    return state.ui.hierarchy.activeSubTabs[tab as keyof typeof state.ui.hierarchy.activeSubTabs] || '';
+    // TODO: hierarchy property is not available, returning default
+    return tab === 'project' ? '計画' : '目的間接';
   },
 
   getLoadingState: (state: EventState): boolean => {
@@ -77,35 +79,43 @@ export const eventSelectors = {
   
   // 新規追加（プロジェクト選択状態）
   getSelectedProjectCode: (state: EventState): string => {
-    return state.sidebar.selectedProjectCode;
+    // TODO: sidebar property is not available
+    return '';
   },
   
   getPurposeProjectCode: (state: EventState): string => {
-    return state.sidebar.purposeProjectCode;
+    // TODO: sidebar property is not available
+    return '';
   },
   
   // 新規追加（タブ詳細状態）
   getTabDetails: (state: EventState) => {
-    return state.sidebar.tabDetails;
+    // TODO: sidebar property is not available
+    return {};
   },
   
   getPlanningTabDetails: (state: EventState) => {
-    return state.sidebar.tabDetails.planning;
+    // TODO: sidebar property is not available
+    return '';
   },
   
   getDesignTabDetails: (state: EventState) => {
-    return state.sidebar.tabDetails.design;
+    // TODO: sidebar property is not available
+    return '';
   },
   
   getMeetingTabDetails: (state: EventState) => {
-    return state.sidebar.tabDetails.meeting;
+    // TODO: sidebar property is not available
+    return '';
   },
   
   getOtherTabDetails: (state: EventState) => {
-    return state.sidebar.tabDetails.other;
+    // TODO: sidebar property is not available
+    return '';
   },
   
   getIndirectTabDetails: (state: EventState) => {
-    return state.sidebar.tabDetails.indirect;
+    // TODO: sidebar property is not available
+    return '';
   }
 }; 

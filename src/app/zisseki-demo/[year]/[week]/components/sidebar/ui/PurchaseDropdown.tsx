@@ -1,13 +1,13 @@
 import React from 'react';
-import { ClassificationItem } from '../../../constants/activity-codes';
+import { BusinessCodeInfo } from '../../../types/businessCode';
 import { TimeGridEvent } from '../../../types';
 
 interface PurchaseDropdownProps {
   currentCode: string;
   onClassificationSelect: (code: string, additionalData: Partial<TimeGridEvent>) => void;
-  generateProjectActivityCode: (mainTab: string, detailTab: string, classification: ClassificationItem, subTabType: string) => string;
-  getProjectAdditionalData: (classification: ClassificationItem) => Partial<TimeGridEvent>;
-  purchaseClassifications: ClassificationItem[];
+  generateCode: (subTab: string, detailTab: string, classification: BusinessCodeInfo) => string;
+  getAdditionalData: (detailTab: string, classification: BusinessCodeInfo) => Partial<TimeGridEvent>;
+  purchaseClassifications: BusinessCodeInfo[];
 }
 
 /**
@@ -16,8 +16,8 @@ interface PurchaseDropdownProps {
 export const PurchaseDropdown = ({
   currentCode,
   onClassificationSelect,
-  generateProjectActivityCode,
-  getProjectAdditionalData,
+  generateCode,
+  getAdditionalData,
   purchaseClassifications
 }: PurchaseDropdownProps) => {
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -25,15 +25,15 @@ export const PurchaseDropdown = ({
     const selectedClassification = purchaseClassifications[selectedIndex];
     
     if (selectedClassification) {
-      const newCode = generateProjectActivityCode('購入品', '購入品', selectedClassification, '購入品');
-      onClassificationSelect(newCode, getProjectAdditionalData(selectedClassification));
+      const newCode = generateCode('購入品', '購入品', selectedClassification);
+      onClassificationSelect(newCode, getAdditionalData('購入品', selectedClassification));
     }
   };
 
   // 現在選択されている分類のインデックスを取得
   const getCurrentIndex = () => {
     return purchaseClassifications.findIndex(classification => {
-      const code = generateProjectActivityCode('購入品', '購入品', classification, '購入品');
+      const code = generateCode('購入品', '購入品', classification);
       return code === currentCode;
     });
   };

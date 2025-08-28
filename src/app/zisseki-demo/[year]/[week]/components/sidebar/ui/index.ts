@@ -18,6 +18,8 @@ export { DetailClassifications } from './DetailClassifications';
 export { PurchaseDropdown } from './PurchaseDropdown';
 export { Instructions } from './Instructions';
 export { TimeInputField } from './TimeInputField';
+export { ColorPicker } from '../components/ColorPicker';
+export { ProgressSelect } from '../components/ProgressSelect';
 
 // 型定義
 export type { SubTabConfig, ProjectSubTabConfigs, IndirectSubTabConfigs } from './types';

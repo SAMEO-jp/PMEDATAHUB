@@ -1,4 +1,4 @@
-import { ClassificationItem } from '../../../constants/activity-codes';
+import { BusinessCodeInfo } from '../../../types/businessCode';
 
 // タブ型の集中管理
 export const TAB = { PROJECT: 'project', INDIRECT: 'indirect' } as const;
@@ -138,13 +138,10 @@ export interface ClassificationState {
 
 export interface ClassificationActions {
   onSelect: (code: string, additionalData: Record<string, unknown>) => void;
-  getProjectClassifications: () => ClassificationItem[] | null;
-  getIndirectClassifications: () => Record<string, ClassificationItem[]> | null;
-  generateProjectCode: (mainTab: string, detailTab: string, classification: ClassificationItem, subTabType: string) => string;
-  generateIndirectCode: (mainTab: string, detailTab: string, classification: ClassificationItem) => string;
-  getProjectData: (classification: ClassificationItem) => Record<string, unknown>;
-  getIndirectData: (detailTab: string, classification: ClassificationItem) => Record<string, unknown>;
-  getPurchaseClassifications: () => ClassificationItem[];
+  getClassifications: () => BusinessCodeInfo[];
+  generateCode: (subTab: string, detailTab: string, classification: BusinessCodeInfo) => string;
+  getAdditionalData: (detailTab: string, classification: BusinessCodeInfo) => Record<string, unknown>;
+  getPurchaseClassifications: () => BusinessCodeInfo[];
 }
 
 export interface DetailClassificationsProps {

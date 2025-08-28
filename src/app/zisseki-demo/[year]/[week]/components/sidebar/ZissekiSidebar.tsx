@@ -11,11 +11,13 @@ import {
   SidebarBasic,
   SidebarActiveCodeEditor,
   DeleteButton,
-  ProjectSelect
+  ProjectSelect,
+  ColorPicker,
+  ProgressSelect
 } from "./ui";
 import { Tab, TAB } from "./ui/types";
 import { useZissekiStore } from "../../store/zissekiStore";
-
+import { parseActivityCode } from "./utils/businessCodeUtils";
 
 /**
  * 実績入力サイドバー（個別コンポーネント直接使用版）
@@ -35,86 +37,38 @@ export const ZissekiSidebar = () => {
   // ZissekiStoreからプロジェクト一覧を取得
   const { projects } = useZissekiStore();
 
+  // ローカル状態で入力値を管理
+  const [localValues, setLocalValues] = useState({
+    title: '',
+    description: '',
+    project: '',
+    activityCode: '',
+    color: '#3B82F6', // デフォルトカラー
+    status: '' // 進捗状況
+  });
 
-  
-  // アクティビティコードからタブ状態を判定する関数
-  // Reactでは、このような計算ロジックを関数として分離することで、
-  // コンポーネントの可読性と再利用性を向上させる
-  const getActiveTab = (): Tab => {
-    // 選択されたイベントが存在しない、またはアクティビティコードが空の場合
-    // デフォルトで「プロジェクト」タブを返す
+  // 現在のタブ状態を計算（プロジェクト/間接業務の選択のみ）
+  const getCurrentTab = (): Tab => {
     if (!selectedEvent?.activityCode) return TAB.PROJECT;
     
-    // アクティビティコードの最初の文字を取得
-    // 例: "Z001" → "Z", "P123" → "P"
-    const firstChar = selectedEvent.activityCode.charAt(0);
-    
-    // 最初の文字が'Z'の場合は間接業務、それ以外は直接業務（プロジェクト）
-    // 三項演算子を使用して条件分岐を簡潔に表現
-    return firstChar === 'Z' ? TAB.INDIRECT : TAB.PROJECT;
+    const parsed = parseActivityCode(selectedEvent.activityCode);
+    return parsed?.mainTab === 'indirect' ? TAB.INDIRECT : TAB.PROJECT;
   };
 
-  // アクティビティコードからサブタブを判定する関数
-  // タブの種類（プロジェクト or 間接業務）に応じて、2文字目でサブタブを決定
-  const getSubTab = (): string => {
-    // 選択されたイベントが存在しない、またはアクティビティコードが2文字未満の場合
-    // タブの種類に応じてデフォルト値を返す
-    if (!selectedEvent?.activityCode || selectedEvent.activityCode.length < 2) {
-      return activeTab === TAB.PROJECT ? '計画' : '純間接';
-    }
-    
-    // アクティビティコードの1文字目でタブの種類を判定
-    const firstChar = selectedEvent.activityCode.charAt(0);
-    // アクティビティコードの2文字目でサブタブを判定
-    const secondChar = selectedEvent.activityCode.charAt(1);
-    
-    // プロジェクトタブの場合
-    if (firstChar !== 'Z') {
-      switch (secondChar) {
-        case 'P': return '計画';    // Planning
-        case 'D': return '設計';    // Design
-        case 'M': return '会議';    // Meeting
-        case 'B': return '購入品';  // Purchase
-        case 'O': return 'その他';  // Other
-        default: return '計画';     // デフォルト
-      }
-    }
-    // 間接業務タブの場合
-    else {
-      switch (secondChar) {
-        case 'P': return '純間接';    // Pure Indirect
-        case 'M': return '目的間接';  // Mission Indirect
-        case 'K': return '控除';      // Deduction
-        default: return '純間接';   // デフォルト
-      }
-    }
-  };
-
-  // 現在アクティブなタブを計算して取得
-  // getActiveTab()関数を呼び出して、選択されたイベントのアクティビティコードに基づいて
-  // どのタブ（プロジェクト or 間接業務）を表示すべきかを決定
-  const activeTab = getActiveTab();
-
-  // 現在アクティブなサブタブを計算して取得
-  // getSubTab()関数を呼び出して、アクティビティコードの1文字目と2文字目に基づいて
-  // どのサブタブを表示すべきかを決定
-  const activeSubTab = getSubTab();
-
-  // タブ変更時の処理
+  // タブ変更時の処理（プロジェクト/間接業務の切り替えのみ）
   const handleTabChange = (eventId: string, newTab: Tab) => {
     if (selectedEvent && selectedEvent.id === eventId) {
       let newActivityCode = '';
       
       if (newTab === TAB.PROJECT) {
-        newActivityCode = 'P000';
+        newActivityCode = 'PP01'; // プロジェクトのデフォルトコード
       } else if (newTab === TAB.INDIRECT) {
-        newActivityCode = 'Z000';
+        newActivityCode = 'ZW04'; // 間接業務のデフォルトコード
       }
 
       const updatedEvent = {
         ...selectedEvent,
-        activityCode: newActivityCode,
-        selectedTab: newTab
+        activityCode: newActivityCode
       };
 
       // イベントを更新
@@ -123,30 +77,17 @@ export const ZissekiSidebar = () => {
     }
   };
 
-  // ローカル状態で入力値を管理
-  const [localValues, setLocalValues] = useState({
-    title: '',
-    description: '',
-    project: '',
-    activityCode: ''
-  });
-
-  // サブタブ状態の管理（動的に計算された値を使用）
-  const [selectedSubTab, _setSelectedSubTab] = useState<string>(activeSubTab);
-
-  // 選択イベントが変わったらローカル状態とサブタブ状態を更新
+  // 選択イベントが変わったらローカル状態を更新
   useEffect(() => {
     if (selectedEvent) {
       setLocalValues({
         title: selectedEvent.title || '',
         description: selectedEvent.description || '',
         project: selectedEvent.project || '',
-        activityCode: selectedEvent.activityCode || ''
+        activityCode: selectedEvent.activityCode || '',
+        color: selectedEvent.color || '#3B82F6',
+        status: selectedEvent.status || ''
       });
-      
-      // サブタブも動的に更新
-      const newSubTab = getSubTab();
-      _setSelectedSubTab(newSubTab);
     }
   }, [selectedEvent]);
 
@@ -209,8 +150,8 @@ export const ZissekiSidebar = () => {
           <SidebarHeader 
             title="業務詳細" 
             eventId=""
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
+            activeTab={TAB.PROJECT}
+            onTabChange={() => {}}
           />
           <div className="sidebar-section">
             <SidebarEmpty message="イベントを選択してください" />
@@ -227,7 +168,7 @@ export const ZissekiSidebar = () => {
         <SidebarHeader 
           title="業務詳細"
           eventId={selectedEvent.id}
-          activeTab={activeTab}
+          activeTab={getCurrentTab()}
           onTabChange={handleTabChange}
         />
         <div className="sidebar-section"> 
@@ -249,17 +190,28 @@ export const ZissekiSidebar = () => {
           }}
         />
         
+        {/* イベントの色設定 */}
+        <div className="sidebar-section sidebar-section-compact">
+          <ColorPicker
+            currentColor={localValues.color}
+            onColorChange={(color) => handleSelectChange('color', color)}
+            label="イベントの色"
+          />
+        </div>
+        
+        {/* 進捗状況設定 */}
+        <div className="sidebar-section sidebar-section-compact">
+          <ProgressSelect
+            currentProgress={localValues.status}
+            onProgressChange={(status) => handleSelectChange('status', status)}
+            label="進捗状況"
+          />
+        </div>
+        
         {/* 業務分類コードエディター */}
         <SidebarActiveCodeEditor
-          state={{
-            selectedTab: activeTab,
-            projectSubTab: selectedSubTab,
-            indirectSubTab: selectedSubTab
-          }}
-          event={{
-            selectedEvent,
-            updateEvent: handleUpdateEvent
-          }}
+          selectedEvent={selectedEvent}
+          onEventUpdate={handleUpdateEvent}
         />
 
         <div className="sidebar-section"> 

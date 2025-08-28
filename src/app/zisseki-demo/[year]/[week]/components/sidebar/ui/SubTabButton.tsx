@@ -17,7 +17,7 @@ export const SubTabButton = ({
   color = 'blue' 
 }: SubTabButtonProps) => (
   <button
-    className={`sub-tab-button ${isSelected ? 'selected' : ''}`}
+    className={`zisseki-demo sub-tab-button ${isSelected ? 'selected' : ''}`}
     onClick={onClick}
   >
     {tab}

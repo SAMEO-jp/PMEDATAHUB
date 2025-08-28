@@ -8,6 +8,12 @@ import { paletRouter } from './palet';
 import { photosRouter } from './photos';
 import { zissekiRouter } from './zisseki';
 
+// 新しいDB管理用ルーター
+import { tableRouter } from './db/table';
+import { sqlRouter } from './db/sql';
+import { statisticsRouter } from './db/statistics';
+import { authRouter } from './db/auth';
+
 
 /**
  * This is the primary router for your server.
@@ -22,6 +28,12 @@ export const appRouter = createTRPCRouter({
   palet: paletRouter,
   photos: photosRouter,
   zisseki: zissekiRouter,
+  
+  // 新しいDB管理用ルーター
+  table: tableRouter,
+  sql: sqlRouter,
+  statistics: statisticsRouter,
+  auth: authRouter,
 });
 
 // export type definition of API

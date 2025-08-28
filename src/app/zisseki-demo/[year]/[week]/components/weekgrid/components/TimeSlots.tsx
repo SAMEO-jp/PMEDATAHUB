@@ -11,7 +11,7 @@ type TimeSlotsProps = {
   workTimes: WorkTimeData[];  // 勤務時間データの配列
   events: TimeGridEvent[];  // イベントデータの配列
   selectedEvent: TimeGridEvent | null;  // 選択されたイベント
-  onTimeSlotClick: (day: Date, hour: number, minute: number) => void;  // タイムスロットクリック時のコールバック
+  onTimeSlotClick: (day: Date, hour: number, minute: number) => void;  // タイムスロットダブルクリック時のコールバック
   onEventClick: (event: TimeGridEvent) => void;  // イベントクリック時のコールバック
 }
 
@@ -75,7 +75,7 @@ export const TimeSlots = ({
                 <div
                   key={`${hour}-${minute}`}
                   className="h-8 border-b border-r border-gray-100 hover:bg-blue-50 cursor-pointer"
-                  onClick={() => onTimeSlotClick(day, hour, minute)}
+                  onDoubleClick={() => onTimeSlotClick(day, hour, minute)}
                 />
               ))}
             </React.Fragment>

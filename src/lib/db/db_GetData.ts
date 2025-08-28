@@ -389,5 +389,226 @@ export async function deleteTable(tableName: string): Promise<DataResult<null>> 
   }
 }
 
+/**********************************************************
+ * テーブルのスキーマ情報を取得する
+ * @param tableName - テーブル名
+ * @returns スキーマ情報（成功/失敗、データ、エラーメッセージ）
+**********************************************************/
+
+export interface ColumnInfo {
+  name: string;
+  type: string;
+  nullable: boolean;
+  primary: boolean;
+  autoIncrement: boolean;
+  comment?: string;
+}
+
+export interface TableSchema {
+  tableName: string;
+  columns: ColumnInfo[];
+}
+
+export async function getTableSchema(tableName: string): Promise<DataResult<TableSchema>> {
+  let db: any = null;
+  try {
+    db = await initializeDatabase();
+    
+    // テーブルが存在するかチェック
+    const tableExistsQuery = `
+      SELECT name 
+      FROM sqlite_master 
+      WHERE type='table' 
+      AND name = ?`;
+    
+    const tableExists = await db.get(tableExistsQuery, [tableName]);
+    
+    if (!tableExists) {
+      return {
+        success: false,
+        error: `テーブル '${tableName}' が見つかりません`,
+        data: null
+      };
+    }
+    
+    // カラム情報を取得
+    const pragmaQuery = `PRAGMA table_info(${tableName})`;
+    const columns = await db.all(pragmaQuery);
+    
+    const columnInfos: ColumnInfo[] = columns.map((col: any) => ({
+      name: col.name,
+      type: col.type,
+      nullable: col.notnull === 0,
+      primary: col.pk === 1,
+      autoIncrement: col.pk === 1 && col.type.toUpperCase() === 'INTEGER',
+      comment: `${col.name}カラム`
+    }));
+    
+    const schema: TableSchema = {
+      tableName,
+      columns: columnInfos
+    };
+    
+    return { 
+      success: true, 
+      error: null, 
+      data: schema 
+    };
+  } catch (error) {
+    console.error('テーブルスキーマの取得に失敗しました:', error);
+    return { 
+      success: false, 
+      error: 'データベースエラーが発生しました', 
+      data: null 
+    };
+  } finally {
+    if (db) {
+      try {
+        await db.close();
+      } catch (closeErr) {
+        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+      }
+    }
+  }
+}
+
+/**********************************************************
+ * テーブルの詳細情報を取得する
+ * @param tableName - テーブル名
+ * @returns 詳細情報（成功/失敗、データ、エラーメッセージ）
+**********************************************************/
+
+export interface IndexInfo {
+  name: string;
+  type: string;
+  columns: string[];
+}
+
+export interface TableDetail {
+  name: string;
+  description: string;
+  columns: ColumnInfo[];
+  indexes: IndexInfo[];
+  records: number;
+  size: string;
+  lastUpdated: string;
+}
+
+export async function getTableDetail(tableName: string): Promise<DataResult<TableDetail>> {
+  let db: any = null;
+  try {
+    db = await initializeDatabase();
+    
+    // テーブルが存在するかチェック
+    const tableExistsQuery = `
+      SELECT name 
+      FROM sqlite_master 
+      WHERE type='table' 
+      AND name = ?`;
+    
+    const tableExists = await db.get(tableExistsQuery, [tableName]);
+    
+    if (!tableExists) {
+      return {
+        success: false,
+        error: `テーブル '${tableName}' が見つかりません`,
+        data: null
+      };
+    }
+    
+    // スキーマ情報を取得
+    const schemaResult = await getTableSchema(tableName);
+    if (!schemaResult.success || !schemaResult.data) {
+      return {
+        success: false,
+        error: 'スキーマ情報の取得に失敗しました',
+        data: null
+      };
+    }
+    
+    // レコード数を取得
+    const countQuery = `SELECT COUNT(*) as count FROM ${tableName}`;
+    const countResult = await db.get(countQuery);
+    const recordCount = countResult?.count || 0;
+    
+    // インデックス情報を取得
+    const indexQuery = `PRAGMA index_list(${tableName})`;
+    const indexes = await db.all(indexQuery);
+    
+    const indexInfos: IndexInfo[] = [];
+    
+    for (const index of indexes) {
+      const indexInfoQuery = `PRAGMA index_info(${index.name})`;
+      const indexColumns = await db.all(indexInfoQuery);
+      
+      indexInfos.push({
+        name: index.name,
+        type: index.unique ? 'UNIQUE' : 'INDEX',
+        columns: indexColumns.map((col: any) => col.name)
+      });
+    }
+    
+    // プライマリキーインデックスを追加
+    const primaryColumns = schemaResult.data.columns.filter(col => col.primary);
+    if (primaryColumns.length > 0) {
+      indexInfos.unshift({
+        name: 'PRIMARY',
+        type: 'PRIMARY',
+        columns: primaryColumns.map(col => col.name)
+      });
+    }
+    
+    const tableDetail: TableDetail = {
+      name: tableName,
+      description: `${tableName}テーブルの詳細情報`,
+      columns: schemaResult.data.columns,
+      indexes: indexInfos,
+      records: recordCount,
+      size: calculateTableSize(recordCount),
+      lastUpdated: new Date().toLocaleDateString('ja-JP')
+    };
+    
+    return { 
+      success: true, 
+      error: null, 
+      data: tableDetail 
+    };
+  } catch (error) {
+    console.error('テーブル詳細の取得に失敗しました:', error);
+    return { 
+      success: false, 
+      error: 'データベースエラーが発生しました', 
+      data: null 
+    };
+  } finally {
+    if (db) {
+      try {
+        await db.close();
+      } catch (closeErr) {
+        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+      }
+    }
+  }
+}
+
+/**********************************************************
+ * テーブルサイズを計算する（概算）
+ * @param recordCount - レコード数
+ * @returns サイズ文字列
+**********************************************************/
+
+function calculateTableSize(recordCount: number): string {
+  // 概算：1レコードあたり平均1KBと仮定
+  const sizeKB = recordCount * 1;
+  
+  if (sizeKB < 1024) {
+    return `${sizeKB} KB`;
+  } else if (sizeKB < 1024 * 1024) {
+    return `${(sizeKB / 1024).toFixed(1)} MB`;
+  } else {
+    return `${(sizeKB / (1024 * 1024)).toFixed(1)} GB`;
+  }
+}
+
 
 

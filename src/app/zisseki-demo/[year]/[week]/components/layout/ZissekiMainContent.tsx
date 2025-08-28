@@ -112,10 +112,10 @@ export function ZissekiMainContent({ year, week }: ZissekiMainContentProps) {
   // ========================================
   
   const handleTimeSlotClick = (day: Date, hour: number, minute: number) => {
+    // ダブルクリックでイベント作成
     console.log('handleTimeSlotClick呼び出し:', { day, hour, minute });
     console.log('EventContext状態:', {
       events: eventState.events?.length || 0,
-      hierarchy: eventState.ui?.hierarchy,
       selectedEvent: eventState.selectedEvent
     });
 
@@ -126,7 +126,8 @@ export function ZissekiMainContent({ year, week }: ZissekiMainContentProps) {
     }
 
     try {
-      const newEvent = createNewEvent(day, hour, minute, eventState.ui.hierarchy);
+      // hierarchyが存在しない場合はundefinedを渡す（デフォルト値が使用される）
+      const newEvent = createNewEvent(day, hour, minute, undefined);
       console.log('作成されたイベント:', newEvent);
       
       const createdEvent = eventState.createEvent(newEvent);
@@ -139,27 +140,13 @@ export function ZissekiMainContent({ year, week }: ZissekiMainContentProps) {
     }
   };
 
-  // ========================================
-  // デバッグ情報
-  // ========================================
-  
-  console.log('ZissekiMainContent状態:', {
-    databaseEvents: database.events?.length || 0,
-    eventStateEvents: eventState.events?.length || 0,
-    databaseLoading: database.isLoading,
-    databaseInitialized: database.isInitialized,
-    eventStateLoading: eventState.loading,
-    hasInitialized: hasInitialized.current,
-    eventStateUI: eventState.ui,
-    eventStateHierarchy: eventState.ui?.hierarchy
-  });
-  
+ 
   // ========================================
   // メインコンテンツ
   // ========================================
   
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="zisseki-demo flex h-screen bg-gray-50">
       {/* メインコンテンツ */}
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* ヘッダー */}

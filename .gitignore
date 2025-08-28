@@ -25,6 +25,7 @@ logs/
 *.temp
 .DS_Store
 Thumbs.db
+nul
 
 # 設定ファイル（機密情報含む）
 .env
