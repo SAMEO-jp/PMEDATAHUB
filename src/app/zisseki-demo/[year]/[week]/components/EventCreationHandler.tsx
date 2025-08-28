@@ -37,7 +37,10 @@ const createNewEvent = (
   day: Date,
   hour: number,
   minute: number,
-  activityCode: string
+  activityCode: string,
+  activeTab: string,
+  activeSubTab: string,
+  userId?: string
 ): TimeGridEvent => {
   return {
     id: `event-${Date.now()}`,
@@ -46,11 +49,14 @@ const createNewEvent = (
     startDateTime: new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour, minute).toISOString(),
     endDateTime: new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour + 1, minute).toISOString(),
     project: "",
+    user_id: userId || 'guest', // ユーザーIDまたはデフォルト
     color: "#3788d8",
     top: hour * 64 + (minute / 60) * 64,
     height: 64,
     activityCode: activityCode,
-    unsaved: false
+    status: "開始", // デフォルトの進捗状況
+    unsaved: false,
+
   };
 };
 
@@ -78,7 +84,7 @@ export const createEventCreationHandler = ({
     const activityCode = generateActivityCode(activeTab, activeSubTab);
     
     // 新しいイベントを作成
-    const newEvent = createNewEvent(day, hour, minute, activityCode);
+    const newEvent = createNewEvent(day, hour, minute, activityCode, activeTab, activeSubTab);
     
     // イベントを作成して選択状態に設定
     const createdEvent = createEvent(newEvent);

@@ -1061,6 +1061,53 @@ a {
     background-color: var(--hover-bg-color);
 }
 
+.login-button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 12px;
+    gap: 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 15px;
+    border-radius: 8px;
+    text-align: left;
+}
+.login-button:hover {
+    background-color: var(--hover-bg-color);
+}
+
+/* 年と週番号表示 */
+.year-week-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    color: var(--secondary-text-color);
+    background-color: var(--background-color);
+    border-radius: 6px;
+    margin-bottom: 4px;
+}
+
+.year-week-info .calendar-icon {
+    font-size: 16px;
+    color: var(--primary-color);
+}
+
+.year-week-text {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+/* ポップアップ内の区切り線 */
+.popup-divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 4px 0;
+}
+
 /* --- メインコンテンツ --- */
 .main-content-wrapper {
     padding-top: var(--header-height);

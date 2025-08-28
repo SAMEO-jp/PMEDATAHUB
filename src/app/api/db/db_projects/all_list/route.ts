@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   console.log('API: プロジェクト一覧取得開始');
   
   try {
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(request.url || '', 'http://localhost');
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status');
     const page = parseInt(searchParams.get('page') || '1');

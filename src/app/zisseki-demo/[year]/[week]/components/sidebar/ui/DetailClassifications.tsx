@@ -1,13 +1,12 @@
 import React from 'react';
 import { SubTabButton } from './SubTabButton';
 import { PurchaseDropdown } from './PurchaseDropdown';
-import { ClassificationItem } from '../../../constants/activity-codes';
+import { BusinessCodeInfo } from '../../../types/businessCode';
 import { DetailClassificationsProps } from './types';
 
-// 既存の型定義を削除し、新しい型を使用
-
 /**
- * 詳細分類ボタンをレンダリング
+ * 詳細分類ボタンをレンダリング（動的生成版）
+ * 新しいbusinessCodeUtilsを使用してJSONベースの動的処理に変更
  */
 export const DetailClassifications = ({
   state,
@@ -21,83 +20,80 @@ export const DetailClassifications = ({
   const { selectedTab, mainSubTab: currentMainSubTab, detailSubTab: currentDetailSubTab, currentCode } = state;
   const { 
     onSelect: onClassificationSelect,
-    getProjectClassifications,
-    getIndirectClassifications,
-    generateProjectCode: generateProjectActivityCode,
-    generateIndirectCode: generateIndirectActivityCode,
-    getProjectData: getProjectAdditionalData,
-    getIndirectData: getIndirectAdditionalData,
+    getClassifications,
+    generateCode,
+    getAdditionalData,
     getPurchaseClassifications
   } = actions;
-  if (selectedTab === 'project') {
-    // 購入品タブの場合は特別なプルダウンコンポーネントを使用
-    if (currentMainSubTab === '購入品') {
-      return (
-        <PurchaseDropdown
-          currentCode={currentCode}
-          onClassificationSelect={onClassificationSelect}
-          generateProjectActivityCode={generateProjectActivityCode}
-          getProjectAdditionalData={getProjectAdditionalData}
-          purchaseClassifications={getPurchaseClassifications()}
-        />
-      );
-    }
-    
-    return <ProjectDetailClassifications
+
+  // 購入品タブの場合は特別なプルダウンコンポーネントを使用
+  if (currentMainSubTab === '購入品') {
+    return (
+      <PurchaseDropdown
+        currentCode={currentCode}
+        onClassificationSelect={onClassificationSelect}
+        generateCode={generateCode}
+        getAdditionalData={getAdditionalData}
+        purchaseClassifications={getPurchaseClassifications()}
+      />
+    );
+  }
+  
+  // 間接業務の場合は3段階目と4段階目の両方を表示
+  if (selectedTab === 'indirect') {
+    return <IndirectDetailClassifications
       currentMainSubTab={currentMainSubTab}
       currentDetailSubTab={currentDetailSubTab}
       currentCode={currentCode}
       onClassificationSelect={onClassificationSelect}
-      getProjectClassifications={getProjectClassifications}
-      generateProjectActivityCode={generateProjectActivityCode}
-      getProjectAdditionalData={getProjectAdditionalData}
-    />;
-  } else {
-    return <IndirectDetailClassifications
-      currentMainSubTab={currentMainSubTab}
-      currentCode={currentCode}
-      onClassificationSelect={onClassificationSelect}
-      getIndirectClassifications={getIndirectClassifications}
-      generateIndirectActivityCode={generateIndirectActivityCode}
-      getIndirectAdditionalData={getIndirectAdditionalData}
+      getClassifications={getClassifications}
+      generateCode={generateCode}
+      getAdditionalData={getAdditionalData}
     />;
   }
+  
+  // プロジェクトの場合は統一された詳細分類コンポーネント
+  return <UnifiedDetailClassifications
+    currentMainSubTab={currentMainSubTab}
+    currentDetailSubTab={currentDetailSubTab}
+    currentCode={currentCode}
+    onClassificationSelect={onClassificationSelect}
+    getClassifications={getClassifications}
+    generateCode={generateCode}
+    getAdditionalData={getAdditionalData}
+  />;
 };
 
 /**
- * プロジェクト詳細分類をレンダリング
+ * 間接業務詳細分類をレンダリング（3段階目と4段階目の両方を表示）
  */
-const ProjectDetailClassifications = ({
+const IndirectDetailClassifications = ({
   currentMainSubTab,
   currentDetailSubTab,
   currentCode,
   onClassificationSelect,
-  getProjectClassifications,
-  generateProjectActivityCode,
-  getProjectAdditionalData
+  getClassifications,
+  generateCode,
+  getAdditionalData
 }: {
   currentMainSubTab: string;
   currentDetailSubTab: string;
   currentCode: string;
   onClassificationSelect: (code: string, additionalData: any) => void;
-  getProjectClassifications: () => ClassificationItem[] | null;
-  generateProjectActivityCode: (mainTab: string, detailTab: string, classification: ClassificationItem, subTabType: string) => string;
-  getProjectAdditionalData: (classification: ClassificationItem) => any;
+  getClassifications: () => BusinessCodeInfo[];
+  generateCode: (subTab: string, detailTab: string, classification: BusinessCodeInfo) => string;
+  getAdditionalData: (detailTab: string, classification: BusinessCodeInfo) => any;
 }) => {
-  const classifications = getProjectClassifications();
-  if (!classifications) return null;
+  const classifications = getClassifications();
+  if (!classifications || classifications.length === 0) return null;
 
   return (
-    <div className="detail-classifications">
-      <div className="classification-label">詳細分類</div>
-      <div className="flex flex-wrap gap-2">
-        {classifications.map((classification: ClassificationItem) => {
-          const newCode = generateProjectActivityCode(
-            currentMainSubTab, 
-            currentDetailSubTab, 
-            classification, 
-            currentDetailSubTab
-          );
+    <div className="zisseki-demo detail-classifications">
+      {/* 3段階目（詳細タブ）の表示 */}
+      <div className="zisseki-demo classification-label">詳細分類（{currentDetailSubTab}）</div>
+      <div className="zisseki-demo flex flex-wrap gap-2">
+        {classifications.map((classification: BusinessCodeInfo) => {
+          const newCode = generateCode(currentMainSubTab, currentDetailSubTab, classification);
           const isSelected = currentCode === newCode;
 
           return (
@@ -106,9 +102,10 @@ const ProjectDetailClassifications = ({
               tab={classification.name}
               isSelected={isSelected}
               onClick={() => {
-                onClassificationSelect(newCode, getProjectAdditionalData(classification));
+                const additionalData = getAdditionalData(currentDetailSubTab, classification);
+                onClassificationSelect(newCode, additionalData);
               }}
-              color="green"
+              color="blue"
             />
           );
         })}
@@ -118,53 +115,49 @@ const ProjectDetailClassifications = ({
 };
 
 /**
- * 間接業務詳細分類をレンダリング
+ * 統一された詳細分類をレンダリング（動的生成版）
  */
-const IndirectDetailClassifications = ({
+const UnifiedDetailClassifications = ({
   currentMainSubTab,
+  currentDetailSubTab,
   currentCode,
   onClassificationSelect,
-  getIndirectClassifications,
-  generateIndirectActivityCode,
-  getIndirectAdditionalData
+  getClassifications,
+  generateCode,
+  getAdditionalData
 }: {
   currentMainSubTab: string;
+  currentDetailSubTab: string;
   currentCode: string;
   onClassificationSelect: (code: string, additionalData: any) => void;
-  getIndirectClassifications: () => Record<string, ClassificationItem[]> | null;
-  generateIndirectActivityCode: (mainTab: string, detailTab: string, classification: ClassificationItem) => string;
-  getIndirectAdditionalData: (detailTab: string, classification: ClassificationItem) => any;
+  getClassifications: () => BusinessCodeInfo[];
+  generateCode: (subTab: string, detailTab: string, classification: BusinessCodeInfo) => string;
+  getAdditionalData: (detailTab: string, classification: BusinessCodeInfo) => any;
 }) => {
-  const classifications = getIndirectClassifications();
-  if (!classifications) return null;
+  const classifications = getClassifications();
+  if (!classifications || classifications.length === 0) return null;
 
   return (
-    <div className="detail-classifications">
-      <div className="classification-label">詳細分類</div>
-      <div className="flex flex-wrap gap-2">
-        {Object.entries(classifications).map(([detailTab, detailClassifications]) => (
-          <div key={detailTab} className="w-full">
-            <div className="text-xs font-medium text-secondary mb-2">{detailTab}</div>
-            <div className="flex flex-wrap gap-2">
-              {detailClassifications.map((classification: ClassificationItem) => {
-                const newCode = generateIndirectActivityCode(currentMainSubTab, detailTab, classification);
-                const isSelected = currentCode === newCode;
+    <div className="zisseki-demo detail-classifications">
+      <div className="zisseki-demo classification-label">詳細分類</div>
+      <div className="zisseki-demo flex flex-wrap gap-2">
+        {classifications.map((classification: BusinessCodeInfo) => {
+          const newCode = generateCode(currentMainSubTab, currentDetailSubTab, classification);
+          const isSelected = currentCode === newCode;
 
-                return (
-                  <SubTabButton
-                    key={classification.name}
-                    tab={classification.name}
-                    isSelected={isSelected}
-                    onClick={() => {
-                      onClassificationSelect(newCode, getIndirectAdditionalData(detailTab, classification));
-                    }}
-                    color="green"
-                  />
-                );
-              })}
-            </div>
-          </div>
-        ))}
+          return (
+            <SubTabButton
+              key={classification.name}
+              tab={classification.name}
+              isSelected={isSelected}
+              onClick={() => {
+                const additionalData = getAdditionalData(currentDetailSubTab, classification);
+                onClassificationSelect(newCode, additionalData);
+              }}
+              color="green"
+            />
+          );
+        })}
       </div>
     </div>
   );

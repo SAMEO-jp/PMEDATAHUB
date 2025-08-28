@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { SubTabGroup } from './SubTabGroup';
 import { SubTabConfig } from './types';
+import { getDetailTabs } from '../utils/businessCodeUtils';
 
 interface DetailSubTabsProps {
   selectedTab: 'project' | 'indirect';
@@ -8,10 +9,12 @@ interface DetailSubTabsProps {
   currentDetailSubTab: string;
   onTabSelect: (tab: string) => void;
   projectSubTabConfigs: Record<string, SubTabConfig>;
+  indirectSubTabConfigs: Record<string, SubTabConfig>;
 }
 
 /**
- * 詳細サブタブをレンダリング
+ * 詳細サブタブをレンダリング（動的生成版）
+ * 新しいbusinessCodeUtilsを使用してJSONベースの動的処理に変更
  */
 export const DetailSubTabs = ({
   selectedTab,
@@ -20,19 +23,21 @@ export const DetailSubTabs = ({
   onTabSelect,
   projectSubTabConfigs
 }: DetailSubTabsProps) => {
-  if (selectedTab !== 'project') return null;
-
   // 購入品タブの場合は詳細サブタブを非表示
   if (currentMainSubTab === '購入品') return null;
 
-  const config = projectSubTabConfigs[currentMainSubTab];
-  if (!config?.subTabs || config.subTabs.length === 0) return null;
+  // 動的に詳細タブを生成
+  const detailTabs = useMemo(() => {
+    return getDetailTabs(selectedTab, currentMainSubTab);
+  }, [selectedTab, currentMainSubTab]);
+
+  if (!detailTabs || detailTabs.length === 0) return null;
 
   return (
     <div className="detail-sub-tabs">
       <SubTabGroup
         title={`${currentMainSubTab}分類`}
-        tabs={config.subTabs}
+        tabs={detailTabs}
         selectedTab={currentDetailSubTab}
         onTabSelect={onTabSelect}
         color="green"

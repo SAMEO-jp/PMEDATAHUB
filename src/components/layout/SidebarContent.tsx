@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuthContext } from '@/src/contexts/AuthContext';
+import { getCurrentYearWeekString } from '@/src/utils/dateUtils';
 
 // Material Symbols のフォールバック用アイコンマッピング
 const iconFallbacks: Record<string, string> = {
@@ -110,9 +111,9 @@ export const SidebarContent: React.FC = () => {
 
   // 認証コンテキストからユーザー情報とログイン機能を取得
   const {
-    currentUser,
+    user,
     isAuthenticated,
-    logout,
+    clearUser,
     openLoginModal,
   } = useAuthContext();
 
@@ -173,7 +174,7 @@ export const SidebarContent: React.FC = () => {
   // ログアウトハンドラー
   const handleLogout = () => {
     try {
-      logout();
+      clearUser();
       setIsPopupOpen(false);
     } catch (error) {
       console.error('Sidebar logout error:', error);
@@ -181,8 +182,8 @@ export const SidebarContent: React.FC = () => {
   };
 
   // ユーザー情報の取得（認証状態に応じて）
-  const userName = currentUser?.name || 'ゲスト';
-  const userRole = currentUser?.role || 'GUEST';
+  const userName = user?.name_japanese || 'ゲスト';
+  const userRole = user?.syokui || 'GUEST';
   const userIcon = isAuthenticated ? 'account_circle' : 'person';
 
   return (
@@ -248,6 +249,16 @@ export const SidebarContent: React.FC = () => {
         {/* 認証状態に応じたポップアップ */}
         {isPopupOpen && (
           <div className="logout-popup">
+            {/* 年と週番号表示 */}
+            <div className="year-week-info">
+              <IconComponent iconName="edit_calendar" className="calendar-icon" />
+              <span className="year-week-text">{getCurrentYearWeekString()}</span>
+            </div>
+            
+            {/* 区切り線 */}
+            <div className="popup-divider"></div>
+            
+            {/* 認証アクションボタン */}
             {isAuthenticated ? (
               <button className="logout-button" onClick={handleLogout}>
                 <IconComponent iconName="logout" />

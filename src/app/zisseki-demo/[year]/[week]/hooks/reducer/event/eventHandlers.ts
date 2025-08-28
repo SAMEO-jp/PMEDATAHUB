@@ -46,29 +46,34 @@ export const createEventHandlers = (
     },
     
     syncSidebarToSelectedEvent: () => {
-      if (state.selectedEvent) {
-        dispatch(eventActions.syncSidebarToEvent(state.selectedEvent.id, state.sidebar));
-      }
+      // TODO: syncSidebarToEvent method is not available
+      // if (state.selectedEvent) {
+      //   dispatch(eventActions.syncSidebarToEvent(state.selectedEvent.id, state.sidebar));
+      // }
     },
     
     syncHierarchyToSelectedEvent: () => {
-      if (state.selectedEvent) {
-        dispatch(eventActions.syncHierarchyToEvent(state.selectedEvent.id, state.ui.hierarchy));
-      }
+      // TODO: syncHierarchyToEvent method is not available
+      // if (state.selectedEvent) {
+      //   dispatch(eventActions.syncHierarchyToEvent(state.selectedEvent.id, state.ui.hierarchy));
+      // }
     },
     
     setActiveSubTab: (tab: 'project' | 'indirect', subTab: string) => {
-      dispatch(eventActions.setActiveSubTab(tab, subTab));
+      // TODO: setActiveSubTab method is not available
+      // dispatch(eventActions.setActiveSubTab(tab, subTab));
     },
     
     setActiveTab: (tab: 'project' | 'indirect') => {
-      dispatch(eventActions.setActiveTab(tab));
+      // TODO: setActiveTab method is not available
+      // dispatch(eventActions.setActiveTab(tab));
     },
     
     updateActivityCodePrefix: (tab: 'project' | 'indirect', subTab: string) => {
       // 業務分類コードプレフィックスの更新ロジック
       // 現在はsetActiveSubTabと同じ動作をする
-      dispatch(eventActions.setActiveSubTab(tab, subTab));
+      // TODO: setActiveSubTab method is not available
+      // dispatch(eventActions.setActiveSubTab(tab, subTab));
     }
   };
 }; 

@@ -22,12 +22,18 @@ export interface PurchaseItem {
   equipmentNumber?: string;
 }
 
+// 業務コード関連の型定義をインポート
+import type {
+  BusinessCode
+} from './businessCode';
+
 // イベント関連の型定義
 export interface Event {
   id: string;
   title: string;
   description: string;
   project: string;
+  user_id?: string; // ユーザーID（個人実績データのため追加）
   equipmentNumber?: string;
   equipmentName?: string;
   equipment_id?: string;
@@ -35,32 +41,16 @@ export interface Event {
   itemName?: string;
   startDateTime: string;
   endDateTime: string;
-  activityCode?: string; // 業務分類コード（BusinessCodeと統合）
+  activityCode?: BusinessCode; // 業務分類コード（型安全性を向上）
   purposeProject?: string;
   departmentCode?: string;
-  // サブタブ関連のプロパティ
-  planningSubType?: string;
-  estimateSubType?: string;
-  designSubType?: string;
-  meetingType?: string;
-  travelType?: string;
-  stakeholderType?: string;
-  documentType?: string;
-  documentMaterial?: string;
-  subTabType?: string;
-  activityColumn?: string;
-  // businessCodeを削除 - activityCodeに統合
-  indirectType?: string;
-  indirectDetailType?: string;
+  
+  
+  
+  // UI関連のプロパティ
   top?: number;
   height?: number;
   status?: string;
-  // タブ状態を保存するプロパティ
-  selectedTab?: string;           // "project" | "indirect"
-  selectedProjectSubTab?: string; // "計画" | "設計" | "会議" | "購入" | "その他"
-  selectedIndirectSubTab?: string; // "純間接" | "目的間接" | "控除時間"
-  selectedIndirectDetailTab?: string; // 詳細タブ
-  selectedOtherSubTab?: string;   // その他のサブタブ
 }
 
 // TimeGrid関連の型定義
@@ -78,6 +68,11 @@ export type TimeGridEvent = Event & {
   unsaved?: boolean;
   category?: string;
   employeeNumber?: string;
+  selectedTab?: string;
+  selectedProjectSubTab?: string;
+  selectedIndirectSubTab?: string;
+  selectedIndirectDetailTab?: string;
+  selectedOtherSubTab?: string;
 }
 
 export type TimeGridProps = {
@@ -87,7 +82,7 @@ export type TimeGridProps = {
   workTimes: WorkTimeData[];
   selectedEvent: TimeGridEvent | null;
   onEventClick: (event: TimeGridEvent) => void;
-  onTimeSlotClick: (day: Date, hour: number, minute: number) => void;
+  onTimeSlotClick: (day: Date, hour: number, minute: number) => void; // ダブルクリックでイベント作成
   onWorkTimeChange: (date: string, startTime: string, endTime: string) => void;
 }
 

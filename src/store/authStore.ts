@@ -3,25 +3,12 @@
 // 機能: 認証状態管理（Zustand）
 // 技術: Zustand, persist middleware
 // 作成日: 2024-12-19
+// 更新日: 2025-01-XX（tRPC対応）
 // ==========================================
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-// ==========================================
-// 型定義
-// ==========================================
-
-/**
- * ユーザー情報インターフェース
- */
-export interface User {
-  id: string;
-  name: string;
-  role: string;
-  email?: string;
-  avatar?: string;
-}
+import type { LoginUser } from '@src/types/auth';
 
 /**
  * 認証状態インターフェース
@@ -29,7 +16,7 @@ export interface User {
 interface AuthState {
   // === 認証状態 ===
   isAuthenticated: boolean;        // ログイン状態
-  currentUser: User | null;        // 現在のユーザー情報
+  user: LoginUser | null;          // 現在のユーザー情報（tRPCの型に対応）
   isLoading: boolean;              // ローディング状態
   
   // === UI状態 ===
@@ -44,9 +31,8 @@ interface AuthState {
  */
 interface AuthActions {
   // === 認証アクション ===
-  login: (userId: string) => Promise<boolean>;  // ログイン処理
-  logout: () => void;                          // ログアウト処理
-  setCurrentUser: (user: User | null) => void; // ユーザー情報設定
+  setUser: (user: LoginUser | null) => void;   // ユーザー情報設定（tRPC連携用）
+  clearUser: () => void;                       // ユーザー情報クリア
   
   // === UIアクション ===
   openLoginModal: () => void;                  // ログインモーダルを開く
@@ -67,94 +53,41 @@ interface AuthActions {
  * 認証状態管理ストア
  * Zustandのcreateとpersistミドルウェアを使用して、
  * 認証状態の管理とローカルストレージへの永続化を実現
+ * tRPCフックと連携してログイン処理を行う
  */
 export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
     (set, get) => ({
       // === 初期状態 ===
       isAuthenticated: false,
-      currentUser: null,
+      user: null,
       isLoading: false,
       isLoginModalOpen: false,
       error: null,
 
       // === 認証アクション ===
       /**
-       * ログイン処理
-       * @param userId ユーザーID
-       * @returns ログイン成功時true、失敗時false
-       */
-      login: async (userId: string): Promise<boolean> => {
-        try {
-          set({ isLoading: true, error: null });
-          
-          const response = await fetch('/api/loginmodals/auth', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userId }),
-          });
-
-          if (!response.ok) {
-            const data = await response.json();
-            const errorMessage = data.error || 'ログインに失敗しました。';
-            set({ error: errorMessage, isLoading: false });
-            return false;
-          }
-
-          const userData: User = await response.json();
-          
-          // ローカルストレージに保存（永続化）
-          localStorage.setItem('currentUser', JSON.stringify(userData));
-          
-          // 状態を更新
-          set({
-            isAuthenticated: true,
-            currentUser: userData,
-            isLoading: false,
-            error: null,
-            isLoginModalOpen: false, // ログイン成功時はモーダルを閉じる
-          });
-          
-          return true;
-        } catch (error) {
-          console.error('Login error:', error);
-          set({
-            error: 'ログイン中にエラーが発生しました。',
-            isLoading: false,
-          });
-          return false;
-        }
-      },
-
-      /**
-       * ログアウト処理
-       */
-      logout: () => {
-        // ローカルストレージから削除
-        localStorage.removeItem('currentUser');
-        
-        // 状態をリセット
-        set({
-          isAuthenticated: false,
-          currentUser: null,
-          error: null,
-          isLoginModalOpen: false,
-        });
-        
-        // ページをリロード（必要に応じて）
-        window.location.reload();
-      },
-
-      /**
-       * 現在のユーザー情報を設定
+       * ユーザー情報を設定
        * @param user ユーザー情報（nullでログアウト状態）
        */
-      setCurrentUser: (user: User | null) => {
+      setUser: (user: LoginUser | null) => {
         set({
-          currentUser: user,
+          user,
           isAuthenticated: !!user,
+          isLoginModalOpen: false, // ログイン成功時はモーダルを閉じる
+          error: null,
+        });
+      },
+
+      /**
+       * ユーザー情報をクリア（ログアウト）
+       */
+      clearUser: () => {
+        set({
+          isAuthenticated: false,
+          user: null,
+          error: null,
+          isLoginModalOpen: false,
         });
       },
 
@@ -217,28 +150,8 @@ export const useAuthStore = create<AuthState & AuthActions>()(
        */
       partialize: (state) => ({
         isAuthenticated: state.isAuthenticated,
-        currentUser: state.currentUser,
+        user: state.user,
       }),
-      
-      /**
-       * 初期化時の処理
-       * ローカルストレージからユーザー情報を復元
-       */
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-          // ローカルストレージからユーザー情報を取得
-          const storedUser = localStorage.getItem('currentUser');
-          if (storedUser) {
-            try {
-              const userData = JSON.parse(storedUser);
-              state.setCurrentUser(userData);
-            } catch (error) {
-              console.error('Failed to parse stored user data:', error);
-              localStorage.removeItem('currentUser');
-            }
-          }
-        }
-      },
     }
   )
 );
@@ -250,6 +163,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 /**
  * 認証状態管理のカスタムフック
  * useAuthStoreの状態とアクションを使いやすい形で提供
+ * tRPCベースの認証システムと連携
  * 
  * @returns 認証状態とアクションのオブジェクト
  * 
@@ -257,18 +171,15 @@ export const useAuthStore = create<AuthState & AuthActions>()(
  * ```typescript
  * const { 
  *   isAuthenticated, 
- *   currentUser, 
- *   login,
- *   logout,
+ *   user, 
+ *   setUser,
+ *   clearUser,
  *   openLoginModal 
  * } = useAuth();
  * 
- * // ログイン処理
- * const handleLogin = async (userId: string) => {
- *   const success = await login(userId);
- *   if (success) {
- *     console.log('ログイン成功');
- *   }
+ * // ログイン成功時（tRPCフック経由）
+ * const handleLoginSuccess = (loginData: LoginUser) => {
+ *   setUser(loginData);
  * };
  * 
  * // ログインモーダルを開く
@@ -281,15 +192,14 @@ export const useAuth = () => {
   return {
     // === 状態（読み取り専用） ===
     isAuthenticated: store.isAuthenticated,     // ログイン状態
-    currentUser: store.currentUser,             // 現在のユーザー情報
+    user: store.user,                           // 現在のユーザー情報
     isLoading: store.isLoading,                 // ローディング状態
     isLoginModalOpen: store.isLoginModalOpen,   // ログインモーダルの開閉状態
     error: store.error,                         // エラーメッセージ
     
     // === アクション（状態変更） ===
-    login: store.login,                         // ログイン処理
-    logout: store.logout,                       // ログアウト処理
-    setCurrentUser: store.setCurrentUser,       // ユーザー情報設定
+    setUser: store.setUser,                     // ユーザー情報設定
+    clearUser: store.clearUser,                 // ユーザー情報クリア
     openLoginModal: store.openLoginModal,       // ログインモーダルを開く
     closeLoginModal: store.closeLoginModal,     // ログインモーダルを閉じる
     toggleLoginModal: store.toggleLoginModal,   // ログインモーダルを切り替え

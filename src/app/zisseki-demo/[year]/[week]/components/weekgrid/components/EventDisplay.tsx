@@ -61,34 +61,13 @@ const calculateDayIndexFromMouseX = (mouseX: number, weekDays: Date[]): number =
   // TimeGridの構造を想定：最初のカラムは時間ラベル、その後7日分のカラム
   // 各日付カラムの幅を計算（概算）
   const gridContainer = document.querySelector('[style*="grid-template-columns"]');
-  if (!gridContainer) {
-    console.warn('Grid container not found');
-    return 0;
-  }
-  
+  if (!gridContainer) return 0;
   const containerRect = gridContainer.getBoundingClientRect();
   const timeLabelsWidth = 80; // 時間ラベル部分の概算幅
   const dayColumnWidth = (containerRect.width - timeLabelsWidth) / 7;
-  
   const relativeX = mouseX - containerRect.left - timeLabelsWidth;
   const dayIndex = Math.floor(relativeX / dayColumnWidth);
-  
   const clampedIndex = Math.max(0, Math.min(dayIndex, weekDays.length - 1));
-  
-  // デバッグ情報
-  if (Math.abs(relativeX) > 10) { // 意味のある移動があった場合のみログ
-    console.log('Day index calculation:', {
-      mouseX,
-      containerLeft: containerRect.left,
-      timeLabelsWidth,
-      dayColumnWidth,
-      relativeX,
-      dayIndex,
-      clampedIndex,
-      weekDaysLength: weekDays.length
-    });
-  }
-  
   return clampedIndex;
 };
 
@@ -112,7 +91,6 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
   };
   
   const activityCode = getDefaultActivityCode();
-  const subTabType = event.subTabType || 'なし';
 
   // イベントの位置が変更された時に一時位置も更新
   React.useEffect(() => {
@@ -337,7 +315,7 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
           e.currentTarget.style.cursor = getCursorStyle(e);
         }
       }}
-      title={`${event.title} - 業務コード: ${event.activityCode || '未設定'} - サブタブ: ${event.subTabType || 'なし'} - ドラッグで移動・端をドラッグで時間調整`}
+      title={`${event.title} - 業務コード: ${event.activityCode || '未設定'} - ドラッグで移動・端をドラッグで時間調整`}
     >
       {/* リサイズハンドル（上） */}
       <div className="absolute top-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover:opacity-100 bg-white/20 transition-opacity" />

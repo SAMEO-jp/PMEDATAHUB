@@ -5,12 +5,29 @@
 import React from 'react';
 import { Card } from '../components/cusutom_ui/Card';
 import { CardGrid } from '../components/cusutom_ui/CardGrid';
+import { useAuthContext } from '@/src/contexts/AuthContext';
+import { getYearAndWeek } from '@/src/utils/dateUtils';
 
 export default function HomePage() {
+  // 認証コンテキストを取得
+  const { isAuthenticated } = useAuthContext();
+  
   // 現在の年と月を取得
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1; // getMonth()は0ベースなので+1
+  
+  // 実績デモのURLを動的に生成
+  const getZissekiDemoUrl = () => {
+    if (isAuthenticated) {
+      // ログイン済みの場合：現在の年・週
+      const { year, week } = getYearAndWeek();
+      return `/zisseki-demo/${year}/${week}`;
+    } else {
+      // 未ログインの場合：デフォルト
+      return '/zisseki-demo/2024/1';
+    }
+  };
 
   const cardData = [
     { 
@@ -66,7 +83,7 @@ export default function HomePage() {
       title: "実績デモ", 
       description: "実績入力システムのデモページです。週単位でのイベント管理機能を提供します。", 
       linkText: "実績デモを開く",
-      href: "/zisseki-demo/2024/1",
+      href: getZissekiDemoUrl(),
       stylePattern: 'demo' as const
     }
 

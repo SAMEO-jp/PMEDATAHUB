@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { SubTabGroup } from './SubTabGroup';
 import { SubTabConfig } from './types';
+import { getSubTabs } from '../utils/businessCodeUtils';
 
 interface MainSubTabsProps {
   selectedTab: 'project' | 'indirect';
@@ -11,7 +12,8 @@ interface MainSubTabsProps {
 }
 
 /**
- * メインサブタブをレンダリング
+ * メインサブタブをレンダリング（動的生成版）
+ * 新しいbusinessCodeUtilsを使用してJSONベースの動的処理に変更
  */
 export const MainSubTabs = ({
   selectedTab,
@@ -20,8 +22,11 @@ export const MainSubTabs = ({
   projectSubTabConfigs,
   indirectSubTabConfigs
 }: MainSubTabsProps) => {
-  const configs = selectedTab === 'project' ? projectSubTabConfigs : indirectSubTabConfigs;
-  const tabs = Object.keys(configs);
+  // 動的にタブを生成
+  const tabs = useMemo(() => {
+    return getSubTabs(selectedTab);
+  }, [selectedTab]);
+
   const selectedTabValue = currentMainSubTab;
 
   return (

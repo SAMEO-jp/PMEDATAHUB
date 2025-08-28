@@ -11,7 +11,7 @@ export async function GET(
   { params }: { params: { zumen_id: string } }
 ) {
   try {
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(request.url || '', 'http://localhost');
     const fileType = searchParams.get('type'); // 'jpeg', 'pdf', 'cad'
     const action = searchParams.get('action'); // 'check', 'download'
 

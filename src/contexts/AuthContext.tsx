@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useAuth, User } from '@/src/store/authStore';
+import { useAuth } from '@/src/store/authStore';
+import type { LoginUser } from '@/src/types/auth';
 
 // ==========================================
 // 認証コンテキストの型定義
@@ -9,20 +10,19 @@ import { useAuth, User } from '@/src/store/authStore';
 
 /**
  * 認証コンテキストの型定義
- * Zustandストアの状態とアクションをそのまま提供
+ * tRPC対応のZustandストアの状態とアクションをそのまま提供
  */
 interface AuthContextType {
   // === 状態（読み取り専用） ===
   isAuthenticated: boolean;
-  currentUser: User | null;
+  user: LoginUser | null;
   isLoading: boolean;
   isLoginModalOpen: boolean;
   error: string | null;
   
   // === アクション（状態変更） ===
-  login: (userId: string) => Promise<boolean>;
-  logout: () => void;
-  setCurrentUser: (user: User | null) => void;
+  setUser: (user: LoginUser | null) => void;
+  clearUser: () => void;
   openLoginModal: () => void;
   closeLoginModal: () => void;
   toggleLoginModal: () => void;
@@ -118,7 +118,7 @@ export function useAuthContext(): AuthContextType {
 export function useAuthState() {
   const { 
     isAuthenticated, 
-    currentUser, 
+    user, 
     isLoading, 
     isLoginModalOpen, 
     error 
@@ -126,7 +126,7 @@ export function useAuthState() {
   
   return {
     isAuthenticated,
-    currentUser,
+    user,
     isLoading,
     isLoginModalOpen,
     error,
@@ -141,9 +141,8 @@ export function useAuthState() {
  */
 export function useAuthActions() {
   const {
-    login,
-    logout,
-    setCurrentUser,
+    setUser,
+    clearUser,
     openLoginModal,
     closeLoginModal,
     toggleLoginModal,
@@ -153,9 +152,8 @@ export function useAuthActions() {
   } = useAuthContext();
   
   return {
-    login,
-    logout,
-    setCurrentUser,
+    setUser,
+    clearUser,
     openLoginModal,
     closeLoginModal,
     toggleLoginModal,

@@ -57,9 +57,9 @@ export const HeaderContent: React.FC<HeaderContentProps> = ({
 
   // 認証コンテキストからユーザー情報とログイン機能を取得
   const {
-    currentUser,
+    user,
     isAuthenticated,
-    logout,
+    clearUser,
     openLoginModal,
   } = useAuthContext();
 
@@ -86,7 +86,7 @@ export const HeaderContent: React.FC<HeaderContentProps> = ({
   // ログアウトハンドラー
   const handleLogout = () => {
     try {
-      logout();
+      clearUser();
     } catch (error) {
       console.error('Header logout error:', error);
     }
@@ -124,8 +124,8 @@ export const HeaderContent: React.FC<HeaderContentProps> = ({
   };
 
   // ユーザー情報の取得（認証状態に応じて）
-  const userName = currentUser?.name || 'ゲスト';
-  const userRole = currentUser?.role || 'GUEST';
+  const userName = user?.name_japanese || 'ゲスト';
+  const userRole = user?.syokui || 'GUEST';
 
   return (
     <header className={`header ${className}`}>

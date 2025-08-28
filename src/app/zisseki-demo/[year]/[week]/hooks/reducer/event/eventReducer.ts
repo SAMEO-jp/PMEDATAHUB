@@ -40,14 +40,21 @@ export function eventReducer(state: EventState, action: EventAction): EventState
         error: null 
       };
     
-    case 'UPDATE_EVENT':
+    case 'UPDATE_EVENT': {
+      const updatedEvents = state.events.map(event =>
+        event.id === action.payload.eventId ? { ...event, ...action.payload.event } : event
+      );
+      const updatedSelectedEvent = state.selectedEvent && state.selectedEvent.id === action.payload.eventId
+        ? { ...state.selectedEvent, ...action.payload.event }
+        : state.selectedEvent;
+      
       return {
         ...state,
-        events: state.events.map(event =>
-          event.id === action.payload.eventId ? { ...event, ...action.payload.event } : event
-        ),
+        events: updatedEvents,
+        selectedEvent: updatedSelectedEvent,
         error: null
       };
+    }
     
     case 'DELETE_EVENT':
       return {
