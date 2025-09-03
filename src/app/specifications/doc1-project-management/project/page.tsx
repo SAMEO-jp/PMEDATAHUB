@@ -592,12 +592,12 @@ export default function ProjectSpecificationPage() {
           この仕様書は継続的に更新されます
         </p>
         <div className="flex justify-center gap-4">
-          <Link href="/project/api.document">
+          <Link href="/specifications/doc1-project-management/project/api.document">
             <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 transition-colors">
               API設計方針
             </button>
           </Link>
-          <Link href="/project/demo">
+          <Link href="/specifications/doc1-project-management/project/demo">
             <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 transition-colors">
               デモページを見る
             </button>

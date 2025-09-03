@@ -145,7 +145,7 @@ function PJ007BulkOperationsDemoContent() {
             <p className="text-gray-600 mt-2">一括処理の安全な実行とログ残し</p>
           </div>
           <div className="flex gap-3">
-            <Link href="/project/demo/pj-001">
+            <Link href="/specifications/doc1-project-management/project/demo/pj-001">
               <button className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
                 一覧に戻る
               </button>
