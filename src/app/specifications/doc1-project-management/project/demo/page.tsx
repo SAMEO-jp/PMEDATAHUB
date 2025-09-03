@@ -106,7 +106,7 @@ export default function ProjectDemoPage() {
           基本設計ドラフトに基づく機能デモ
         </p>
         <div className="flex justify-center gap-4">
-          <Link href="/project">
+          <Link href="/specifications/doc1-project-management/project">
             <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
               仕様書に戻る
             </button>
@@ -121,7 +121,7 @@ export default function ProjectDemoPage() {
           デモページ一覧
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Link href="/project/demo/pj-001">
+          <Link href="/specifications/doc1-project-management/project/demo/pj-001">
             <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer">
               <h3 className="font-semibold text-blue-600 mb-2">PJ-001: プロジェクト一覧</h3>
               <p className="text-sm text-gray-600 mb-3">登録済みプロジェクトを検索・確認・一括操作</p>
@@ -132,7 +132,7 @@ export default function ProjectDemoPage() {
             </div>
           </Link>
 
-          <Link href="/project/demo/pj-002">
+          <Link href="/specifications/doc1-project-management/project/demo/pj-002">
             <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer">
               <h3 className="font-semibold text-green-600 mb-2">PJ-002: プロジェクト詳細</h3>
               <p className="text-sm text-gray-600 mb-3">個別プロジェクトの状態と構成を俯瞰・編集</p>
@@ -143,7 +143,7 @@ export default function ProjectDemoPage() {
             </div>
           </Link>
 
-          <Link href="/project/demo/pj-003">
+          <Link href="/specifications/doc1-project-management/project/demo/pj-003">
             <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer">
               <h3 className="font-semibold text-purple-600 mb-2">PJ-003: プロジェクト作成</h3>
               <p className="text-sm text-gray-600 mb-3">新規プロジェクト登録</p>
@@ -154,7 +154,7 @@ export default function ProjectDemoPage() {
             </div>
           </Link>
 
-          <Link href="/project/demo/pj-004">
+          <Link href="/specifications/doc1-project-management/project/demo/pj-004">
             <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer">
               <h3 className="font-semibold text-orange-600 mb-2">PJ-004: プロジェクト編集</h3>
               <p className="text-sm text-gray-600 mb-3">既存プロジェクトの属性変更</p>
@@ -165,7 +165,7 @@ export default function ProjectDemoPage() {
             </div>
           </Link>
 
-          <Link href="/project/demo/pj-005">
+          <Link href="/specifications/doc1-project-management/project/demo/pj-005">
             <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer">
               <h3 className="font-semibold text-red-600 mb-2">PJ-005: メンバー管理</h3>
               <p className="text-sm text-gray-600 mb-3">参加メンバーの登録・権限付与・履歴管理</p>
@@ -176,7 +176,7 @@ export default function ProjectDemoPage() {
             </div>
           </Link>
 
-          <Link href="/project/demo/pj-006">
+          <Link href="/specifications/doc1-project-management/project/demo/pj-006">
             <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer">
               <h3 className="font-semibold text-indigo-600 mb-2">PJ-006: 進捗・ステータス管理</h3>
               <p className="text-sm text-gray-600 mb-3">進捗指標や状態遷移を管理</p>
@@ -187,7 +187,7 @@ export default function ProjectDemoPage() {
             </div>
           </Link>
 
-          <Link href="/project/demo/pj-007">
+          <Link href="/specifications/doc1-project-management/project/demo/pj-007">
             <div className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer">
               <h3 className="font-semibold text-yellow-600 mb-2">PJ-007: 一括操作センター</h3>
               <p className="text-sm text-gray-600 mb-3">一括処理の安全な実行とログ残し</p>
@@ -437,7 +437,7 @@ export default function ProjectDemoPage() {
           各デモページで詳細な機能を確認できます
         </p>
         <div className="flex justify-center gap-4">
-          <Link href="/project">
+          <Link href="/specifications/doc1-project-management/project">
             <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 transition-colors">
               仕様書に戻る
             </button>

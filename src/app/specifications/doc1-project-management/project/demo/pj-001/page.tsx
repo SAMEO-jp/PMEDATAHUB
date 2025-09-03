@@ -138,12 +138,12 @@ export default function PJ001ProjectListDemo() {
             <p className="text-gray-600 mt-2">登録済みプロジェクトを検索・確認・一括操作</p>
           </div>
           <div className="flex gap-3">
-            <Link href="/project/demo">
+            <Link href="/specifications/doc1-project-management/project/demo">
               <button className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
                 戻る
               </button>
             </Link>
-            <Link href="/project/demo/pj-003">
+            <Link href="/specifications/doc1-project-management/project/demo/pj-003">
               <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
                 <Plus className="w-4 h-4" />
                 新規作成

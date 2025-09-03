@@ -59,19 +59,19 @@ export default function ProjectLayout({
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
-              <Link href="/project" className="flex items-center gap-2">
+              <Link href="/specifications/doc1-project-management/project" className="flex items-center gap-2">
                 <FileText className="h-6 w-6 text-blue-600" />
                 <span className="font-semibold text-lg">プロジェクト管理アプリ</span>
               </Link>
               
               <div className="flex items-center gap-1">
-                <Link href="/project">
+                <Link href="/specifications/doc1-project-management/project">
                   <button className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     仕様書
                   </button>
                 </Link>
-                <Link href="/project/demo">
+                <Link href="/specifications/doc1-project-management/project/demo">
                   <button className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors flex items-center gap-2">
                     <Settings className="h-4 w-4" />
                     デモ
@@ -81,13 +81,13 @@ export default function ProjectLayout({
             </div>
             
             <div className="flex items-center gap-2">
-              <Link href="/project/api.document">
+              <Link href="/specifications/doc1-project-management/project/api.document">
                 <button className="bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 transition-colors flex items-center gap-1">
                   <FileText className="h-4 w-4" />
                   API設計方針
                 </button>
               </Link>
-              <Link href="/project/demo">
+              <Link href="/specifications/doc1-project-management/project/demo">
                 <button className="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors flex items-center gap-1">
                   <Settings className="h-4 w-4" />
                   デモページ
@@ -157,12 +157,12 @@ export default function ProjectLayout({
               <h4 className="font-semibold text-gray-900 mb-4">リンク</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <Link href="/project" className="text-blue-600 hover:text-blue-800">
+                  <Link href="/specifications/doc1-project-management/project" className="text-blue-600 hover:text-blue-800">
                     仕様書
                   </Link>
                 </li>
                 <li>
-                  <Link href="/project/demo" className="text-blue-600 hover:text-blue-800">
+                  <Link href="/specifications/doc1-project-management/project/demo" className="text-blue-600 hover:text-blue-800">
                     デモページ
                   </Link>
                 </li>

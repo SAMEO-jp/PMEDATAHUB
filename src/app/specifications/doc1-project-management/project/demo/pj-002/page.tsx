@@ -133,7 +133,7 @@ function PJ002ProjectDetailDemoContent() {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">プロジェクトが見つかりません</h1>
-          <Link href="/project/demo/pj-001">
+          <Link href="/specifications/doc1-project-management/project/demo/pj-001">
             <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
               一覧に戻る
             </button>
@@ -153,12 +153,12 @@ function PJ002ProjectDetailDemoContent() {
             <p className="text-gray-600 mt-2">PJ-002: プロジェクト詳細 - 個別プロジェクトの状態と構成を俯瞰・編集</p>
           </div>
           <div className="flex gap-3">
-            <Link href="/project/demo/pj-001">
+            <Link href="/specifications/doc1-project-management/project/demo/pj-001">
               <button className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
                 一覧に戻る
               </button>
             </Link>
-            <Link href={`/project/demo/pj-004?id=${project.id}`}>
+            <Link href={`/specifications/doc1-project-management/project/demo/pj-004?id=${project.id}`}>
               <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2">
                 <Edit className="w-4 h-4" />
                 編集

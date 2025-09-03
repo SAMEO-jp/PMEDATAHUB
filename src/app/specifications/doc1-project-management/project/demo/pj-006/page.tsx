@@ -103,7 +103,7 @@ function PJ006ProgressManagementDemoContent() {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">プロジェクトが見つかりません</h1>
-          <Link href="/project/demo/pj-001">
+                      <Link href="/specifications/doc1-project-management/project/demo/pj-001">
             <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
               一覧に戻る
             </button>

@@ -14,6 +14,9 @@ import { sqlRouter } from './db/sql';
 import { statisticsRouter } from './db/statistics';
 import { authRouter } from './db/auth';
 
+// Box item用ルーター
+import { boxRouter } from './box';
+
 
 /**
  * This is the primary router for your server.
@@ -34,6 +37,9 @@ export const appRouter = createTRPCRouter({
   sql: sqlRouter,
   statistics: statisticsRouter,
   auth: authRouter,
+  
+  // Box item用ルーター
+  box: boxRouter,
 });
 
 // export type definition of API

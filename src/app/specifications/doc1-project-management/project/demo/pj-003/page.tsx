@@ -106,7 +106,7 @@ export default function PJ003ProjectCreateDemo() {
             <p className="text-gray-600 mt-2">新規プロジェクト登録</p>
           </div>
           <div className="flex gap-3">
-            <Link href="/project/demo/pj-001">
+            <Link href="/specifications/doc1-project-management/project/demo/pj-001">
               <button className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
                 キャンセル
               </button>
@@ -402,7 +402,7 @@ export default function PJ003ProjectCreateDemo() {
 
         {/* 送信ボタン */}
         <div className="flex justify-end gap-4">
-          <Link href="/project/demo/pj-001">
+          <Link href="/specifications/doc1-project-management/project/demo/pj-001">
             <button
               type="button"
               className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"

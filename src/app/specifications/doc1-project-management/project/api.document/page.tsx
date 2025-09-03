@@ -12,7 +12,7 @@ export default function ApiDesignDocumentPage() {
           プロジェクト管理アプリのtRPC API設計と実装ガイドライン
         </p>
         <div className="flex justify-center gap-4">
-          <Link href="/project">
+          <Link href="/specifications/doc1-project-management/project">
             <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
               仕様書に戻る
             </button>
@@ -943,7 +943,7 @@ export const requireProjectPermission = (requiredRole: ProjectRole) =>
           このAPI設計方針は継続的に更新されます
         </p>
         <div className="flex justify-center gap-4">
-          <Link href="/project">
+          <Link href="/specifications/doc1-project-management/project">
             <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 transition-colors">
               仕様書に戻る
             </button>
