@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useAuth } from '@/src/store/authStore';
-import type { LoginUser } from '@/src/types/auth';
+import { useAuth } from '@/store/authStore';
+import type { LoginUser } from '@/types/auth';
 
 // ==========================================
 // 認証コンテキストの型定義

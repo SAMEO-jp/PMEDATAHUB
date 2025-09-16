@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { initializeDatabase } from '@src/lib/db/db_connection';
+import { initializeDatabase } from '@src/lib/db/connection/db_connection';
 
 export async function GET(
   request: Request,
@@ -9,23 +9,8 @@ export async function GET(
     const db = await initializeDatabase();
     const tableName = params.tableName;
 
-    // テーブルの存在確認
-    const tableCheck = await db.get(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name = ?",
-      [tableName]
-    );
-
-    if (!tableCheck) {
-      return NextResponse.json(
-        { error: '指定されたテーブルが存在しません' },
-        { status: 404 }
-      );
-    }
-
-    // テーブルのカラム情報を取得
     const columns = await db.all(`PRAGMA table_info(${tableName})`);
 
-    // テーブルのデータを取得
     const data = await db.all(`SELECT * FROM ${tableName}`);
 
     return NextResponse.json({
@@ -36,9 +21,9 @@ export async function GET(
       }
     });
   } catch (error) {
-    console.error('テーブルデータの取得に失敗しました:', error);
+    console.error('繝・・繝悶Ν繝・・繧ｿ縺ｮ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆:', error);
     return NextResponse.json(
-      { error: 'データベースエラーが発生しました' },
+      { error: '繝・・繧ｿ繝吶・繧ｹ繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆' },
       { status: 500 }
     );
   }

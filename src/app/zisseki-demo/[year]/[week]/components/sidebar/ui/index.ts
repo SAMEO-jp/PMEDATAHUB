@@ -6,6 +6,8 @@ export { DeleteButton } from './DeleteButton';
 export { TitleField } from './TitleField';
 export { DescriptionField } from './DescriptionField';
 export { ProjectSelect } from '../components/ProjectSelect';
+export { SetsubiSelect } from '../components/SetsubiSelect';
+export { KounyuSelect } from '../components/KounyuSelect';
 export { ActivityCodeField } from './ActivityCodeField';
 export { TabSelector } from './TabSelector';
 

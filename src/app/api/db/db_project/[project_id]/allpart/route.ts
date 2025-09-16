@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { initializeDatabase } from '@src/lib/db/db_connection';
+import { initializeDatabase } from '@src/lib/db/connection/db_connection';
 import type { Database } from 'sqlite';
 import type { BomFlatRow } from '@src/types/db_bom';
 
@@ -13,10 +13,10 @@ export async function GET(
   try {
     db = await initializeDatabase();
 
-    // プロジェクト内の全図面の部品情報を取得
+    // Get all part information for the project's drawings
     const query = `
       SELECT 
-        -- 図面情報
+        -- Drawing information
         z.ROWID as Zumen_ROWID,
         z.Zumen_ID,
         z.project_ID,
@@ -43,7 +43,7 @@ export async function GET(
         z.WRITEver,
         z.KANREN_ZUMEN,
         
-        -- 部品情報
+        -- 驛ｨ蜩∵ュ蝣ｱ
         p.ROWID as Part_ROWID,
         p.PART_ID,
         p.QUANTITY,
@@ -57,7 +57,7 @@ export async function GET(
         p.ZUMEN_ID as PART_ZUMEN_ID,
         p.PART_TANNI_WEIGHT,
         
-        -- 部材情報
+        -- 驛ｨ譚先ュ蝣ｱ
         b.ROWID as Buzai_ROWID,
         b.BUZAI_ID,
         b.ZUMEN_ID as BUZAI_ZUMEN_ID,
@@ -75,9 +75,9 @@ export async function GET(
 
     const rows = await db.all(query, [projectId]);
 
-    // 結果を整形
+    // 邨先棡繧呈紛蠖｢
     const flatRows: BomFlatRow[] = rows.map(row => ({
-      // 図面情報
+      // 蝗ｳ髱｢諠・ｱ
       Zumen_ROWID: row.Zumen_ROWID,
       Zumen_ID: row.Zumen_ID,
       project_ID: row.project_ID,
@@ -104,7 +104,7 @@ export async function GET(
       WRITEver: row.WRITEver,
       KANREN_ZUMEN: row.KANREN_ZUMEN,
 
-      // 部品情報
+      // 驛ｨ蜩∵ュ蝣ｱ
       Part_ROWID: row.Part_ROWID,
       PART_ID: row.PART_ID,
       QUANTITY: row.QUANTITY,
@@ -118,7 +118,7 @@ export async function GET(
       PART_ZUMEN_ID: row.PART_ZUMEN_ID,
       PART_TANNI_WEIGHT: row.PART_TANNI_WEIGHT,
 
-      // 部材情報
+      // 驛ｨ譚先ュ蝣ｱ
       Buzai_ROWID: row.Buzai_ROWID,
       BUZAI_ID: row.BUZAI_ID,
       BUZAI_ZUMEN_ID: row.BUZAI_ZUMEN_ID,
@@ -136,18 +136,18 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('BOMデータの取得に失敗しました:', error);
+    console.error('BOM繝・・繧ｿ縺ｮ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆:', error);
     return NextResponse.json({
       success: false,
       data: null,
-      error: 'データベースエラーが発生しました'
+      error: '繝・・繧ｿ繝吶・繧ｹ繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆'
     }, { status: 500 });
   } finally {
     if (db) {
       try {
         await db.close();
       } catch (closeErr) {
-        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+        console.warn('DB繧ｯ繝ｭ繝ｼ繧ｺ譎ゅ↓繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆:', closeErr);
       }
     }
   }

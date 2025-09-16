@@ -4,7 +4,7 @@
 
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { getAllRecords, createRecord, updateDataById } from '@src/lib/db/db_CRUD';
+import { getAllRecords, createRecord, updateDataById } from '@src/lib/db/crud/db_CRUD';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 import type { TimeGridEvent, WorkTimeData } from '@src/app/zisseki-demo/[year]/[week]/types';
 
@@ -12,11 +12,19 @@ import type { TimeGridEvent, WorkTimeData } from '@src/app/zisseki-demo/[year]/[
 const WeekParamsSchema = z.object({
   year: z.number().min(2020).max(2030),
   week: z.number().min(1, '週番号は1以上である必要があります').max(53, '週番号は53以下である必要があります'),
+  userId: z.string().min(1, 'ユーザーIDは必須です'),
 });
 
 const MonthParamsSchema = z.object({
   year: z.number().min(2020).max(2030),
   month: z.number().min(1, '月は1以上である必要があります').max(12, '月は12以下である必要があります'),
+  userId: z.string().min(1, 'ユーザーIDは必須です'),
+});
+
+const WorkTimeParamsSchema = z.object({
+  year: z.number().min(2020).max(2030),
+  week: z.number().min(1, '週番号は1以上である必要があります').max(53, '週番号は53以下である必要があります'),
+  userId: z.string().min(1, 'ユーザーIDは必須です'),
 });
 
 const EventSchema = z.object({
@@ -126,6 +134,9 @@ export const zissekiRouter = createTRPCRouter({
     .input(WeekParamsSchema)
     .query(async ({ input }) => {
       try {
+        // サーバーサイドログ出力
+        console.log(`🔍 [API] getWeekData: year=${input.year}, week=${input.week}, userId=${input.userId}`);
+
         // eventsテーブルから該当週のデータを取得
         const startOfWeek = new Date(input.year, 0, 1 + (input.week - 1) * 7);
         const endOfWeek = new Date(startOfWeek);
@@ -133,7 +144,7 @@ export const zissekiRouter = createTRPCRouter({
         endOfWeek.setHours(23, 59, 59, 999);
 
         const query = `
-          SELECT 
+          SELECT
             id,
             title,
             description,
@@ -174,16 +185,17 @@ export const zissekiRouter = createTRPCRouter({
             status,
             createdAt,
             updatedAt
-          FROM events 
-          WHERE startDateTime >= ? 
+          FROM events
+          WHERE startDateTime >= ?
             AND startDateTime <= ?
+            AND (employeeNumber = ? OR employeeNumber IS NULL OR employeeNumber = '')
           ORDER BY startDateTime ASC
         `;
 
         const result = await getAllRecords<EventRecord>(
           'events',
           query,
-          [startOfWeek.toISOString(), endOfWeek.toISOString()]
+          [startOfWeek.toISOString(), endOfWeek.toISOString(), input.userId]
         );
 
         if (!result.success) {
@@ -241,6 +253,9 @@ export const zissekiRouter = createTRPCRouter({
         // ワークタイムは一旦空配列を返す（後で実装）
         const workTimes: WorkTimeData[] = [];
 
+        // レスポンスログ出力
+        console.log(`✅ [API] getWeekData success: ${events.length} events found`);
+
         return {
           success: true,
           data: {
@@ -273,13 +288,17 @@ export const zissekiRouter = createTRPCRouter({
     .input(z.object({
       year: z.number(),
       week: z.number(),
+      userId: z.string().min(1, 'ユーザーIDは必須です'),
       data: WeekDataSchema,
     }))
     .mutation(async ({ input }) => {
       try {
-        const { year, week, data } = input;
-        
-        // 既存データを削除（週単位で全削除）
+        const { year, week, userId, data } = input;
+
+        // サーバーサイドログ出力
+        console.log(`🔍 [API] saveWeekData: year=${year}, week=${week}, userId=${userId}, events=${data.events.length}`);
+
+        // 既存データを削除（週単位で該当ユーザーのデータのみ削除）
         const startOfWeek = new Date(year, 0, 1 + (week - 1) * 7);
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(endOfWeek.getDate() + 6);
@@ -287,15 +306,17 @@ export const zissekiRouter = createTRPCRouter({
 
         // 既存データを削除
         const deleteQuery = `
-          DELETE FROM events 
-          WHERE startDateTime >= ? 
+          DELETE FROM events
+          WHERE startDateTime >= ?
             AND startDateTime <= ?
+            AND (employeeNumber = ? OR employeeNumber IS NULL OR employeeNumber = '')
         `;
 
         // 削除処理を実行
         const deleteResult = await getAllRecords('events', deleteQuery, [
-          startOfWeek.toISOString(), 
-          endOfWeek.toISOString()
+          startOfWeek.toISOString(),
+          endOfWeek.toISOString(),
+          userId
         ]);
 
         if (!deleteResult.success) {
@@ -318,7 +339,7 @@ export const zissekiRouter = createTRPCRouter({
             color: event.color || '#3788d8',
             unsaved: event.unsaved ? 1 : 0,
             category: event.category || '',
-            employeeNumber: event.employeeNumber || '',
+            employeeNumber: userId, // 必ずログイン中のユーザーIDを設定
             activityCode: event.activityCode || '',
             purposeProject: event.purposeProject || '',
             departmentCode: event.departmentCode || '',
@@ -360,6 +381,9 @@ export const zissekiRouter = createTRPCRouter({
 
         const insertedEvents = await Promise.all(insertPromises);
 
+        // レスポンスログ出力
+        console.log(`✅ [API] saveWeekData success: ${insertedEvents.length} events saved`);
+
         return {
           success: true,
           data: {
@@ -386,11 +410,29 @@ export const zissekiRouter = createTRPCRouter({
   updateEvent: publicProcedure
     .input(z.object({
       eventId: z.string(),
+      userId: z.string().min(1, 'ユーザーIDは必須です'),
       event: EventSchema.partial(),
     }))
     .mutation(async ({ input }) => {
       try {
-        const { eventId, event } = input;
+        const { eventId, userId, event } = input;
+
+        // サーバーサイドログ出力
+        console.log(`🔍 [API] updateEvent: eventId=${eventId}, userId=${userId}, title=${event.title || 'N/A'}`);
+
+        // まずイベントの所有者を確認
+        const checkOwnerQuery = `
+          SELECT id, employeeNumber FROM events
+          WHERE id = ? AND (employeeNumber = ? OR employeeNumber IS NULL OR employeeNumber = '')
+        `;
+        const ownerCheck = await getAllRecords('events', checkOwnerQuery, [eventId, userId]);
+
+        if (!ownerCheck.success || !ownerCheck.data || ownerCheck.data.length === 0) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'このイベントを更新する権限がありません',
+          });
+        }
 
         // eventsテーブルのカラム名に合わせて変換
         const updateData = {
@@ -443,6 +485,9 @@ export const zissekiRouter = createTRPCRouter({
           });
         }
 
+        // レスポンスログ出力
+        console.log(`✅ [API] updateEvent success: eventId=${eventId}`);
+
         return {
           success: true,
           data: result.data,
@@ -465,10 +510,28 @@ export const zissekiRouter = createTRPCRouter({
   deleteEvent: publicProcedure
     .input(z.object({
       eventId: z.string(),
+      userId: z.string().min(1, 'ユーザーIDは必須です'),
     }))
     .mutation(async ({ input }) => {
       try {
-        const { eventId } = input;
+        const { eventId, userId } = input;
+
+        // サーバーサイドログ出力
+        console.log(`🔍 [API] deleteEvent: eventId=${eventId}, userId=${userId}`);
+
+        // まずイベントの所有者を確認
+        const checkOwnerQuery = `
+          SELECT id, employeeNumber FROM events
+          WHERE id = ? AND (employeeNumber = ? OR employeeNumber IS NULL OR employeeNumber = '')
+        `;
+        const ownerCheck = await getAllRecords('events', checkOwnerQuery, [eventId, userId]);
+
+        if (!ownerCheck.success || !ownerCheck.data || ownerCheck.data.length === 0) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'このイベントを削除する権限がありません',
+          });
+        }
 
         // 実際にレコードを削除（deleted_atカラムが存在しないため）
         const result = await getAllRecords('events', 'DELETE FROM events WHERE id = ?', [eventId]);
@@ -482,6 +545,9 @@ export const zissekiRouter = createTRPCRouter({
             message: errorMessage,
           });
         }
+
+        // レスポンスログ出力
+        console.log(`✅ [API] deleteEvent success: eventId=${eventId}`);
 
         return {
           success: true,
@@ -503,11 +569,17 @@ export const zissekiRouter = createTRPCRouter({
    * ワークタイムデータを取得するプロシージャ（現在は空配列を返す）。
    */
   getWorkTimes: publicProcedure
-    .input(WeekParamsSchema)
+    .input(WorkTimeParamsSchema)
     .query(({ input }) => {
       try {
+        // サーバーサイドログ出力
+        console.log(`🔍 [API] getWorkTimes: year=${input.year}, week=${input.week}, userId=${input.userId}`);
+
         // 現在は空配列を返す（後で実装）
         const workTimes: WorkTimeData[] = [];
+
+        // レスポンスログ出力
+        console.log(`✅ [API] getWorkTimes success: ${workTimes.length} worktimes found`);
 
         return {
           success: true,
@@ -529,12 +601,15 @@ export const zissekiRouter = createTRPCRouter({
     .input(MonthParamsSchema)
     .query(async ({ input }) => {
       try {
+        // サーバーサイドログ出力
+        console.log(`🔍 [API] getMonthData: year=${input.year}, month=${input.month}, userId=${input.userId}`);
+
         // eventsテーブルから該当月のデータを取得
         const startOfMonth = new Date(input.year, input.month - 1, 1);
         const endOfMonth = new Date(input.year, input.month, 0, 23, 59, 59, 999);
 
         const query = `
-          SELECT 
+          SELECT
             id,
             title,
             description,
@@ -575,16 +650,17 @@ export const zissekiRouter = createTRPCRouter({
             status,
             createdAt,
             updatedAt
-          FROM events 
-          WHERE startDateTime >= ? 
+          FROM events
+          WHERE startDateTime >= ?
             AND startDateTime <= ?
+            AND (employeeNumber = ? OR employeeNumber IS NULL OR employeeNumber = '')
           ORDER BY startDateTime ASC
         `;
 
         const result = await getAllRecords<EventRecord>(
           'events',
           query,
-          [startOfMonth.toISOString(), endOfMonth.toISOString()]
+          [startOfMonth.toISOString(), endOfMonth.toISOString(), input.userId]
         );
 
         if (!result.success) {
@@ -638,6 +714,9 @@ export const zissekiRouter = createTRPCRouter({
           createdAt: event.createdAt,
           updatedAt: event.updatedAt,
         }));
+
+        // レスポンスログ出力
+        console.log(`✅ [API] getMonthData success: ${events.length} events found`);
 
         return {
           success: true,

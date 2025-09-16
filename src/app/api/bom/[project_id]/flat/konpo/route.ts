@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
-import { initializeDatabase } from '@src/lib/db/db_connection';
+import { initializeDatabase } from '@src/lib/db/connection/db_connection';
 
 export async function GET(
   request: Request,
@@ -12,7 +12,7 @@ export async function GET(
     db = await initializeDatabase();
 
     if (!db) {
-      throw new Error('データベースの初期化に失敗しました');
+      throw new Error('繝・・繧ｿ繝吶・繧ｹ縺ｮ蛻晄悄蛹悶↓螟ｱ謨励＠縺ｾ縺励◆');
     }
 
     const query = `
@@ -53,9 +53,9 @@ export async function GET(
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('データの取得に失敗しました:', error);
+    console.error('繝・・繧ｿ縺ｮ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆:', error);
     return NextResponse.json(
-      { error: 'データベースエラーが発生しました' },
+      { error: '繝・・繧ｿ繝吶・繧ｹ繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆' },
       { status: 500 }
     );
   } finally {
@@ -63,7 +63,7 @@ export async function GET(
       try {
         await db.close();
       } catch (closeErr) {
-        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+        console.warn('DB繧ｯ繝ｭ繝ｼ繧ｺ譎ゅ↓繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆:', closeErr);
       }
     }
   }

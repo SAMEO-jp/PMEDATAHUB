@@ -1,4 +1,4 @@
-import { initializeDatabase, DataResult } from '@src/lib/db/db_connection';
+import { initializeDatabase, DataResult } from '@src/lib/db/connection/db_connection';
 import type { Database } from 'sqlite';
 import type { ColumnInfo, TableSchemaChange } from '@src/types/table-schema';
 

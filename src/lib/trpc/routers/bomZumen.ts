@@ -1,4 +1,4 @@
-import { createRecord, deleteRecord, getAllRecords, getRecord, updateRecord } from '@src/lib/db/db_CRUD';
+import { createRecord, deleteRecord, getAllRecords, getRecord, updateRecord } from '@src/lib/db/crud/db_CRUD';
 import type { BomZumen } from '@src/types/db_bom';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';

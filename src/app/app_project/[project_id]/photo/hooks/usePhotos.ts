@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { trpc } from '@src/lib/trpc/client';
-import { Photo, PhotoFilters } from '@/src/types/photo';
+import { Photo, PhotoFilters } from '@/types/photo';
 
 export function usePhotos(projectId: string) {
   const [selectedPhotos, setSelectedPhotos] = useState<number[]>([]);

@@ -5,7 +5,7 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
-import { getAllTables, getTableDetail, getTableSchema } from '../../../db/db_GetData';
+import { getAllTables, getTableDetail, getTableSchema } from '../../../db/crud/db_GetData';
 
 // Zodスキーマ定義
 export const TableSchema = z.object({
@@ -110,7 +110,7 @@ export const tableRouter = createTRPCRouter({
    */
   getData: publicProcedure
     .input(TableDataSchema)
-    .query(async ({ input }) => {
+    .query(({ input }) => {
       try {
         // TODO: DAL層のgetTableData()を実装後に置き換え
         // const result = await getTableData(input.tableName, input.limit, input.offset);
@@ -161,7 +161,7 @@ export const tableRouter = createTRPCRouter({
    */
   search: publicProcedure
     .input(TableSearchSchema)
-    .query(async ({ input }) => {
+    .query(({ input }) => {
       try {
         // TODO: DAL層のsearchTables()を実装後に置き換え
         // const result = await searchTables(input);
@@ -230,7 +230,7 @@ export const tableRouter = createTRPCRouter({
    */
   getStatistics: publicProcedure
     .input(TableDetailSchema)
-    .query(async ({ input }) => {
+    .query(({ input }) => {
       try {
         // TODO: DAL層のgetTableStatistics()を実装後に置き換え
         // const result = await getTableStatistics(input.tableName);

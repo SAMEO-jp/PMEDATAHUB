@@ -5,8 +5,8 @@
 import React from 'react';
 import { Card } from '../components/cusutom_ui/Card';
 import { CardGrid } from '../components/cusutom_ui/CardGrid';
-import { useAuthContext } from '@/src/contexts/AuthContext';
-import { getYearAndWeek } from '@/src/utils/dateUtils';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { getYearAndWeek } from '@/utils/dateUtils';
 
 export default function HomePage() {
   // 認証コンテキストを取得
@@ -44,11 +44,18 @@ export default function HomePage() {
       href: "/specifications/doc1-project-management/project",
       stylePattern: 'project' as const
     },
-    { 
-      title: "検討書管理システム仕様書", 
-      description: "検討書管理システムの仕様書です。プロジェクト実績としての検討書管理の設計と実装仕様を確認できます。", 
+    {
+      title: "検討書管理システム仕様書",
+      description: "検討書管理システムの仕様書です。プロジェクト実績としての検討書管理の設計と実装仕様を確認できます。",
       linkText: "仕様書を見る",
       href: "/specifications/doc2-kentosho-management",
+      stylePattern: 'project' as const
+    },
+    {
+      title: "ユーザー管理",
+      description: "全ユーザーの一覧表示と個別詳細情報の確認ができます。プロジェクト参加状況や担当業務も確認できます。",
+      linkText: "ユーザー管理を開く",
+      href: "/page/user",
       stylePattern: 'project' as const
     },
     { 
@@ -79,12 +86,19 @@ export default function HomePage() {
       href: "/test",
       stylePattern: 'table' as const
     },
-    { 
-      title: "実績デモ", 
-      description: "実績入力システムのデモページです。週単位でのイベント管理機能を提供します。", 
+    {
+      title: "実績デモ",
+      description: "実績入力システムのデモページです。週単位でのイベント管理機能を提供します。",
       linkText: "実績デモを開く",
       href: getZissekiDemoUrl(),
       stylePattern: 'demo' as const
+    },
+    {
+      title: "ページ管理",
+      description: "各種ページの一覧と管理機能を提供します。ユーザー情報やシステム設定などにアクセスできます。",
+      linkText: "ページ管理を開く",
+      href: "/page",
+      stylePattern: 'default' as const
     }
 
   ];

@@ -1,33 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
-import { initializeDatabase } from '@src/lib/db/db_connection';
+import { initializeDatabase } from '@src/lib/db/connection/db_connection';
 import type { ApiResponse } from '@src/types/api';
 
 // ==========================================
-// 型定義層（レスポンス型、データ型）
-// ==========================================
+// 蝙句ｮ夂ｾｩ螻､・医Ξ繧ｹ繝昴Φ繧ｹ蝙九√ョ繝ｼ繧ｿ蝙具ｼ・// ==========================================
 /**
- * フラットBOMデータの型定義
- * @property project_ID - プロジェクトID
- * @property Zumen_ID - 図面ID
- * @property Zumen_Name - 図面名
- * @property PART_ID - 部品ID
- * @property PART_NAME - 部品名
- * @property QUANTITY - 数量
- * @property SPARE_QUANTITY - 予備数量
- * @property MANUFACTURER - 製造元
- * @property BUZAI_ID - 部材ID
- * @property BUZAI_NAME - 部材名
- * @property BUZAI_WEIGHT - 部材重量
- * @property BUZAI_QUANTITY - 部材数量
- * @property ZAISITU_NAME - 材質名
- * @property KONPO_TANNI_ID - 工法単位ID
- * @property PART_KO - 部品工法
- * @property ZENSU_KO - 全数工法
- * @property KONPO_LIST_ID - 工法リストID
- * @property KONPO_LIST_WEIGHT - 工法リスト重量
- * @property HASSOU_IN - 発送元
- * @property HASSOU_TO - 発送先
+ * 繝輔Λ繝・ヨBOM繝・・繧ｿ縺ｮ蝙句ｮ夂ｾｩ
+ * @property project_ID - 繝励Ο繧ｸ繧ｧ繧ｯ繝・D
+ * @property Zumen_ID - 蝗ｳ髱｢ID
+ * @property Zumen_Name - 蝗ｳ髱｢蜷・ * @property PART_ID - 驛ｨ蜩！D
+ * @property PART_NAME - 驛ｨ蜩∝錐
+ * @property QUANTITY - 謨ｰ驥・ * @property SPARE_QUANTITY - 莠亥ｙ謨ｰ驥・ * @property MANUFACTURER - 陬ｽ騾蜈・ * @property BUZAI_ID - 驛ｨ譚蝕D
+ * @property BUZAI_NAME - 驛ｨ譚仙錐
+ * @property BUZAI_WEIGHT - 驛ｨ譚宣㍾驥・ * @property BUZAI_QUANTITY - 驛ｨ譚先焚驥・ * @property ZAISITU_NAME - 譚占ｳｪ蜷・ * @property KONPO_TANNI_ID - 蟾･豕募腰菴巧D
+ * @property PART_KO - 驛ｨ蜩∝ｷ･豕・ * @property ZENSU_KO - 蜈ｨ謨ｰ蟾･豕・ * @property KONPO_LIST_ID - 蟾･豕輔Μ繧ｹ繝・D
+ * @property KONPO_LIST_WEIGHT - 蟾･豕輔Μ繧ｹ繝磯㍾驥・ * @property HASSOU_IN - 逋ｺ騾∝・
+ * @property HASSOU_TO - 逋ｺ騾∝・
  */
 interface FlatBomData {
   project_ID: string;
@@ -53,13 +42,9 @@ interface FlatBomData {
 }
 
 // ==========================================
-// API実装層（GET メソッド）
-// ==========================================
+// API螳溯｣・ｱ､・・ET 繝｡繧ｽ繝・ラ・・// ==========================================
 /**
- * プロジェクトのフラットBOMデータを取得
- * @param request - HTTPリクエスト
- * @param params - URLパラメータ（project_id）
- * @returns フラットBOMデータの配列
+ * 繝励Ο繧ｸ繧ｧ繧ｯ繝医・繝輔Λ繝・ヨBOM繝・・繧ｿ繧貞叙蠕・ * @param request - HTTP繝ｪ繧ｯ繧ｨ繧ｹ繝・ * @param params - URL繝代Λ繝｡繝ｼ繧ｿ・・roject_id・・ * @returns 繝輔Λ繝・ヨBOM繝・・繧ｿ縺ｮ驟榊・
  */
 export async function GET(
   request: Request,
@@ -68,33 +53,32 @@ export async function GET(
   let db: any = null;
   
   try {
-    // パラメータ検証
+    // 繝代Λ繝｡繝ｼ繧ｿ讀懆ｨｼ
     const projectId = params.project_id;
     if (!projectId) {
       return NextResponse.json<ApiResponse<null>>({
         success: false,
         error: {
           code: 'MISSING_PROJECT_ID',
-          message: 'プロジェクトIDが指定されていません',
+          message: '繝励Ο繧ｸ繧ｧ繧ｯ繝・D縺梧欠螳壹＆繧後※縺・∪縺帙ｓ',
           status: 400
         }
       }, { status: 400 });
     }
 
-    // データベース接続
-    db = await initializeDatabase();
+    // 繝・・繧ｿ繝吶・繧ｹ謗･邯・    db = await initializeDatabase();
     if (!db) {
       return NextResponse.json<ApiResponse<null>>({
         success: false,
         error: {
           code: 'DATABASE_CONNECTION_FAILED',
-          message: 'データベースの初期化に失敗しました',
+          message: '繝・・繧ｿ繝吶・繧ｹ縺ｮ蛻晄悄蛹悶↓螟ｱ謨励＠縺ｾ縺励◆',
           status: 500
         }
       }, { status: 500 });
     }
 
-    // フラットBOMデータ取得クエリ
+    // 繝輔Λ繝・ヨBOM繝・・繧ｿ蜿門ｾ励け繧ｨ繝ｪ
     const query = `
       SELECT
         z.project_ID,
@@ -132,7 +116,7 @@ export async function GET(
 
     const result = await db.all(query, [projectId]);
 
-    // データ型変換
+    // 繝・・繧ｿ蝙句､画鋤
     const flatBomData: FlatBomData[] = result.map((row: any) => ({
       project_ID: row.project_ID,
       Zumen_ID: row.Zumen_ID,
@@ -162,22 +146,22 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('フラットBOMデータの取得に失敗しました:', error);
+    console.error('繝輔Λ繝・ヨBOM繝・・繧ｿ縺ｮ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆:', error);
     return NextResponse.json<ApiResponse<null>>({
       success: false,
       error: {
         code: 'FLAT_BOM_FETCH_FAILED',
-        message: 'フラットBOMデータの取得に失敗しました',
+        message: '繝輔Λ繝・ヨBOM繝・・繧ｿ縺ｮ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆',
         status: 500
       }
     }, { status: 500 });
   } finally {
-    // データベース接続の確実なクローズ
+    // 繝・・繧ｿ繝吶・繧ｹ謗･邯壹・遒ｺ螳溘↑繧ｯ繝ｭ繝ｼ繧ｺ
     if (db) {
       try {
         await db.close();
       } catch (closeErr) {
-        console.warn('データベースクローズ時にエラーが発生しました:', closeErr);
+        console.warn('繝・・繧ｿ繝吶・繧ｹ繧ｯ繝ｭ繝ｼ繧ｺ譎ゅ↓繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆:', closeErr);
       }
     }
   }

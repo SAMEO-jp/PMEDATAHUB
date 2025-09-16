@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
-import { initializeDatabase } from '@src/lib/db/db_connection';
+import { initializeDatabase } from '@src/lib/db/connection/db_connection';
 
 interface PrepareData {
   ZUMEN_ID: string;
@@ -15,13 +15,13 @@ export async function GET(
   request: Request,
   { params }: { params: { project_id: string } }
 ) {
-  let db: any = null; // SQLite3.Databaseのインスタンス
+  let db: any = null; // SQLite3.Database縺ｮ繧､繝ｳ繧ｹ繧ｿ繝ｳ繧ｹ
 
   try {
     db = await initializeDatabase();
-    console.log('DB: データベース接続成功');
+    console.log('DB: Database connection established');
 
-    // BUZAI_PARTとKONPO_TANNIを結合して、梱包単位が未作成の部品を取得
+    // Get parts from BUZAI_PART and KONPO_TANNI that need konpo tanni preparation
     const query = `
       SELECT 
         bp.ZUMEN_ID,
@@ -40,7 +40,7 @@ export async function GET(
     const result = await new Promise<PrepareData[]>((resolve, reject) => {
       db.all(query, (err: Error | null, rows: PrepareData[]) => {
         if (err) {
-          console.error('クエリ実行エラー:', err);
+          console.error('繧ｯ繧ｨ繝ｪ螳溯｡後お繝ｩ繝ｼ:', err);
           reject(err);
           return;
         }
@@ -55,18 +55,18 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('梱包準備データの取得に失敗しました:', error);
+    console.error('譴ｱ蛹・ｺ門ｙ繝・・繧ｿ縺ｮ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆:', error);
     return NextResponse.json(
-      { success: false, error: '梱包準備データの取得に失敗しました' },
+      { success: false, error: '譴ｱ蛹・ｺ門ｙ繝・・繧ｿ縺ｮ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆' },
       { status: 500 }
     );
   } finally {
     if (db) {
       try {
         db.close();
-        console.log('DB: データベース接続を閉じました');
+        console.log('DB: 繝・・繧ｿ繝吶・繧ｹ謗･邯壹ｒ髢峨§縺ｾ縺励◆');
       } catch (err) {
-        console.error('DB: データベース接続のクローズに失敗しました:', err);
+        console.error('DB: 繝・・繧ｿ繝吶・繧ｹ謗･邯壹・繧ｯ繝ｭ繝ｼ繧ｺ縺ｫ螟ｱ謨励＠縺ｾ縺励◆:', err);
       }
     }
   }

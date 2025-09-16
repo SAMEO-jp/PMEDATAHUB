@@ -1,7 +1,7 @@
 'use client';
 
 //React関連（必ず最初）
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 //Next.js関連
 import { useRouter } from 'next/navigation';
@@ -10,86 +10,57 @@ import { useRouter } from 'next/navigation';
 import type { Project } from '@src/types/db_project';
 import { useProjectListHeader } from './hooks/useProjectListHeader';
 
+// カスタムフック
+import { useProjectAll } from '@src/hooks/useProjectData';
+
 
 
 export default function ProjectListPage() {
   // 状態管理
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<keyof Project>('CREATED_AT');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [filterStatus, setFilterStatus] = useState<Project['PROJECT_STATUS'] | 'all'>('all');
+  const [filterStatus, setFilterStatus] = useState<'active' | 'completed' | 'archived' | 'all'>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 10;
   const router = useRouter();
 
+  // tRPCを使用してプロジェクトデータを取得
+  const { data: projectData, isLoading: loading, error: queryError } = useProjectAll({
+    search: searchTerm || undefined,
+    status: filterStatus === 'all' ? undefined : filterStatus,
+    page: currentPage,
+    pageSize: itemsPerPage,
+  });
+
   // プロジェクト一覧用のヘッダー設定
-  useProjectListHeader(projects.length, searchTerm);
+  useProjectListHeader(projectData?.data?.length || 0, searchTerm);
 
-  // プロジェクトデータの取得
-  const fetchProjects = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  // tRPCからのデータをソートして使用
+  const projects = projectData?.data || [];
+  const totalPages = projectData?.totalPages || 1;
+  const error = queryError ? 'プロジェクトの取得に失敗しました' : null;
 
-      // 検索条件の構築
-      const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
-      if (filterStatus !== 'all') params.append('status', filterStatus);
-      params.append('page', currentPage.toString());
-      params.append('pageSize', itemsPerPage.toString());
+  // ソート済みのプロジェクトデータ
+  const sortedProjects = [...projects].sort((a, b) => {
+    const aValue = a[sortField];
+    const bValue = b[sortField];
 
-      const response = await fetch(`/api/db/db_projects/all_list?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error(`プロジェクトの取得に失敗しました: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      // データの存在確認と型チェック
-      if (!data || !Array.isArray(data.projects)) {
-        throw new Error('無効なデータ形式です');
-      }
-
-      // クライアント側でソート
-      const sortedProjects = [...data.projects].sort((a, b) => {
-        const aValue = a[sortField];
-        const bValue = b[sortField];
-
-        // 日付フィールドの場合は日付として比較
-        if (sortField === 'CREATED_AT' || sortField === 'UPDATE_AT' || 
-            sortField === 'PROJECT_START_DATE' || sortField === 'PROJECT_START_ENDDATE') {
-          const aDate = new Date(aValue as string).getTime();
-          const bDate = new Date(bValue as string).getTime();
-          return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
-        }
-
-        // その他のフィールドは文字列として比較
-        const aStr = String(aValue);
-        const bStr = String(bValue);
-        return sortOrder === 'asc' 
-          ? aStr.localeCompare(bStr)
-          : bStr.localeCompare(aStr);
-      });
-
-      setProjects(sortedProjects);
-      setTotalPages(Math.ceil((data.total || 0) / itemsPerPage));
-    } catch (err) {
-      console.error('プロジェクト取得エラー:', err);
-      setError(err instanceof Error ? err.message : '予期せぬエラーが発生しました');
-      setProjects([]); // エラー時は空配列を設定
-    } finally {
-      setLoading(false);
+    // 日付フィールドの場合は日付として比較
+    if (sortField === 'CREATED_AT' || sortField === 'UPDATE_AT' ||
+        sortField === 'PROJECT_START_DATE' || sortField === 'PROJECT_START_ENDDATE') {
+      const aDate = new Date(aValue as string).getTime();
+      const bDate = new Date(bValue as string).getTime();
+      return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
     }
-  };
 
-  // 初回読み込みと条件変更時のデータ取得
-  useEffect(() => {
-    fetchProjects();
-  }, [searchTerm, filterStatus, currentPage]);
+    // その他のフィールドは文字列として比較
+    const aStr = String(aValue);
+    const bStr = String(bValue);
+    return sortOrder === 'asc'
+      ? aStr.localeCompare(bStr)
+      : bStr.localeCompare(aStr);
+  });
 
   // ソート処理
   const handleSort = (field: keyof Project) => {
@@ -102,7 +73,15 @@ export default function ProjectListPage() {
   };
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">プロジェクト一覧</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">プロジェクト一覧</h1>
+        <button
+          onClick={() => router.push('/app_project/page/make_project')}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+        >
+          新規作成
+        </button>
+      </div>
 
       {/* 検索・フィルター・ソート */}
       <div className="mb-6 space-y-4">
@@ -116,7 +95,7 @@ export default function ProjectListPage() {
           />
           <select
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as Project['PROJECT_STATUS'] | 'all')}
+            onChange={(e) => setFilterStatus(e.target.value as 'active' | 'completed' | 'archived' | 'all')}
             className="p-2 border rounded"
           >
             <option value="all">すべてのステータス</option>
@@ -201,7 +180,7 @@ export default function ProjectListPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {projects.map((project) => (
+                {sortedProjects.map((project) => (
                   <tr
                     key={project.PROJECT_ID}
                     className="hover:bg-gray-50 cursor-pointer"

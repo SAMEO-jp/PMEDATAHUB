@@ -1,4 +1,4 @@
-import { GetAllTables, DeleteTable } from '@src/lib/db/db_DeleteTable';
+import { GetAllTables, DeleteTable } from '@src/lib/db/crud/db_DeleteTable';
 import { DeleteMultipleTablesSchema, DeleteTableSchema } from '@src/types/tableManagement';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';

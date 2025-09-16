@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeDatabase } from '@src/lib/db/db_connection';
+import { initializeDatabase } from '@src/lib/db/connection/db_connection';
 import type { ApiResponse } from '@src/types/api';
 
 // ==========================================
-// 型定義層（レスポンス型、データ型）
-// ==========================================
+// 蝙句ｮ夂ｾｩ螻､・医Ξ繧ｹ繝昴Φ繧ｹ蝙九√ョ繝ｼ繧ｿ蝙具ｼ・// ==========================================
 interface PartData {
   ROWID: number;
   PART_ID: string;
@@ -21,7 +20,7 @@ interface PartData {
 }
 
 // ==========================================
-// API実装層
+// API螳溯｣・ｱ､
 // ==========================================
 export async function GET(
   req: NextRequest,
@@ -29,7 +28,7 @@ export async function GET(
 ) {
   try {
     const db = await initializeDatabase();
-    // BOM_PARTとBOM_ZUMENをZUMEN_IDでJOINし、BOM_ZUMEN.project_IDで絞り込む
+    // BOM_PART縺ｨBOM_ZUMEN繧短UMEN_ID縺ｧJOIN縺励。OM_ZUMEN.project_ID縺ｧ邨槭ｊ霎ｼ繧
     const parts = await db.all<PartData[]>(`
       SELECT 
         p.ROWID,
@@ -68,7 +67,7 @@ export async function GET(
       success: false,
       error: {
         code: 'INTERNAL_ERROR',
-        message: '部品データの取得に失敗しました',
+        message: '驛ｨ蜩√ョ繝ｼ繧ｿ縺ｮ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆',
         status: 500
       }
     }, { status: 500 });

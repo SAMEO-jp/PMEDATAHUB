@@ -5,7 +5,7 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
-import { executeQuery, getQueryHistory } from '../../../db/db_advanced';
+import { executeQuery, getQueryHistory } from '../../../db/crud/db_advanced';
 
 // SQL実行のバリデーションスキーマ
 export const SqlExecuteSchema = z.object({

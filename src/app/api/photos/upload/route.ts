@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { createRecord } from '@src/lib/db/db_CRUD';
+import { createRecord } from '@src/lib/db/crud/db_CRUD';
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,12 +1,13 @@
-/**
- * @file box itemに関連するtRPCデータ操作を集約したカスタムフック
+﻿/**
+ * @file box item縺ｫ髢｢騾｣縺吶ｋtRPC繝・・ｽE繧ｿ謫堺ｽ懊ｒ髮・・ｽ・ｽE・ｽ・ｽ縺溘き繧ｹ繧ｿ繝繝輔ャ繧ｯ
  */
 
 import { trpc } from '@src/lib/trpc/client';
+import { skipToken } from '@tanstack/react-query';
 import type { BoxItemSearchFilters as BoxItemSearchFiltersType } from '@src/types/box/box';
 
 /**
- * ページネーション用のパラメータ
+ * 繝夲ｿｽE繧ｸ繝搾ｿｽE繧ｷ繝ｧ繝ｳ逕ｨ縺ｮ繝代Λ繝｡繝ｼ繧ｿ
  */
 export interface PaginationParams {
   page: number;
@@ -14,25 +15,24 @@ export interface PaginationParams {
 }
 
 /**
- * BoxItemSearchFilters型を再export
+ * BoxItemSearchFilters蝙九ｒ蜀稿xport
  */
 export type BoxItemSearchFilters = BoxItemSearchFiltersType;
 
 /**
- * 全てのbox itemを取得するフック（ページネーション対応）
- */
+ * 蜈ｨ縺ｦ縺ｮbox item繧貞叙蠕励☆繧九ヵ繝・・ｽ・ｽ・ｽE・ｽ・ｽE繝ｼ繧ｸ繝搾ｿｽE繧ｷ繝ｧ繝ｳ蟇ｾ蠢懶ｼ・ */
 export const useBoxAll = (pagination?: PaginationParams) => {
   return trpc.box.getAll.useQuery(
-    pagination ? { page: pagination.page, limit: pagination.limit } : undefined,
+    pagination ? { page: pagination.page, limit: pagination.limit } : skipToken,
     {
-      staleTime: 5 * 60 * 1000, // 5分間キャッシュ
-      gcTime: 10 * 60 * 1000, // 10分間キャッシュ保持
+      staleTime: 5 * 60 * 1000, // 5蛻・・ｽ・ｽ繧ｭ繝｣繝・・ｽ・ｽ繝･
+      gcTime: 10 * 60 * 1000, // 10蛻・・ｽ・ｽ繧ｭ繝｣繝・・ｽ・ｽ繝･菫晄戟
     }
   );
 };
 
 /**
- * 指定されたIDのbox itemを取得するフック
+ * 謖・・ｽ・ｽ縺輔ｌ縺櫑D縺ｮbox item繧貞叙蠕励☆繧九ヵ繝・・ｽ・ｽ
  */
 export const useBoxById = (boxId: string, itemType: number) => {
   return trpc.box.getById.useQuery(
@@ -42,8 +42,7 @@ export const useBoxById = (boxId: string, itemType: number) => {
 };
 
 /**
- * 条件を指定してbox itemを検索するフック（ページネーション対応）
- */
+ * 譚｡莉ｶ繧呈欠螳壹＠縺ｦbox item繧呈､懃ｴ｢縺吶ｋ繝輔ャ繧ｯ・ｽE・ｽ・ｽE繝ｼ繧ｸ繝搾ｿｽE繧ｷ繝ｧ繝ｳ蟇ｾ蠢懶ｼ・ */
 export const useBoxSearch = (filters: BoxItemSearchFilters, pagination?: PaginationParams) => {
   const hasFilters = Object.values(filters).some(value => value !== undefined && value !== '');
   const queryParams = hasFilters 
@@ -51,27 +50,41 @@ export const useBoxSearch = (filters: BoxItemSearchFilters, pagination?: Paginat
     : undefined;
 
   return trpc.box.search.useQuery(
-    hasFilters ? queryParams! : undefined,
+    hasFilters ? queryParams! : skipToken,
     {
       enabled: hasFilters,
-      staleTime: 5 * 60 * 1000, // 5分間キャッシュ
-      gcTime: 10 * 60 * 1000, // 10分間キャッシュ保持
+      staleTime: 5 * 60 * 1000, // 5蛻・・ｽ・ｽ繧ｭ繝｣繝・・ｽ・ｽ繝･
+      gcTime: 10 * 60 * 1000, // 10蛻・・ｽ・ｽ繧ｭ繝｣繝・・ｽ・ｽ繝･菫晄戟
     }
   );
 };
 
 /**
- * box itemの統計情報を取得するフック
+ * box item縺ｮ邨ｱ險域ュ蝣ｱ繧貞叙蠕励☆繧九ヵ繝・・ｽ・ｽ
  */
 export const useBoxStats = () => {
   return trpc.box.getStats.useQuery(undefined, {
-    staleTime: 10 * 60 * 1000, // 10分間キャッシュ
-    gcTime: 20 * 60 * 1000, // 20分間キャッシュ保持
+    staleTime: 10 * 60 * 1000, // 10蛻・・ｽ・ｽ繧ｭ繝｣繝・・ｽ・ｽ繝･
+    gcTime: 20 * 60 * 1000, // 20蛻・・ｽ・ｽ繧ｭ繝｣繝・・ｽ・ｽ繝･菫晄戟
   });
 };
 
 /**
- * box itemのCRUD操作をまとめたフック
+ * 隍・・ｽ・ｽ縺ｮbox_id縺ｫ蟇ｾ蠢懊☆繧九ヵ繧｡繧､繝ｫ蜷阪ｒ蜿門ｾ励☆繧九ヵ繝・・ｽ・ｽ
+ */
+export const useBoxFileNamesByIds = (boxIds: string, enabled: boolean = false) => {
+  return trpc.box.getFileNamesByIds.useQuery(
+    { boxIds },
+    {
+      enabled: enabled && boxIds.length > 0,
+      staleTime: 5 * 60 * 1000, // 5蛻・・ｽ・ｽ繧ｭ繝｣繝・・ｽ・ｽ繝･
+      gcTime: 10 * 60 * 1000, // 10蛻・・ｽ・ｽ繧ｭ繝｣繝・・ｽ・ｽ繝･菫晄戟
+    }
+  );
+};
+
+/**
+ * box item縺ｮCRUD謫堺ｽ懊ｒ縺ｾ縺ｨ繧√◆繝輔ャ繧ｯ
  */
 export const useBoxMutations = () => {
   const utils = trpc.useUtils();
@@ -101,7 +114,7 @@ export const useBoxMutations = () => {
 };
 
 /**
- * box itemの操作をまとめたフック
+ * box item縺ｮ謫堺ｽ懊ｒ縺ｾ縺ｨ繧√◆繝輔ャ繧ｯ
  */
 export const useBoxOperations = () => {
   const { createMutation, updateMutation, deleteMutation } = useBoxMutations();

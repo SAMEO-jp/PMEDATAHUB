@@ -6,9 +6,9 @@
 // ==========================================
 
 import { useEffect } from 'react';
-import { useHeader } from '@/src/components/layout/header/store/headerStore';
-import { Project } from '@/src/types/db_project';
-import { ProjectInfo } from '@/src/components/layout/header/store/headerStore';
+import { useHeader } from '@/components/layout/header/store/headerStore';
+import { Project } from '@/types/db_project';
+import { ProjectInfo } from '@/components/layout/header/store/headerStore';
 
 /**
  * プロジェクト情報をヘッダーストアに設定するカスタムフック

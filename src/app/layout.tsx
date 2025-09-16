@@ -1,8 +1,8 @@
 import React from 'react';
 import { TRPCProvider } from '@src/lib/trpc/Provider';
-import { AuthProvider } from '@/src/contexts/AuthContext';
-import { HeaderSidbarLayout } from '@/src/components/layout/HeaderSidbarLayout';
-import { MainLayout } from '@/src/components/layout-main';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { HeaderSidbarLayout } from '@/components/layout/HeaderSidbarLayout';
+import { MainLayout } from '@/components/layout-main';
 import './globals.css';
 
 export const metadata = {

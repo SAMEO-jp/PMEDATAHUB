@@ -12,8 +12,9 @@ import {
   createBoxItem,
   updateBoxItem,
   deleteBoxItem,
-  getBoxItemStats
-} from '@src/lib/db/box/boxQueries';
+  getBoxItemStats,
+  getFileNamesByBoxIds
+} from '@src/lib/db/queries/boxQueries';
 import type { BoxItemCreateInput, BoxItemUpdateInput } from '@src/types/box/box';
 
 /**
@@ -263,14 +264,14 @@ export const boxRouter = createTRPCRouter({
     .query(async () => {
       try {
         const result = await getBoxItemStats();
-        
+
         if (!result.success) {
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: result.error || '統計情報の取得に失敗しました',
           });
         }
-        
+
         return { success: true, data: result.data };
       } catch (error) {
         console.error("tRPC box.getStats error:", error);
@@ -280,6 +281,55 @@ export const boxRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: '統計情報の取得に失敗しました',
+        });
+      }
+    }),
+
+  /**
+   * 複数のbox_idに対応するファイル名を取得するプロシージャ。
+   */
+  getFileNamesByIds: publicProcedure
+    .input(z.object({
+      boxIds: z.string().min(1, 'box IDsは必須です'),
+    }))
+    .query(async ({ input }) => {
+      try {
+        // カンマ区切りの文字列を配列に変換
+        const boxIds = input.boxIds.split(',').map(id => id.trim()).filter(id => id.length > 0);
+
+        if (boxIds.length === 0) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: '有効なbox IDが指定されていません',
+          });
+        }
+
+        // 最大100個まで制限
+        if (boxIds.length > 100) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: '一度に検索できるBox IDは最大100個までです',
+          });
+        }
+
+        const result = await getFileNamesByBoxIds(boxIds);
+
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: result.error || 'ファイル名の取得に失敗しました',
+          });
+        }
+
+        return { success: true, data: result.data };
+      } catch (error) {
+        console.error("tRPC box.getFileNamesByIds error:", error);
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'ファイル名の取得に失敗しました',
         });
       }
     }),

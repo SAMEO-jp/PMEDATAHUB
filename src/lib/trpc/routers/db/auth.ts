@@ -5,7 +5,7 @@
 
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { searchUsersByName, getUserById, validateUser } from '@src/lib/db/userQueries';
+import { searchUsersByName, getUserById, validateUser } from '@src/lib/db/queries/userQueries';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
 
 /**
@@ -32,7 +32,7 @@ export const authRouter = createTRPCRouter({
         if (!result.success) {
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
-            message: typeof result.error === 'object' && result.error?.message ? result.error.message : 'ユーザー検索に失敗しました',
+            message: result.error || 'ユーザー検索に失敗しました',
           });
         }
         
@@ -71,7 +71,7 @@ export const authRouter = createTRPCRouter({
         if (!result.success) {
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
-            message: typeof result.error === 'object' && result.error?.message ? result.error.message : 'ユーザー情報の取得に失敗しました',
+            message: result.error || 'ユーザー情報の取得に失敗しました',
           });
         }
         
@@ -133,7 +133,7 @@ export const authRouter = createTRPCRouter({
         if (!result.success) {
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
-            message: typeof result.error === 'object' && result.error?.message ? result.error.message : 'ユーザー検証に失敗しました',
+            message: result.error || 'ユーザー検証に失敗しました',
           });
         }
         

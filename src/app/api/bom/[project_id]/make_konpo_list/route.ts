@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { initializeDatabase } from '../../../../../lib/db/db_connection';
+import { initializeDatabase } from '../../../../../lib/db/connection/db_connection';
 
 /**
- * 選択された単位IDのリストIDを更新するAPI
- * リストIDは選択された中で最も若い単位IDを基に生成
- * リストIDが空の場合のみ更新可能
- * 同時にKONPO_LISTテーブルに新規レコードを作成
+ * 驕ｸ謚槭＆繧後◆蜊倅ｽ巧D縺ｮ繝ｪ繧ｹ繝・D繧呈峩譁ｰ縺吶ｋAPI
+ * 繝ｪ繧ｹ繝・D縺ｯ驕ｸ謚槭＆繧後◆荳ｭ縺ｧ譛繧り凶縺・腰菴巧D繧貞渕縺ｫ逕滓・
+ * 繝ｪ繧ｹ繝・D縺檎ｩｺ縺ｮ蝣ｴ蜷医・縺ｿ譖ｴ譁ｰ蜿ｯ閭ｽ
+ * 蜷梧凾縺ｫKONPO_LIST繝・・繝悶Ν縺ｫ譁ｰ隕上Ξ繧ｳ繝ｼ繝峨ｒ菴懈・
  */
 export async function POST(
   request: Request,
@@ -15,49 +15,46 @@ export async function POST(
     const { selectedIds } = await request.json();
     if (!Array.isArray(selectedIds) || selectedIds.length === 0) {
       return NextResponse.json(
-        { error: '選択された単位IDがありません' },
+        { error: '驕ｸ謚槭＆繧後◆蜊倅ｽ巧D縺後≠繧翫∪縺帙ｓ' },
         { status: 400 }
       );
     }
 
     const db = await initializeDatabase();
 
-    // 選択された単位IDの中で最も若いものを取得
     const youngestId = selectedIds.sort()[0];
-    // リストIDを生成（KT-をKL-に変更）
     const newListId = youngestId.replace('KT-', 'KL-');
 
-    // 選択された単位IDのリストIDが空かどうかを確認
+    // Check if selected konpo tanni IDs have existing list IDs
     const checkResult = await db.all(`
       SELECT KONPO_TANNI_ID, KONPO_LIST_ID
       FROM KONPO_TANNI
       WHERE KONPO_TANNI_ID IN (${selectedIds.map(() => '?').join(',')})
     `, selectedIds);
 
-    // リストIDが既に設定されているレコードがないか確認
+    // Check if any records already have list IDs set
     const hasExistingListId = checkResult.some(record => 
       record.KONPO_LIST_ID && record.KONPO_LIST_ID.trim() !== ''
     );
 
     if (hasExistingListId) {
       return NextResponse.json(
-        { error: '一部のレコードに既にリストIDが設定されています' },
+        { error: 'Some records already have list IDs assigned' },
         { status: 400 }
       );
     }
 
-    // トランザクション開始
-    await db.run('BEGIN TRANSACTION');
+    // 繝医Λ繝ｳ繧ｶ繧ｯ繧ｷ繝ｧ繝ｳ髢句ｧ・    await db.run('BEGIN TRANSACTION');
 
     try {
-      // リストIDを更新
+      // 繝ｪ繧ｹ繝・D繧呈峩譁ｰ
       const updateResult = await db.run(`
         UPDATE KONPO_TANNI
         SET KONPO_LIST_ID = ?
         WHERE KONPO_TANNI_ID IN (${selectedIds.map(() => '?').join(',')})
       `, [newListId, ...selectedIds]);
 
-      // KONPO_LISTテーブルに新規レコードを作成
+      // KONPO_LIST繝・・繝悶Ν縺ｫ譁ｰ隕上Ξ繧ｳ繝ｼ繝峨ｒ菴懈・
       await db.run(`
         INSERT INTO KONPO_LIST (
           KONPO_LIST_ID,
@@ -65,12 +62,11 @@ export async function POST(
         ) VALUES (?, ?)
       `, [newListId, params.project_id]);
 
-      // トランザクションをコミット
-      await db.run('COMMIT');
+      // 繝医Λ繝ｳ繧ｶ繧ｯ繧ｷ繝ｧ繝ｳ繧偵さ繝溘ャ繝・      await db.run('COMMIT');
 
       return NextResponse.json({
         success: true,
-        message: 'リストIDの更新と新規リストの作成が完了しました',
+        message: '繝ｪ繧ｹ繝・D縺ｮ譖ｴ譁ｰ縺ｨ譁ｰ隕上Μ繧ｹ繝医・菴懈・縺悟ｮ御ｺ・＠縺ｾ縺励◆',
         data: {
           newListId,
           updatedCount: updateResult.changes
@@ -78,7 +74,7 @@ export async function POST(
       });
 
     } catch (error) {
-      // エラーが発生した場合はロールバック
+      // 繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺溷ｴ蜷医・繝ｭ繝ｼ繝ｫ繝舌ャ繧ｯ
       await db.run('ROLLBACK');
       throw error;
     }
@@ -86,7 +82,7 @@ export async function POST(
   } catch (error) {
     console.error('Error in make_konpo_list route:', error);
     return NextResponse.json(
-      { error: 'リストIDの更新に失敗しました' },
+      { error: '繝ｪ繧ｹ繝・D縺ｮ譖ｴ譁ｰ縺ｫ螟ｱ謨励＠縺ｾ縺励◆' },
       { status: 500 }
     );
   }

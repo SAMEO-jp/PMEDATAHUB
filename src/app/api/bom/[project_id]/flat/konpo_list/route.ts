@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-//projedt make konnpoページ用
+//projedt make konnpo繝壹・繧ｸ逕ｨ
 import { NextResponse } from 'next/server';
-import { initializeDatabase } from '@src/lib/db/db_connection';
+import { initializeDatabase } from '@src/lib/db/connection/db_connection';
 
 export async function GET(
   request: Request,
@@ -13,7 +13,7 @@ export async function GET(
     db = await initializeDatabase();
 
     if (!db) {
-      throw new Error('データベースの初期化に失敗しました');
+      throw new Error('繝・・繧ｿ繝吶・繧ｹ縺ｮ蛻晄悄蛹悶↓螟ｱ謨励＠縺ｾ縺励◆');
     }
 
     const query = `
@@ -21,7 +21,7 @@ export async function GET(
         SELECT 
           p.ZUMEN_ID,
           p.PART_ID,
-          GROUP_CONCAT(b.BUZAI_NAME || ' (' || b.BUZAI_QUANTITY || '個)') as BUZAI_INFO,
+          GROUP_CONCAT(b.BUZAI_NAME || ' (' || b.BUZAI_QUANTITY || '蛟・') as BUZAI_INFO,
           GROUP_CONCAT(b.BUZAI_WEIGHT) as BUZAI_WEIGHTS,
           GROUP_CONCAT(b.ZAISITU_NAME) as ZAISITU_NAMES
         FROM BOM_PART p
@@ -71,7 +71,7 @@ export async function GET(
 
     const result = await db.all(query, [projectId]);
 
-    // 部材情報をパースして整形
+    // 驛ｨ譚先ュ蝣ｱ繧偵ヱ繝ｼ繧ｹ縺励※謨ｴ蠖｢
     const formattedResult = result.map((row: any) => {
       if (row.BUZAI_INFO) {
         const buzaiInfo = row.BUZAI_INFO.split(',');
@@ -83,7 +83,7 @@ export async function GET(
           return {
             BUZAI_NAME: name,
             BUZAI_WEIGHT: buzaiWeights[index],
-            BUZAI_QUANTITY: quantity.replace('個)', ''),
+            BUZAI_QUANTITY: quantity.replace('蛟・', ''),
             ZAISITU_NAME: zaisituNames[index]
           };
         });
@@ -98,9 +98,9 @@ export async function GET(
 
     return NextResponse.json(formattedResult);
   } catch (error) {
-    console.error('データの取得に失敗しました:', error);
+    console.error('繝・・繧ｿ縺ｮ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆:', error);
     return NextResponse.json(
-      { error: 'データベースエラーが発生しました' },
+      { error: '繝・・繧ｿ繝吶・繧ｹ繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆' },
       { status: 500 }
     );
   } finally {
@@ -108,7 +108,7 @@ export async function GET(
       try {
         await db.close();
       } catch (closeErr) {
-        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+        console.warn('DB繧ｯ繝ｭ繝ｼ繧ｺ譎ゅ↓繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆:', closeErr);
       }
     }
   }

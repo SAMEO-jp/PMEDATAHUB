@@ -18,11 +18,12 @@ import {
   TableHeader, 
   TableRow 
 } from '@src/components/ui/table';
-import { 
-  useBoxAll, 
-  useBoxSearch, 
-  useBoxStats, 
-  useBoxOperations 
+import {
+  useBoxAll,
+  useBoxSearch,
+  useBoxStats,
+  useBoxOperations,
+  useBoxFileNamesByIds
 } from '@src/hooks/box/useBoxData';
 import type { BoxItemSearchFilters, PaginationParams } from '@src/hooks/box/useBoxData';
 
@@ -31,10 +32,15 @@ export default function BoxAllPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [pagination, setPagination] = useState<PaginationParams>({ page: 1, limit: 20 });
 
+  // 複数ID検索用のstate
+  const [multiBoxIds, setMultiBoxIds] = useState('');
+  const [isMultiSearching, setIsMultiSearching] = useState(false);
+
   // データ取得
   const { data: allData, isLoading: allLoading, error: allError } = useBoxAll(pagination);
   const { data: searchData, isLoading: searchLoading } = useBoxSearch(searchFilters, pagination);
   const { data: statsData, isLoading: statsLoading } = useBoxStats();
+  const { data: multiFileNamesData, isLoading: multiFileNamesLoading, error: multiFileNamesError } = useBoxFileNamesByIds(multiBoxIds, isMultiSearching);
   const { handleCreate, handleUpdate, handleDelete, refreshData } = useBoxOperations();
 
   // 表示するデータを決定
@@ -63,6 +69,19 @@ export default function BoxAllPage() {
     setSearchFilters({});
     setIsSearching(false);
     setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  // 複数ID検索実行
+  const handleMultiSearch = () => {
+    if (multiBoxIds.trim()) {
+      setIsMultiSearching(true);
+    }
+  };
+
+  // 複数ID検索リセット
+  const handleResetMultiSearch = () => {
+    setMultiBoxIds('');
+    setIsMultiSearching(false);
   };
 
   // ページネーション処理
@@ -209,6 +228,94 @@ export default function BoxAllPage() {
               リセット
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 複数IDファイル名検索 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>複数IDファイル名検索</CardTitle>
+          <CardDescription>
+            カンマ区切りで複数のBox IDを入力し、それに対応するファイル名を取得できます
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="multi_box_ids">Box IDs (カンマ区切り)</Label>
+              <Input
+                id="multi_box_ids"
+                value={multiBoxIds}
+                onChange={(e) => setMultiBoxIds(e.target.value)}
+                placeholder="例: EBXX0JR11610280, EBXX0JR11610410, EBXX0JR11610510"
+                className="mt-1"
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                最大100個まで入力可能です
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleMultiSearch}
+                disabled={multiFileNamesLoading || !multiBoxIds.trim()}
+              >
+                {multiFileNamesLoading ? '検索中...' : 'ファイル名検索'}
+              </Button>
+              <Button onClick={handleResetMultiSearch} variant="outline">
+                リセット
+              </Button>
+            </div>
+          </div>
+
+          {/* 結果表示 */}
+          {multiFileNamesError && (
+            <div className="mt-4 p-4 border border-red-200 bg-red-50 rounded">
+              <p className="text-red-600">{multiFileNamesError.message}</p>
+            </div>
+          )}
+
+          {multiFileNamesData?.data && multiFileNamesData.data.length > 0 && (
+            <div className="mt-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-lg font-semibold">検索結果</h4>
+                <Badge variant="secondary">
+                  {multiFileNamesData.data.length}件
+                </Badge>
+              </div>
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Box ID</TableHead>
+                      <TableHead>Item Type</TableHead>
+                      <TableHead>ファイル名</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {multiFileNamesData.data.map((item, index) => (
+                      <TableRow key={`${item.box_id}-${item.item_type}-${index}`}>
+                        <TableCell className="font-mono text-sm">
+                          {item.box_id}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{item.item_type}</Badge>
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          {item.name || '-'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+
+          {isMultiSearching && !multiFileNamesLoading && (!multiFileNamesData?.data || multiFileNamesData.data.length === 0) && !multiFileNamesError && (
+            <div className="mt-4 p-4 border border-gray-200 bg-gray-50 rounded text-center">
+              <p className="text-muted-foreground">一致するデータが見つかりませんでした</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 

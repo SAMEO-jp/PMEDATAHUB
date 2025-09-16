@@ -4,7 +4,7 @@
 
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { GetConditionData } from '@src/lib/db/db_GetData';
+import { GetConditionData } from '@src/lib/db/crud/db_GetData';
 import type { BomZumen } from '@src/types/db_bom';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
 

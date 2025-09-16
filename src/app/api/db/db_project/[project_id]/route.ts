@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GetRecode } from '@src/lib/db/db_GetData';
-import { updateDataById, deleteById } from '@src/lib/db/db_CRUD';
+import { GetRecode } from '@src/lib/db/crud/db_GetData';
+import { updateDataById, deleteById } from '@src/lib/db/crud/db_CRUD';
 import { Project } from '@src/types/db_project';
 
 /**

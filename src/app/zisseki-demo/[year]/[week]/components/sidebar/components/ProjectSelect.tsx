@@ -51,13 +51,13 @@ const normalizeProject = (project: ProjectVariant): UnifiedProject => {
   };
 };
 
-export const ProjectSelect = ({ 
-  value, 
-  onLocalChange, 
+export const ProjectSelect = ({
+  value,
+  onLocalChange,
   onCommit,
   projects = [],
-  label = "プロジェクト", 
-  placeholder = "プロジェクト選択" 
+  label = "プロジェクト",
+  placeholder = "プロジェクト選択"
 }: ProjectSelectProps) => {
   // プロジェクトデータを統一形式に変換
   const normalizedProjects = projects.map(normalizeProject);

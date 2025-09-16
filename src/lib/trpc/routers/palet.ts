@@ -4,13 +4,13 @@
 
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { 
-  getRecord, 
-  updateRecord, 
-  getAllRecords, 
+import {
+  getRecord,
+  updateRecord,
+  getAllRecords,
   createRecord,
-  deleteRecord 
-} from '@src/lib/db/db_CRUD';
+  deleteRecord
+} from '@src/lib/db/crud/db_CRUD';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 import type {
   PaletMaster,

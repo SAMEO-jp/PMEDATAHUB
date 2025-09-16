@@ -9,7 +9,7 @@ import { useAlbums } from './hooks/useAlbums';
 import { Upload, FolderPlus } from 'lucide-react';
 import PhotoUploadModal from './components/PhotoUpload/PhotoUploadModal';
 import { trpc } from '@src/lib/trpc/client';
-import { Photo } from '@/src/types/photo';
+import { Photo } from '@/types/photo';
 
 export default function PhotoPage() {
   const params = useParams();

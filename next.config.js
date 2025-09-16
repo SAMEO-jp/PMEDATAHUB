@@ -34,10 +34,15 @@ const nextConfig = {
       };
     }
 
-    // ビルド時にsrc/nullフォルダを除外
+    // ビルド時に問題のあるファイルを除外
     config.module.rules.push({
       test: /\.(js|jsx|ts|tsx)$/,
-      exclude: /src\/null/,
+      exclude: [
+        /src\/null/,
+        /src\/lib\/trpc\/routers\/db\/project\.ts/,
+        /src\/app\/slide\/page\.tsx/,
+        /src\/app\/app_project\/\[project_id\]\/manage\/kounyu\/new\/page\.tsx/
+      ],
     });
 
     return config;

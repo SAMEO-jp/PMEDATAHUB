@@ -3,7 +3,7 @@
 import React from 'react';
 import { SidebarContent } from './SidebarContent';
 import { HeaderContent } from './HeaderContent';
-import { LoginModal } from '@/src/components/auth/LoginModal';
+import { LoginModal } from '@/components/auth/LoginModal';
 
 interface HeaderSidbarLayoutProps {
   children: React.ReactNode;

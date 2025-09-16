@@ -3,20 +3,24 @@
 import React, { useState, useEffect } from "react";
 import "../../styles.css";
 import { useEventContext } from "../../context/EventContext";
+import { useDatabase } from "../../context/DatabaseContext";
 import { TimeGridEvent } from "../../types";
 import { eventActions } from "../../hooks/reducer/event/eventActions";
-import { 
-  SidebarHeader, 
-  SidebarEmpty, 
+import {
+  SidebarHeader,
+  SidebarEmpty,
   SidebarBasic,
   SidebarActiveCodeEditor,
   DeleteButton,
   ProjectSelect,
+  SetsubiSelect,
+  KounyuSelect,
   ColorPicker,
   ProgressSelect
 } from "./ui";
 import { Tab, TAB } from "./ui/types";
 import { useZissekiStore } from "../../store/zissekiStore";
+import { useProjectAssignments } from "../../hooks/useProjectAssignments";
 import { parseActivityCode } from "./utils/businessCodeUtils";
 
 /**
@@ -33,8 +37,18 @@ export const ZissekiSidebar = () => {
   // - handleDeleteEvent: イベント削除関数（deleteEventとしてエイリアス設定）
   // - dispatch: Reduxライクな状態管理のディスパッチ関数
   const { selectedEvent, handleUpdateEvent: updateEvent, handleDeleteEvent: deleteEvent, dispatch } = useEventContext();
-  
-  // ZissekiStoreからプロジェクト一覧を取得
+
+  // DatabaseContextからユーザー情報を取得
+  const { userInfo } = useDatabase();
+
+  console.log('ZissekiSidebar: userInfo from DatabaseContext:', userInfo);
+
+  // プロジェクト参加情報と担当装備・購入品情報を取得
+  const { userProjects, getSetsubiByProject, getKounyuByProject } = useProjectAssignments(userInfo);
+
+  console.log('ZissekiSidebar: userProjects from hook:', userProjects);
+
+  // ZissekiStoreからプロジェクト一覧を取得（フォールバック）
   const { projects } = useZissekiStore();
 
   // ローカル状態で入力値を管理
@@ -42,6 +56,8 @@ export const ZissekiSidebar = () => {
     title: '',
     description: '',
     project: '',
+    setsubi: '', // 選択された装備（製番）
+    kounyu: '', // 選択された購入品（管理番号）
     activityCode: '',
     color: '#3B82F6', // デフォルトカラー
     status: '' // 進捗状況
@@ -50,9 +66,16 @@ export const ZissekiSidebar = () => {
   // 現在のタブ状態を計算（プロジェクト/間接業務の選択のみ）
   const getCurrentTab = (): Tab => {
     if (!selectedEvent?.activityCode) return TAB.PROJECT;
-    
+
     const parsed = parseActivityCode(selectedEvent.activityCode);
     return parsed?.mainTab === 'indirect' ? TAB.INDIRECT : TAB.PROJECT;
+  };
+
+  // 購入品タブかどうかを判定
+  const isPurchaseTab = (): boolean => {
+    if (!selectedEvent?.activityCode) return false;
+    const parsed = parseActivityCode(selectedEvent.activityCode);
+    return parsed?.mainTab === 'project' && parsed?.subTab === '購入品';
   };
 
   // タブ変更時の処理（プロジェクト/間接業務の切り替えのみ）
@@ -84,6 +107,8 @@ export const ZissekiSidebar = () => {
         title: selectedEvent.title || '',
         description: selectedEvent.description || '',
         project: selectedEvent.project || '',
+        setsubi: selectedEvent.setsubi || '',
+        kounyu: selectedEvent.kounyu || '',
         activityCode: selectedEvent.activityCode || '',
         color: selectedEvent.color || '#3B82F6',
         status: selectedEvent.status || ''
@@ -115,13 +140,19 @@ export const ZissekiSidebar = () => {
   const handleSelectChange = (field: string, value: string) => {
     if (!selectedEvent) return;
 
+    // プロジェクトが変更された場合は、装備と購入品の選択をリセット
+    const resetFields = field === 'project' ? { setsubi: '', kounyu: '' } : {};
+
     setLocalValues(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
+      ...resetFields
     }));
+
     const updatedEvent = {
       ...selectedEvent,
-      [field]: value
+      [field]: value,
+      ...resetFields
     };
     updateEvent(updatedEvent);
     dispatch(eventActions.setSelectedEvent(updatedEvent));
@@ -171,13 +202,43 @@ export const ZissekiSidebar = () => {
           activeTab={getCurrentTab()}
           onTabChange={handleTabChange}
         />
-        <div className="sidebar-section"> 
+                <div className="sidebar-section">
           <ProjectSelect
               value={localValues.project}
               onLocalChange={(value) => handleSelectChange('project', value)}
-              projects={projects}
+              projects={userProjects.length > 0 ? userProjects : projects}
             />
         </div>
+
+        {/* プロジェクトが選択されている場合のみ表示 */}
+        {localValues.project && (
+          <>
+            {/* 装備選択（購入品タブ以外の場合） */}
+            {!isPurchaseTab() && (
+              <div className="sidebar-section">
+                <SetsubiSelect
+                  value={localValues.setsubi}
+                  onLocalChange={(value) => handleSelectChange('setsubi', value)}
+                  setsubiList={getSetsubiByProject(localValues.project)}
+                  disabled={!localValues.project}
+                />
+              </div>
+            )}
+
+            {/* 購入品選択（購入品タブの場合） */}
+            {isPurchaseTab() && (
+              <div className="sidebar-section">
+                <KounyuSelect
+                  value={localValues.kounyu}
+                  onLocalChange={(value) => handleSelectChange('kounyu', value)}
+                  kounyuList={getKounyuByProject(localValues.project)}
+                  disabled={!localValues.project}
+                />
+              </div>
+            )}
+          </>
+        )}
+
         <hr className="sidebar-divider" />
         <SidebarBasic
           form={{

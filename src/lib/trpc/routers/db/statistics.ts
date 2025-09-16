@@ -5,7 +5,7 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
-import { getDatabaseStats } from '../../../db/db_advanced';
+import { getDatabaseStats } from '../../../db/crud/db_advanced';
 
 // 統計情報取得のスキーマ
 export const DatabaseStatsSchema = z.object({

@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { trpc } from '@src/lib/trpc/client';
-import { PhotoAlbum, AlbumFilters } from '@/src/types/photo';
+import { PhotoAlbum, AlbumFilters } from '@/types/photo';
 
 export function useAlbums(projectId: string) {
   const [filters, setFilters] = useState<AlbumFilters>({});

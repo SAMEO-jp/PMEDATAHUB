@@ -4,6 +4,9 @@ import { bomBuhinRouter } from './bomBuhin';
 import { bomZumenRouter } from './bomZumen';
 import { tableManagementRouter } from './db/tableManagement';
 import { zumenAssemblySearchRouter } from './app/zumenAssemblySearch';
+import { setsubiRouter } from './app/setsubi';
+import { kounyuRouter } from './app/kounyu';
+import { userRouter } from './app/user';
 import { paletRouter } from './palet';
 import { photosRouter } from './photos';
 import { zissekiRouter } from './zisseki';
@@ -13,6 +16,10 @@ import { tableRouter } from './db/table';
 import { sqlRouter } from './db/sql';
 import { statisticsRouter } from './db/statistics';
 import { authRouter } from './db/auth';
+// import { projectRouter } from './db/project';
+import { projectMemberRouter } from './db/projectMember';
+import { setsubiAssignmentRouter } from './db/setsubiAssignment';
+import { kounyuAssignmentRouter } from './db/kounyuAssignment';
 
 // Box item用ルーター
 import { boxRouter } from './box';
@@ -28,6 +35,9 @@ export const appRouter = createTRPCRouter({
   bomZumen: bomZumenRouter,
   tableManagement: tableManagementRouter,
   zumenAssemblySearch: zumenAssemblySearchRouter,
+  setsubi: setsubiRouter,
+  kounyu: kounyuRouter,
+  user: userRouter,
   palet: paletRouter,
   photos: photosRouter,
   zisseki: zissekiRouter,
@@ -37,7 +47,11 @@ export const appRouter = createTRPCRouter({
   sql: sqlRouter,
   statistics: statisticsRouter,
   auth: authRouter,
-  
+  // project: projectRouter,
+  projectMember: projectMemberRouter,
+  setsubiAssignment: setsubiAssignmentRouter,
+  kounyuAssignment: kounyuAssignmentRouter,
+
   // Box item用ルーター
   box: boxRouter,
 });

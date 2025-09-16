@@ -1,61 +1,68 @@
 {
-  "compilerOptions": {
-    "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "incremental": true,
-    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo",
-    "module": "esnext",
-    "esModuleInterop": true,
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@ui/*": [
-        "./src/components/ui/*"
-      ],
-      "@app/*": [
-        "./src/app/*"
-      ],
-      "@components/*": [
-        "./src/app/app_bom/src/components/*"
-      ],
-      "@bom/*": [
-        "./src/app/app_bom/*"
-      ],
-      "@utils/*": [
-        "./src/app/app_bom/src/utils/*"
-      ],
-      "@src/*": [
-        "./src/*"
-      ]
-    }
-  },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "src/__ignore__",
-    "temp-download"
-  ]
+    "compilerOptions":  {
+                            "target":  "es5",
+                            "lib":  [
+                                        "dom",
+                                        "dom.iterable",
+                                        "esnext"
+                                    ],
+                            "allowJs":  true,
+                            "skipLibCheck":  true,
+                            "strict":  true,
+                            "noEmit":  true,
+                            "incremental":  true,
+                            "tsBuildInfoFile":  "node_modules/.cache/tsbuildinfo",
+                            "module":  "esnext",
+                            "esModuleInterop":  true,
+                            "moduleResolution":  "bundler",
+                            "resolveJsonModule":  true,
+                            "isolatedModules":  true,
+                            "jsx":  "preserve",
+                            "downlevelIteration":  true,
+                            "plugins":  [
+                                            {
+                                                "name":  "next"
+                                            }
+                                        ],
+                            "paths":  {
+                                          "@/*":  [
+                                                      "./src/*"
+                                                  ],
+                                          "@ui/*":  [
+                                                        "./src/components/ui/*"
+                                                    ],
+                                          "@app/*":  [
+                                                         "./src/app/*"
+                                                     ],
+                                          "@components/*":  [
+                                                                "./src/app/app_bom/src/components/*"
+                                                            ],
+                                          "@bom/*":  [
+                                                         "./src/app/app_bom/*"
+                                                     ],
+                                          "@utils/*":  [
+                                                           "./src/app/app_bom/src/utils/*"
+                                                       ],
+                                          "@src/*":  [
+                                                         "./src/*"
+                                                     ]
+                                      }
+                        },
+    "include":  [
+                    "next-env.d.ts",
+                    "**/*.ts",
+                    "**/*.tsx",
+                    ".next/types/**/*.ts"
+                ],
+    "exclude": [
+                    "node_modules",
+                    "src/__ignore__",
+                    "temp-download",
+                    "src/app/api/bom/**",
+                    "src/app/api/db/**", 
+                    "src/app/app_project/**",
+                    "src/app/slide/**",
+                    "src/lib/trpc/routers/db/**",
+                    "src/lib/trpc/routers/db/project.ts"
+                ]
 }

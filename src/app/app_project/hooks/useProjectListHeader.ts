@@ -6,7 +6,7 @@
 // ==========================================
 
 import { useEffect } from 'react';
-import { useHeader } from '@/src/components/layout/header/store/headerStore';
+import { useHeader } from '@/components/layout/header/store/headerStore';
 
 /**
  * プロジェクト一覧ページ用のヘッダー設定カスタムフック

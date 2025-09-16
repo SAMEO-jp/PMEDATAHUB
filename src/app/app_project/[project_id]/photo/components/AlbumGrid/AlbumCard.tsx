@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { PhotoAlbum } from '@/src/types/photo';
+import { PhotoAlbum } from '@/types/photo';
 import { Edit, Trash2, Folder, Image as ImageIcon } from 'lucide-react';
 
 interface AlbumCardProps {

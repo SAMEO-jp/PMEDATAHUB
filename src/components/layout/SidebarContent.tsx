@@ -4,8 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useAuthContext } from '@/src/contexts/AuthContext';
-import { getCurrentYearWeekString } from '@/src/utils/dateUtils';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { getCurrentYearWeekString } from '@/utils/dateUtils';
 
 // Material Symbols のフォールバック用アイコンマッピング
 const iconFallbacks: Record<string, string> = {

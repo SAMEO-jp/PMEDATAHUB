@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { PhotoAlbum } from '@/src/types/photo';
+import { PhotoAlbum } from '@/types/photo';
 import AlbumCard from './AlbumCard';
 
 interface AlbumGridProps {

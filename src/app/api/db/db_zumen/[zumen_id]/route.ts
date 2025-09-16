@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GetRecode, GetConditionData } from '@src/lib/db/db_GetData';
-import { updateDataById, deleteById } from '@src/lib/db/db_CRUD';
+import { GetRecode, GetConditionData } from '@src/lib/db/crud/db_GetData';
+import { updateDataById, deleteById } from '@src/lib/db/crud/db_CRUD';
 import type { BomFlatRow } from '@src/types/db_bom';
 import type { ApiResponse } from '@src/types/api';
 

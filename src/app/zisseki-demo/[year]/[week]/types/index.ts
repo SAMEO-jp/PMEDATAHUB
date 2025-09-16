@@ -33,6 +33,8 @@ export interface Event {
   title: string;
   description: string;
   project: string;
+  setsubi?: string; // 選択された装備（製番）
+  kounyu?: string; // 選択された購入品（管理番号）
   user_id?: string; // ユーザーID（個人実績データのため追加）
   equipmentNumber?: string;
   equipmentName?: string;
@@ -44,9 +46,9 @@ export interface Event {
   activityCode?: BusinessCode; // 業務分類コード（型安全性を向上）
   purposeProject?: string;
   departmentCode?: string;
-  
-  
-  
+
+
+
   // UI関連のプロパティ
   top?: number;
   height?: number;

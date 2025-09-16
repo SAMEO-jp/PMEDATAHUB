@@ -5,7 +5,7 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
-import { getAllTables, getTableInfo, deleteTable, type TableInfo } from '@src/lib/db/db_GetData';
+import { getAllTables, getTableInfo, deleteTable, type TableInfo } from '@src/lib/db/crud/db_GetData';
 
 
 

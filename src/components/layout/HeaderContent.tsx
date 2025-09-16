@@ -3,7 +3,7 @@
 import React from 'react';
 import { HeaderConfig, HeaderAction } from './header/types';
 import { useHeader } from './header/store/headerStore';
-import { useAuthContext } from '@/src/contexts/AuthContext';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { HeaderTitle } from './header/components/HeaderTitle';
 import { HeaderActions } from './header/components/HeaderActions';
 import { HeaderSearch } from './header/components/HeaderSearch';

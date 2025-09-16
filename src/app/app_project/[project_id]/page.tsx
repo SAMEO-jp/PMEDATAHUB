@@ -137,6 +137,12 @@ export default function ProjectDetailPage({ params }: PageProps) {
           <h1 className="text-2xl font-bold">プロジェクト詳細</h1>
           <div className="space-x-2">
             <button
+              onClick={() => router.push(`/app_project/${params.project_id}/manage`)}
+              className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+            >
+              管理
+            </button>
+            <button
               onClick={() => setIsEditing(!isEditing)}
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
             >

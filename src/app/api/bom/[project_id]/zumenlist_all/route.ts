@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GetConditionData } from '@src/lib/db/db_GetData';
+import { GetConditionData } from '@src/lib/db/crud/db_GetData';
 import { BomZumen } from '@src/types/db_bom';
 
 interface ZumenResponse {
@@ -13,18 +13,18 @@ export async function GET(
   { params }: { params: { project_id: string } }
 ) {
   try {
-    console.log('図面一覧の取得を開始:', params.project_id);
+    console.log('蝗ｳ髱｢荳隕ｧ縺ｮ蜿門ｾ励ｒ髢句ｧ・', params.project_id);
 
-    // プロジェクトIDの検証
+    // 繝励Ο繧ｸ繧ｧ繧ｯ繝・D縺ｮ讀懆ｨｼ
     if (!params.project_id) {
-      console.error('プロジェクトIDが指定されていません');
+      console.error('繝励Ο繧ｸ繧ｧ繧ｯ繝・D縺梧欠螳壹＆繧後※縺・∪縺帙ｓ');
       return NextResponse.json(
-        { error: 'プロジェクトIDが指定されていません' },
+        { error: '繝励Ο繧ｸ繧ｧ繧ｯ繝・D縺梧欠螳壹＆繧後※縺・∪縺帙ｓ' },
         { status: 400 }
       );
     }
 
-    // 図面一覧の取得
+    // 蝗ｳ髱｢荳隕ｧ縺ｮ蜿門ｾ・    // Get drawing list
     const result = await GetConditionData<BomZumen[]>(
       'PROJECT_ID = ?',
       [params.project_id],
@@ -35,26 +35,26 @@ export async function GET(
     );
 
     if (!result.success) {
-      console.error('図面一覧の取得に失敗:', result.error);
+      console.error('蝗ｳ髱｢荳隕ｧ縺ｮ蜿門ｾ励↓螟ｱ謨・', result.error);
       return NextResponse.json(
-        { error: result.error || '図面一覧の取得に失敗しました' },
+        { error: result.error || '蝗ｳ髱｢荳隕ｧ縺ｮ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆' },
         { status: 500 }
       );
     }
 
-    // レスポンスの作成
+    // 繝ｬ繧ｹ繝昴Φ繧ｹ縺ｮ菴懈・
     const response: ZumenResponse = {
       projectId: params.project_id,
       total: result.count || 0,
       zumenList: result.data || []
     };
 
-    console.log('図面一覧の取得が完了:', response.total, '件');
+    console.log('蝗ｳ髱｢荳隕ｧ縺ｮ蜿門ｾ励′螳御ｺ・', response.total, '莉ｶ');
     return NextResponse.json(response);
   } catch (error) {
-    console.error('図面一覧の取得中にエラーが発生:', error);
+    console.error('蝗ｳ髱｢荳隕ｧ縺ｮ蜿門ｾ嶺ｸｭ縺ｫ繧ｨ繝ｩ繝ｼ縺檎匱逕・', error);
     return NextResponse.json(
-      { error: '図面一覧の取得に失敗しました' },
+      { error: '蝗ｳ髱｢荳隕ｧ縺ｮ蜿門ｾ励↓螟ｱ謨励＠縺ｾ縺励◆' },
       { status: 500 }
     );
   }

@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs';
-import { useAuthContext } from '@/src/contexts/AuthContext';
-import { useAuthMutations, useUserSearch, useAuthInitialize } from '@/src/hooks/useAuthData';
-import type { UserSearchResult } from '@/src/types/auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { useAuthMutations, useUserSearch, useAuthInitialize } from '@/hooks/useAuthData';
+import type { UserSearchResult } from '@/types/auth';
 
 /**
  * ログインモーダルコンポーネント

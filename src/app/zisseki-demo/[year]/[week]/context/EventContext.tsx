@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, ReactNode, useEffect } from 'react';
 import { useEventReducer } from '../hooks/reducer/useEventReducer';
-import { useAuthContext } from '@/src/contexts/AuthContext';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { generateUserSampleData, generateGuestSampleData } from '../utils/sampleDataGenerator';
 
 // EventContextの型定義
