@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { Header } from "./components/header"
 import { Sidebar } from "./components/sidebar"
 import Link from "next/link"
+import { useUserAll, useAuthOperations } from "@src/hooks/useUserData"
 
 // 週番号を取得する関数
 function getWeekNumber(date: Date) {
@@ -53,19 +54,15 @@ export default function ProjectDetailLayout({
     }))
   }
 
-  // ユーザー情報を取得
+  // ユーザー情報を取得（tRPC使用）
+  const { data: userData, isLoading: userLoading, error: userError } = useUserAll();
+  
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const response = await fetch("/api/user")
-        const data = await response.json()
-        if (data.success) {
-          setCurrentUser(data.data)
-        }
-      } catch (error) {
-        console.error("ユーザー情報の取得に失敗しました:", error)
-      }
+    if (userData?.success && userData.data && userData.data.length > 0) {
+      // 最初のユーザーを現在のユーザーとして設定（デモ用）
+      setCurrentUser(userData.data[0]);
     }
+  }, [userData]);
 
     const fetchEmployees = async () => {
       try {
@@ -104,30 +101,24 @@ export default function ProjectDetailLayout({
     }
   }, [pathname]);
 
-  // ログイン処理
+  // ログイン処理（tRPC使用）
+  const { handleLogin: tRpcLogin } = useAuthOperations();
+  
   const handleLogin = async () => {
     if (!selectedUserId) return
 
     try {
-      const response = await fetch("/api/user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId: selectedUserId }),
-      })
-
-      const data = await response.json()
-      if (data.success) {
-        setCurrentUser(data.data)
-        setShowLoginModal(false)
-        alert(`${data.data.name}としてログインしました`)
+      const result = await tRpcLogin(selectedUserId, "demo_password");
+      if (result.success) {
+        setCurrentUser(result.data);
+        setShowLoginModal(false);
+        alert(`${result.data.name_japanese}としてログインしました`);
       } else {
-        alert(`ログインに失敗しました: ${data.message}`)
+        alert(`ログインに失敗しました: ${result.message}`);
       }
     } catch (error) {
-      console.error("ログイン処理に失敗しました:", error)
-      alert("ログイン処理に失敗しました")
+      console.error("ログイン処理に失敗しました:", error);
+      alert("ログイン処理に失敗しました");
     }
   }
 

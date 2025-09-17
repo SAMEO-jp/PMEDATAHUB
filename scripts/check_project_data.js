@@ -51,3 +51,4 @@ db.all("PRAGMA table_info(PROJECT)", (err, columns) => {
     }
   });
 });
+

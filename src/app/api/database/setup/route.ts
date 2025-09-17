@@ -1,4 +1,24 @@
-﻿import { NextResponse } from 'next/server';
+﻿/**
+ * @file データベースセットアップAPI
+ * 
+ * プロジェクト管理システムに必要なデータベーステーブルとビューを作成するAPIエンドポイントです。
+ * 
+ * 作成されるテーブル:
+ * - PROJECT_MEMBERS: プロジェクトメンバー管理テーブル
+ * - PROJECT_HISTORY: プロジェクト履歴管理テーブル
+ * 
+ * 作成されるビュー:
+ * - v_project_members_detail: プロジェクトメンバーの詳細情報ビュー
+ * - v_project_history_detail: プロジェクト履歴の詳細情報ビュー
+ * 
+ * 使用方法:
+ * POST /api/database/setup
+ * 
+ * @author PMEDATAHUB
+ * @version 1.0.0
+ */
+
+import { NextResponse } from 'next/server';
 import { initializeDatabase } from '@src/lib/db/connection/db_connection';
 import type { Database } from 'sqlite';
 

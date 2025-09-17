@@ -11,7 +11,7 @@ import type { Project } from '@src/types/db_project';
 import { useProjectListHeader } from './hooks/useProjectListHeader';
 
 // カスタムフック
-import { useProjectAll } from '@src/hooks/useProjectData';
+import { useProjectAll, useProjectSearch } from '@src/hooks/useProjectData';
 
 
 
@@ -25,20 +25,38 @@ export default function ProjectListPage() {
   const itemsPerPage = 10;
   const router = useRouter();
 
+  // 検索条件があるかどうか
+  const hasSearchFilters = searchTerm || filterStatus !== 'all';
+
   // tRPCを使用してプロジェクトデータを取得
-  const { data: projectData, isLoading: loading, error: queryError } = useProjectAll({
-    search: searchTerm || undefined,
-    status: filterStatus === 'all' ? undefined : filterStatus,
+  const { data: allProjectData, isLoading: allLoading, error: allError } = useProjectAll({
     page: currentPage,
-    pageSize: itemsPerPage,
+    limit: itemsPerPage,
   });
+
+  // 検索用のデータ取得
+  const { data: searchProjectData, isLoading: searchLoading, error: searchError } = useProjectSearch(
+    {
+      PROJECT_NAME: searchTerm || undefined,
+      PROJECT_STATUS: filterStatus === 'all' ? undefined : filterStatus,
+    },
+    {
+      page: currentPage,
+      limit: itemsPerPage,
+    }
+  );
+
+  // 表示するデータを決定
+  const projectData = hasSearchFilters ? searchProjectData : allProjectData;
+  const loading = hasSearchFilters ? searchLoading : allLoading;
+  const queryError = hasSearchFilters ? searchError : allError;
 
   // プロジェクト一覧用のヘッダー設定
   useProjectListHeader((projectData as any)?.data?.length || 0, searchTerm);
 
   // tRPCからのデータをソートして使用
   const projects = (projectData as any)?.data || [];
-  const totalPages = (projectData as any)?.totalPages || 1;
+  const totalPages = Math.ceil((projects.length || 0) / itemsPerPage);
   const error = queryError ? 'プロジェクトの取得に失敗しました' : null;
 
   // ソート済みのプロジェクトデータ

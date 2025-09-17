@@ -1,32 +1,150 @@
 /**
- * @file プロジェクト関連のtRPCデータ操作を集約したカスタムフック
- * TODO: プロジェクトルーターの実装が必要
+ * @file プロジェクトデータを取得・操作するためのカスタムフック
  */
 
-// 一時的なダミー実装
-const dummyQuery = () => ({ data: null, isLoading: false, error: null });
-const dummyMutation = () => ({ mutate: () => {}, isPending: false, error: null });
+import { trpc } from '@src/lib/trpc/client';
+import { skipToken } from '@tanstack/react-query';
+import type { Project } from '@src/types/db_project';
 
-export const useProjectAll = (filters?: any) => dummyQuery();
-export const useProjectById = () => dummyQuery();
-export const useProjectCreate = () => ({ 
-  handleCreate: (data: any) => Promise.resolve({ success: true }), 
-  isLoading: false 
-});
-export const useProjectUpdate = () => dummyMutation();
-export const useProjectDelete = () => dummyMutation();
-export const useProjectMembers = (projectId?: string) => ({ 
-  members: [], 
-  loadingMembers: false, 
-  handleAddMember: (userId: string, role: string) => Promise.resolve(), 
-  handleRemoveMember: (userId: string) => Promise.resolve(),
-  isAddingMember: false,
-  isRemovingMember: false
-});
-export const useProjectAddMember = () => dummyMutation();
-export const useProjectRemoveMember = () => dummyMutation();
-export const useUserAll = () => dummyQuery();
-export const useUserDetail = (userId?: string) => dummyQuery();
-export const useUserTimeline = (userId?: string) => dummyQuery();
-export const useDepartments = () => dummyQuery();
-export const useAllUsers = () => dummyQuery();
+/**
+ * ページネーション用のパラメータ
+ */
+export interface PaginationParams {
+  page: number;
+  limit: number;
+}
+
+/**
+ * プロジェクト検索フィルター
+ */
+export interface ProjectSearchFilters {
+  PROJECT_NAME?: string;
+  PROJECT_STATUS?: 'active' | 'completed' | 'archived';
+  PROJECT_CLIENT_NAME?: string;
+}
+
+/**
+ * 全てのプロジェクトを取得するフック（ページネーション対応）
+ */
+export const useProjectAll = (pagination?: PaginationParams) => {
+  return trpc.project.getAll.useQuery(
+    pagination ? { 
+      limit: pagination.limit, 
+      offset: (pagination.page - 1) * pagination.limit 
+    } : skipToken,
+    {
+      staleTime: 5 * 60 * 1000, // 5分間キャッシュ
+      gcTime: 10 * 60 * 1000, // 10分間キャッシュ保持
+    }
+  );
+};
+
+/**
+ * 指定されたIDのプロジェクトを取得するフック
+ */
+export const useProjectById = (projectId: string) => {
+  return trpc.project.getById.useQuery(
+    { project_id: projectId },
+    { enabled: !!projectId }
+  );
+};
+
+/**
+ * 条件を指定してプロジェクトを検索するフック（ページネーション対応）
+ */
+export const useProjectSearch = (filters: ProjectSearchFilters, pagination?: PaginationParams) => {
+  const hasFilters = Object.values(filters).some(value => value !== undefined && value !== '');
+  const queryParams = hasFilters 
+    ? { 
+        ...filters, 
+        limit: pagination?.limit || 20, 
+        offset: pagination ? (pagination.page - 1) * pagination.limit : 0 
+      }
+    : undefined;
+
+  return trpc.project.search.useQuery(
+    hasFilters ? queryParams! : skipToken,
+    {
+      enabled: hasFilters,
+      staleTime: 5 * 60 * 1000, // 5分間キャッシュ
+      gcTime: 10 * 60 * 1000, // 10分間キャッシュ保持
+    }
+  );
+};
+
+/**
+ * プロジェクトの統計情報を取得するフック
+ */
+export const useProjectStats = () => {
+  return trpc.project.getStats.useQuery(undefined, {
+    staleTime: 10 * 60 * 1000, // 10分間キャッシュ
+    gcTime: 20 * 60 * 1000, // 20分間キャッシュ保持
+  });
+};
+
+/**
+ * プロジェクトのCRUD操作を提供するフック
+ */
+export const useProjectMutations = () => {
+  const utils = trpc.useUtils();
+  
+  const createMutation = trpc.project.create.useMutation({
+    onSuccess: () => {
+      void utils.project.getAll.invalidate();
+      void utils.project.getStats.invalidate();
+    },
+  });
+
+  const updateMutation = trpc.project.update.useMutation({
+    onSuccess: () => {
+      void utils.project.getAll.invalidate();
+      void utils.project.getStats.invalidate();
+    },
+  });
+
+  const deleteMutation = trpc.project.delete.useMutation({
+    onSuccess: () => {
+      void utils.project.getAll.invalidate();
+      void utils.project.getStats.invalidate();
+    },
+  });
+
+  return { createMutation, updateMutation, deleteMutation };
+};
+
+/**
+ * プロジェクトの操作を提供するフック
+ */
+export const useProjectOperations = () => {
+  const { createMutation, updateMutation, deleteMutation } = useProjectMutations();
+  const utils = trpc.useUtils();
+
+  const handleCreate = (formData: any) => {
+    createMutation.mutate(formData);
+  };
+
+  const handleUpdate = (projectId: string, updates: any) => {
+    updateMutation.mutate({ project_id: projectId, data: updates });
+  };
+
+  const handleDelete = (projectId: string) => {
+    if (confirm('本当に削除しますか？')) {
+      deleteMutation.mutate({ project_id: projectId });
+    }
+  };
+
+  const refreshData = () => {
+    void utils.project.getAll.invalidate();
+    void utils.project.getStats.invalidate();
+  };
+
+  return {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    handleCreate,
+    handleUpdate,
+    handleDelete,
+    refreshData,
+  };
+};

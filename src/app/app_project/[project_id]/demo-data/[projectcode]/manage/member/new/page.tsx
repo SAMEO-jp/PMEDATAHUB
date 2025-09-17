@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MainTabHeader } from "../../../[tab]/[content]/components/x.TabHeader/MainTabHeader"
 import { SubTabHeader } from "../../../[tab]/[content]/components/x.TabHeader/SubTabHeader"
 import { useRouter } from "next/navigation"
+import { useUserAll } from "@src/hooks/useUserData"
 
 // 部署型
 interface Department {
@@ -124,12 +125,14 @@ export default function NewMemberPage({ params }: { params: { projectcode: strin
     setTree(tree);
   };
 
-  // 全ユーザー取得
-  const fetchAllUsers = async () => {
-    const res = await fetch("/api/user/all_user");
-    const data: User[] = await res.json();
-    setUsers(data);
-  };
+  // 全ユーザー取得（tRPC使用）
+  const { data: userData, isLoading: userLoading, error: userError } = useUserAll();
+  
+  useEffect(() => {
+    if (userData?.success && userData.data) {
+      setUsers(userData.data);
+    }
+  }, [userData]);
 
   // プロジェクト参加メンバー取得
   const fetchProjectMembers = async () => {

@@ -16,7 +16,7 @@ import { tableRouter } from './db/table';
 import { sqlRouter } from './db/sql';
 import { statisticsRouter } from './db/statistics';
 import { authRouter } from './db/auth';
-// import { projectRouter } from './db/project';
+import { projectRouter } from './db/project';
 import { projectMemberRouter } from './db/projectMember';
 import { setsubiAssignmentRouter } from './db/setsubiAssignment';
 import { kounyuAssignmentRouter } from './db/kounyuAssignment';
@@ -47,7 +47,7 @@ export const appRouter = createTRPCRouter({
   sql: sqlRouter,
   statistics: statisticsRouter,
   auth: authRouter,
-  // project: projectRouter,
+  project: projectRouter,
   projectMember: projectMemberRouter,
   setsubiAssignment: setsubiAssignmentRouter,
   kounyuAssignment: kounyuAssignmentRouter,
