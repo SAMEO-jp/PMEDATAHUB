@@ -1,0 +1,946 @@
+---
+description: .tsx,.tsファイルのルール
+globs: 
+alwaysApply: false
+---
+---
+description: ".tsx,.tsファイルのルール"
+globs:
+  - "src/**/*.tsx"
+  - "src/**/*.ts"
+alwaysApply: false
+ruleType: Agent Requested
+tags:
+  - .tsx
+  - .ts
+priority: 2
+version: "1.1.0"
+---
+
+# 叫ぶ層
+- 読み込んだら「!!!1.2.tsx codeselection.mdc!!!」と叫ぶ
+
+# 📋 .tsx ファイル基本構造
+
+## 2. 🔖 .tsx ファイル基本構造
+
+### 2-1. コンポーネント基本構造
+
+### インポート層の詳細
+```tsx
+// ==========================================
+// インポート層
+// ==========================================
+//React関連（必ず最初）
+import { 
+  useState, 
+  useEffect, 
+  useCallback, 
+  useMemo,
+  useRef,
+  forwardRef 
+} from 'react';
+
+//Next.js関連
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+
+//外部ライブラリ（アルファベット順）
+import { clsx } from 'clsx';
+import { format } from 'date-fns';
+import { toast } from 'react-hot-toast';
+import { z } from 'zod';
+
+//汎用内部コンポーネント（プロジェクト全体で使用）
+import { Button } from '@ui/button';
+import { Input } from '@ui/input';
+import { ProjectCard } from '@src/components/project/ProjectCard';
+import { Modal } from '@src/components/ui/Modal';
+
+//ページ固有内部コンポーネント（そのページ専用）
+import { PageHeader } from './components/PageHeader';
+import { DataTable } from './components/DataTable';
+
+//汎用カスタムフック（プロジェクト全体で使用）
+import { useDebounce } from '@src/hooks/useDebounce';
+import { useLocalStorage } from '@src/hooks/useLocalStorage';
+import { useAuth } from '@src/hooks/useAuth';
+import { useFetchData } from '@src/hooks/useFetchData';
+
+//ページ固有カスタムフック（そのページ専用）
+import { usePageShortcuts } from './hooks/usePageShortcuts';
+import { usePageState } from './hooks/usePageState';
+
+//汎用ユーティリティ関数（プロジェクト全体で使用）
+import { cn } from '@src/lib/utils';
+import { formatCurrency } from '@src/lib/format';
+import { validateForm } from '@src/lib/validation';
+
+//ページ固有ユーティリティ関数（そのページ専用）
+import { formatPageData } from './utils/formatPageData';
+import { validatePageInput } from './utils/validation';
+
+//汎用型定義（プロジェクト全体で使用）
+import type { User, Project, ApiResponse } from '@src/types';
+import type { DatabaseConfig, AppConfig } from '@src/types/config';
+
+//ページ固有型定義（そのページ専用）
+import type { PageProps, PageState } from './types';
+import type { FormData, ValidationResult } from './types/forms';
+
+```
+#### 注意点:
+ - 未使用のコメントは削除
+ - 未使用のインポートは必ず削除
+ - デフォルトインポートと名前付きインポートを分ける
+ - 相対パスより絶対パス（@src/プレフィックス）を優先
+ - tsconfig.jsonを見て、@/の入れ方を学ぶ。
+
+#### 命名規則:
+ - ファイル名: PascalCase（UserProfile.tsx, DataTable.tsx）
+ - コンポーネント名: PascalCase（UserProfile, DataTable）
+ - フック名: useプレフィックス（useUserData, useProjectActions）
+ - 型名: PascalCase（UserData, ProjectConfig）
+ - 機能を表す名前を使用（UserList, ProjectCard）
+ - 接尾辞の統一（Table, Form, Card, Modal）
+
+
+
+### 2-2. 型定義層の詳細
+```tsx
+// ==========================================
+// 型定義層（Props, 内部型, API型）
+// ==========================================
+// 1. ページコンポーネントのProps
+interface PageProps {
+  params: { 
+    project_id: string;
+    [key: string]: string;
+  };
+  searchParams: { 
+    page?: string;
+    filter?: string;
+    sort?: 'asc' | 'desc';
+    [key: string]: string | string[] | undefined;
+  };
+}
+
+// 2. コンポーネントのProps
+interface ProjectFormProps {
+  initialData?: Partial<ProjectFormData>;
+  onSubmit: (data: ProjectFormData) => Promise<void>;
+  onCancel?: () => void;
+  isLoading?: boolean;
+  errors?: Record<string, string>;
+}
+
+// 3. フォームデータ型
+interface ProjectFormData {
+  name: string;
+  description: string;
+  status: ProjectStatus;
+  tags: string[];
+  dueDate: Date | null;
+  budget?: number;
+}
+
+// 4. エンティティ型
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  status: ProjectStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  owner: Pick<User, 'id' | 'name' | 'email'>;
+}
+
+// 5. API関連型
+interface ProjectApiResponse extends ApiResponse<Project> {
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+  };
+}
+
+// 6. 内部状態型
+interface ProjectPageState {
+  projects: Project[];
+  selectedProject: Project | null;
+  isLoading: boolean;
+  error: string | null;
+  pagination: {
+    page: number;
+    total: number;
+    hasMore: boolean;
+  };
+}
+
+// 7. ユニオン型・列挙型
+type ProjectStatus = 'draft' | 'active' | 'completed' | 'archived';
+type SortOrder = 'asc' | 'desc';
+type ViewMode = 'grid' | 'list' | 'table';
+```
+
+**ベストプラクティス:**
+- interfaceとtypeの使い分け（拡張可能性を考慮）
+- Pick、Omit、Partialを活用
+- オプショナルプロパティは?で明示
+- ネストが深い場合は別の型に分離
+
+### 2-3. パラメータとルーティング層の詳細
+```tsx
+// ==========================================
+// パラメータとルーティング層
+// ==========================================
+export default function ProjectPage({ params, searchParams }: PageProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParamsHook = useSearchParams();
+
+  // 1. パラメータの抽出と検証
+  const projectId = params.project_id;
+  
+  // 2. クエリパラメータの型安全な取得
+  const currentPage = searchParams.page ? 
+    Math.max(1, parseInt(searchParams.page, 10)) : 1;
+  
+  const filterStatus = (searchParams.filter as ProjectStatus) || 'active';
+  const sortOrder = (searchParams.sort as SortOrder) || 'asc';
+  const viewMode = (searchParams.view as ViewMode) || 'grid';
+  
+  // 3. 検索キーワードの処理
+  const searchQuery = Array.isArray(searchParams.q) ? 
+    searchParams.q[0] : searchParams.q || '';
+
+  // 4. URL更新用の関数
+  const updateSearchParams = useCallback((updates: Record<string, string | null>) => {
+    const current = new URLSearchParams(searchParamsHook);
+    
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null) {
+        current.delete(key);
+      } else {
+        current.set(key, value);
+      }
+    });
+
+    const search = current.toString();
+    const query = search ? `?${search}` : '';
+    router.push(`${pathname}${query}`);
+  }, [router, pathname, searchParamsHook]);
+
+  // 5. 早期リターン（無効なパラメータ）
+  if (!projectId || !/^[a-zA-Z0-9-_]+$/.test(projectId)) {
+    notFound();
+  }
+```
+
+**重要なポイント:**
+- パラメータの型変換は必ず安全に行う
+- 無効な値に対するデフォルト値設定
+- URL更新時の既存パラメータ保持
+- 早期リターンでエラー状態を処理
+
+### 2-4. 状態管理層の詳細
+```tsx
+// ==========================================
+// 状態管理層
+// ==========================================
+// 1. 基本的な状態
+const [projects, setProjects] = useState<Project[]>([]);
+const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+// 2. UI状態
+const [isLoading, setIsLoading] = useState(false);
+const [isSubmitting, setIsSubmitting] = useState(false);
+const [error, setError] = useState<string | null>(null);
+
+// 3. フォーム状態
+const [formData, setFormData] = useState<ProjectFormData>({
+  name: '',
+  description: '',
+  status: 'draft',
+  tags: [],
+  dueDate: null,
+  budget: undefined
+});
+
+const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+// 4. フィルタリング・ソート状態
+const [filters, setFilters] = useState({
+  status: filterStatus,
+  search: searchQuery,
+  tags: [] as string[]
+});
+
+const [sorting, setSorting] = useState({
+  field: 'createdAt' as keyof Project,
+  order: sortOrder
+});
+
+// 5. ページネーション状態
+const [pagination, setPagination] = useState({
+  page: currentPage,
+  limit: 20,
+  total: 0,
+  hasMore: false
+});
+
+// 6. 複雑な状態の場合はuseReducerを使用
+interface AppState {
+  projects: Project[];
+  filters: FilterState;
+  ui: UIState;
+}
+
+const initialState: AppState = {
+  projects: [],
+  filters: { status: 'all', search: '', tags: [] },
+  ui: { isLoading: false, error: null }
+};
+
+const [state, dispatch] = useReducer(appReducer, initialState);
+
+// 7. ref状態（DOM操作用）
+const searchInputRef = useRef<HTMLInputElement>(null);
+const containerRef = useRef<HTMLDivElement>(null);
+```
+
+**状態管理のベストプラクティス:**
+- 関連する状態はオブジェクトにまとめる
+- 状態更新は関数形式 `setState(prev => ({ ...prev, newValue }))`
+- 複雑な状態ロジックはuseReducerを検討
+- パフォーマンスが重要な場合は状態の分離を検討
+
+### 2-5. データ取得層の詳細
+```tsx
+// ==========================================
+// データ取得層
+// ==========================================
+// 1. Server Componentの場合
+export default async function ProjectPage({ params }: PageProps) {
+  try {
+    // 並列データ取得
+    const [project, relatedProjects, activities] = await Promise.all([
+      fetchProject(params.project_id),
+      fetchRelatedProjects(params.project_id),
+      fetchProjectActivities(params.project_id)
+    ]);
+
+    // データ検証
+    if (!project) {
+      notFound();
+    }
+
+    return <ProjectDetails project={project} />;
+  } catch (error) {
+    console.error('Failed to fetch project:', error);
+    throw error; // Error Boundaryでキャッチ
+  }
+}
+
+// 2. Client Componentの場合
+useEffect(() => {
+  let isCancelled = false;
+  
+  const fetchProjects = async () => {
+    if (!projectId) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        signal: abortController.signal // キャンセル対応
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // コンポーネントがアンマウントされていない場合のみ更新
+      if (!isCancelled) {
+        setProjects(data.projects);
+        setPagination(prev => ({
+          ...prev,
+          total: data.meta.total,
+          hasMore: data.meta.hasMore
+        }));
+      }
+    } catch (error) {
+      if (!isCancelled && error.name !== 'AbortError') {
+        setError(error instanceof Error ? error.message : 'Unknown error');
+        console.error('Fetch error:', error);
+      }
+    } finally {
+      if (!isCancelled) {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const abortController = new AbortController();
+  fetchProjects();
+
+  // クリーンアップ
+  return () => {
+    isCancelled = true;
+    abortController.abort();
+  };
+}, [projectId, currentPage, filters.status]);
+
+// 3. カスタムフックでのデータ取得
+const { data: projects, loading, error, refetch } = useProjects({
+  projectId,
+  filters,
+  pagination: { page: currentPage, limit: 20 }
+});
+```
+
+**データ取得のベストプラクティス:**
+- AbortControllerでリクエストキャンセル対応
+- 競合状態（race condition）の防止
+- エラーハンドリングの徹底
+- ローディング状態の適切な管理
+- 再取得機能の提供
+
+### 2-6. ビジネスロジック層の詳細
+```tsx
+// ==========================================
+// ビジネスロジック層
+// ==========================================
+// 1. データフィルタリング
+const filteredProjects = useMemo(() => {
+  return projects.filter(project => {
+    // ステータスフィルタ
+    if (filters.status !== 'all' && project.status !== filters.status) {
+      return false;
+    }
+    
+    // 検索フィルタ
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      return (
+        project.name.toLowerCase().includes(searchLower) ||
+        project.description.toLowerCase().includes(searchLower) ||
+        project.tags.some(tag => tag.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    // タグフィルタ
+    if (filters.tags.length > 0) {
+      return filters.tags.every(tag => project.tags.includes(tag));
+    }
+    
+    return true;
+  });
+}, [projects, filters]);
+
+// 2. データソート
+const sortedProjects = useMemo(() => {
+  return [...filteredProjects].sort((a, b) => {
+    const aValue = a[sorting.field];
+    const bValue = b[sorting.field];
+    
+    // 日付の比較
+    if (aValue instanceof Date && bValue instanceof Date) {
+      return sorting.order === 'asc' 
+        ? aValue.getTime() - bValue.getTime()
+        : bValue.getTime() - aValue.getTime();
+    }
+    
+    // 文字列の比較
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sorting.order === 'asc'
+        ? aValue.localeCompare(bValue, 'ja-JP')
+        : bValue.localeCompare(aValue, 'ja-JP');
+    }
+    
+    // 数値の比較
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sorting.order === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+    
+    return 0;
+  });
+}, [filteredProjects, sorting]);
+
+// 3. ページネーション計算
+const paginatedProjects = useMemo(() => {
+  const startIndex = (pagination.page - 1) * pagination.limit;
+  return sortedProjects.slice(startIndex, startIndex + pagination.limit);
+}, [sortedProjects, pagination.page, pagination.limit]);
+
+// 4. 統計計算
+const projectStats = useMemo(() => {
+  const total = projects.length;
+  const completed = projects.filter(p => p.status === 'completed').length;
+  const active = projects.filter(p => p.status === 'active').length;
+  const overdue = projects.filter(p => 
+    p.dueDate && new Date(p.dueDate) < new Date() && p.status !== 'completed'
+  ).length;
+  
+  return {
+    total,
+    completed,
+    active,
+    overdue,
+    completionRate: total > 0 ? (completed / total) * 100 : 0
+  };
+}, [projects]);
+
+// 5. 複雑なビジネスロジック関数
+const calculateProjectHealth = useCallback((project: Project) => {
+  const now = new Date();
+  const dueDate = project.dueDate ? new Date(project.dueDate) : null;
+  
+  if (!dueDate) return 'unknown';
+  
+  const daysRemaining = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (project.status === 'completed') return 'completed';
+  if (daysRemaining < 0) return 'overdue';
+  if (daysRemaining <= 3) return 'critical';
+  if (daysRemaining <= 7) return 'warning';
+  
+  return 'healthy';
+}, []);
+```
+
+### 2-7. 検証・バリデーション層の詳細
+```tsx
+// ==========================================
+// 検証・バリデーション層
+// ==========================================
+// 1. Zodスキーマ定義
+const projectFormSchema = z.object({
+  name: z.string()
+    .min(1, 'プロジェクト名は必須です')
+    .max(100, 'プロジェクト名は100文字以内で入力してください'),
+  description: z.string()
+    .max(500, '説明は500文字以内で入力してください')
+    .optional(),
+  status: z.enum(['draft', 'active', 'completed', 'archived']),
+  tags: z.array(z.string()).max(10, 'タグは10個まで設定できます'),
+  dueDate: z.date().nullable(),
+  budget: z.number().positive('予算は正の数で入力してください').optional()
+});
+
+// 2. バリデーション実行
+const validateProjectForm = useCallback((data: ProjectFormData) => {
+  try {
+    projectFormSchema.parse(data);
+    setFormErrors({});
+    return true;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errors: Record<string, string> = {};
+      error.errors.forEach(err => {
+        if (err.path) {
+          errors[err.path.join('.')] = err.message;
+        }
+      });
+      setFormErrors(errors);
+    }
+    return false;
+  }
+}, []);
+
+// 3. リアルタイムバリデーション
+const validateField = useCallback((field: keyof ProjectFormData, value: any) => {
+  try {
+    projectFormSchema.shape[field].parse(value);
+    setFormErrors(prev => {
+      const { [field]: removed, ...rest } = prev;
+      return rest;
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      setFormErrors(prev => ({
+        ...prev,
+        [field]: error.errors[0]?.message || 'Invalid value'
+      }));
+    }
+  }
+}, []);
+
+// 4. カスタムバリデーション
+const validateProjectNameUnique = useCallback(async (name: string, excludeId?: string) => {
+  if (!name.trim()) return true;
+  
+  try {
+    const response = await fetch(`/api/projects/validate-name`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, excludeId })
+    });
+    
+    const result = await response.json();
+    return result.isUnique;
+  } catch (error) {
+    console.error('Name validation failed:', error);
+    return true; // バリデーションエラー時は通す
+  }
+}, []);
+
+// 5. 入力値サニタイゼーション
+const sanitizeInput = useCallback((input: string) => {
+  return input
+    .trim()
+    .replace(/[<>]/g, '') // XSS対策
+    .replace(/\s+/g, ' '); // 連続空白の正規化
+}, []);
+```
+
+### 2-8. 変換・フォーマット層の詳細
+```tsx
+// ==========================================
+// 変換・フォーマット層
+// ==========================================
+// 1. 日付フォーマット
+const formatDate = useCallback((date: Date | string | null) => {
+  if (!date) return '-';
+  
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  if (isNaN(dateObj.getTime())) return '-';
+  
+  return format(dateObj, 'yyyy年MM月dd日', { locale: ja });
+}, []);
+
+const formatRelativeDate = useCallback((date: Date | string) => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const now = new Date();
+  const diffInDays = Math.ceil((dateObj.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (diffInDays === 0) return '今日';
+  if (diffInDays === 1) return '明日';
+  if (diffInDays === -1) return '昨日';
+  if (diffInDays > 0) return `${diffInDays}日後`;
+  return `${Math.abs(diffInDays)}日前`;
+}, []);
+
+// 2. 数値フォーマット
+const formatCurrency = useCallback((amount: number | null | undefined) => {
+  if (amount == null) return '-';
+  
+  return new Intl.NumberFormat('ja-JP', {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0
+  }).format(amount);
+}, []);
+
+const formatPercentage = useCallback((value: number, decimals: number = 1) => {
+  return `${value.toFixed(decimals)}%`;
+}, []);
+
+// 3. テキスト変換
+const truncateText = useCallback((text: string, maxLength: number) => {
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength) + '...';
+}, []);
+
+const highlightSearchTerm = useCallback((text: string, searchTerm: string) => {
+  if (!searchTerm) return text;
+  
+  const regex = new RegExp(`(${searchTerm})`, 'gi');
+  return text.replace(regex, '<mark>$1</mark>');
+}, []);
+
+// 4. ステータス変換
+const getStatusLabel = useCallback((status: ProjectStatus) => {
+  const statusLabels: Record<ProjectStatus, string> = {
+    draft: '下書き',
+    active: '進行中',
+    completed: '完了',
+    archived: 'アーカイブ'
+  };
+  return statusLabels[status] || status;
+}, []);
+
+const getStatusColor = useCallback((status: ProjectStatus) => {
+  const statusColors: Record<ProjectStatus, string> = {
+    draft: 'text-gray-600 bg-gray-100',
+    active: 'text-blue-600 bg-blue-100',
+    completed: 'text-green-600 bg-green-100',
+    archived: 'text-purple-600 bg-purple-100'
+  };
+  return statusColors[status] || 'text-gray-600 bg-gray-100';
+}, []);
+
+// 5. データ構造変換
+const transformProjectsForTable = useMemo(() => {
+  return sortedProjects.map(project => ({
+    id: project.id,
+    name: project.name,
+    status: getStatusLabel(project.status),
+    statusColor: getStatusColor(project.status),
+    dueDate: formatDate(project.dueDate),
+    relativeDueDate: project.dueDate ? formatRelativeDate(project.dueDate) : null,
+    budget: formatCurrency(project.budget),
+    health: calculateProjectHealth(project),
+    owner: project.owner.name
+  }));
+}, [sortedProjects, getStatusLabel, getStatusColor, formatDate, formatRelativeDate, formatCurrency, calculateProjectHealth]);
+```
+
+### 2-9. エラーハンドリング層の詳細
+```tsx
+// ==========================================
+// エラーハンドリング層（エラー処理、フォールバック）
+// ==========================================
+// 1. エラー状態の表示
+if (error) {
+  return (
+    <div className="error-container">
+      <p>Error: {error}</p>
+      <Button onClick={() => window.location.reload()}>
+        Retry
+      </Button>
+    </div>
+  );
+}
+
+// 2. エラーハンドリング関数
+const handleError = (error: unknown) => {
+  console.error('Operation failed:', error);
+  toast.error('操作に失敗しました');
+};
+
+// 3. 非同期処理のエラーハンドリング
+const handleAsyncOperation = async () => {
+  try {
+    setIsLoading(true);
+    setError(null);
+    
+    const result = await someAsyncOperation();
+    setData(result);
+  } catch (error) {
+    setError(error instanceof Error ? error.message : 'Unknown error');
+    handleError(error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+```
+
+**ベストプラクティス:**
+- 適切なエラーメッセージ
+- リトライ機能の提供
+- ユーザー体験を考慮
+
+### 2-10. 副作用層の詳細
+```tsx
+// ==========================================
+// 副作用層（useMemo, useCallback）
+// ==========================================
+// 1. メモ化されたデータ
+const memoizedData = useMemo(() => {
+  return data.filter(item => item.status === 'active');
+}, [data]);
+
+// 2. メモ化された関数
+const handleSubmit = useCallback(async (formData: FormData) => {
+  try {
+    await api.post('/projects', formData);
+    toast.success('プロジェクトを作成しました');
+    router.push('/projects');
+  } catch (error) {
+    handleError(error);
+  }
+}, [router]);
+
+// 3. 複雑な計算のメモ化
+const expensiveCalculation = useMemo(() => {
+  return data.reduce((acc, item) => {
+    // 重い計算処理
+    return acc + item.value;
+  }, 0);
+}, [data]);
+```
+
+**ベストプラクティス:**
+- 不要な再計算を避ける
+- 依存配列の適切な設定
+- パフォーマンス測定後の最適化
+
+### 2-11. イベントハンドラ層の詳細
+```tsx
+// ==========================================
+// イベントハンドラ層（onClick, onSubmit, onChange）
+// ==========================================
+// 1. 入力値変更ハンドラ
+const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = e.target;
+  setFormData(prev => ({ ...prev, [name]: value }));
+};
+
+// 2. フォーム送信ハンドラ
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!isFormValid) return;
+  
+  setLoading(true);
+  try {
+    await submitForm(formData);
+  } catch (error) {
+    handleError(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+// 3. クリックハンドラ
+const handleItemClick = useCallback((item: Project) => {
+  setSelectedProject(item);
+  router.push(`/projects/${item.id}`);
+}, [router]);
+
+// 4. 削除ハンドラ
+const handleDelete = useCallback(async (id: string) => {
+  if (!confirm('本当に削除しますか？')) return;
+  
+  try {
+    await deleteProject(id);
+    toast.success('削除しました');
+    refetch();
+  } catch (error) {
+    handleError(error);
+  }
+}, [refetch]);
+```
+
+**ベストプラクティス:**
+- イベントのデフォルト動作を防ぐ
+- 非同期処理の適切な管理
+- エラーハンドリング
+
+### 2-12. レンダリング層の詳細
+```tsx
+// ==========================================
+// レンダリング層（JSX return）
+// ==========================================
+return (
+  <div className="container mx-auto p-4">
+    {/* ヘッダーセクション */}
+    <header className="mb-6">
+      <h1 className="text-2xl font-bold mb-2">Project Details</h1>
+      <p className="text-gray-600">プロジェクトの詳細情報を表示します</p>
+    </header>
+    
+    {/* ローディング状態 */}
+    {loading && (
+      <div className="flex justify-center items-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )}
+    
+    {/* エラー状態 */}
+    {error && (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+        <p className="text-red-800">{error}</p>
+        <Button 
+          onClick={() => window.location.reload()} 
+          className="mt-2"
+          variant="outline"
+        >
+          再試行
+        </Button>
+      </div>
+    )}
+    
+    {/* データ表示 */}
+    {data && (
+      <div className="space-y-6">
+        {/* プロジェクト情報 */}
+        <section className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold mb-4">基本情報</h2>
+          {/* プロジェクト詳細 */}
+        </section>
+        
+        {/* 関連データ */}
+        <section className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold mb-4">関連データ</h2>
+          {/* 関連データ表示 */}
+        </section>
+      </div>
+    )}
+  </div>
+);
+```
+
+**ベストプラクティス:**
+- 条件付きレンダリング
+- アクセシビリティの考慮
+- セマンティックなHTML
+
+## 3. 📝 コメント記述ルール
+
+### 3-1. セクション区切りコメント
+```tsx
+// ==========================================
+// セクション名
+// ==========================================
+```
+
+### 3-2. 機能説明コメント
+```tsx
+// プロジェクト一覧を取得し、フィルタリングとソートを適用する
+const fetchAndProcessProjects = useCallback(async () => {
+  // 実装
+}, []);
+```
+
+### 3-3. 複雑なロジックのコメント
+```tsx
+// 日付の比較：過去の日付は負の値、未来の日付は正の値
+const daysRemaining = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+```
+
+### 3-4. TODO/FIXMEコメント
+```tsx
+// TODO: パフォーマンス最適化のため、仮想スクロールを実装する
+// FIXME: 日付フォーマットが正しく動作しない場合がある
+```
+
+### 3-5. 型定義のコメント
+```tsx
+/**
+ * プロジェクトの基本情報
+ * @property id - プロジェクトの一意識別子
+ * @property name - プロジェクト名
+ * @property status - プロジェクトの状態
+ */
+interface Project {
+  id: string;
+  name: string;
+  status: ProjectStatus;
+}
+```
+
+## 4. 🎯 実装時のチェックリスト
+
+- [ ] 各層が適切に分離されているか
+- [ ] コメントが適切に記述されているか
+- [ ] 型安全性が確保されているか
+- [ ] エラーハンドリングが実装されているか
+- [ ] パフォーマンスが考慮されているか
+- [ ] アクセシビリティが考慮されているか
+- [ ] セマンティックなHTMLが使用されているか
+- [ ] 適切な状態管理が行われているか
+- [ ] 不要な再レンダリングが防がれているか
+- [ ] テスト可能なコードになっているか
+
+
+
+
+
+

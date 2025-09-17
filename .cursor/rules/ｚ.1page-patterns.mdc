@@ -1,0 +1,544 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: "Next.js プロジェクトにおける page.tsx の構造・分割ルール"
+globs:
+  - "src/app/**/page.tsx"
+alwaysApply: false
+---
+
+
+#  Next.js 14+ App Router `page.tsx` 実装ルール
+
+## 1. 🔖 コードセクションの構造ルール（必須）
+
+### 1-1. 統一されたセクション構造
+
+以下の順序でセクションごとに明示的なコメントを入れて記述すること。**その層がある場合のみコメントを入れる**
+```tsx
+// ==========================================
+// 型定義層（Props, 内部型, API型）
+// ==========================================
+
+// ==========================================
+// パラメータとルーティング層（searchParams, params, useParams, useRouter, useSearchParams）
+// ==========================================
+
+// ==========================================
+// 状態管理層（useState, useReducer, Zustand）
+// ==========================================
+
+// ==========================================
+// データ取得層（Server Components: async/await, Client Components: useEffect, use hooks）
+// ==========================================
+
+// ==========================================
+// ビジネスロジック層（データ加工・計算・検証）
+// ==========================================
+
+// ==========================================
+// 検証・バリデーション層（入力値チェック、データ整合性）
+// ==========================================
+
+// ==========================================
+// 変換・フォーマット層（データ変換、表示用フォーマット）
+// ==========================================
+
+// ==========================================
+// エラーハンドリング層（エラー処理、フォールバック）
+// ==========================================
+
+// ==========================================
+// 副作用層（useMemo, useCallback）
+// ==========================================
+
+// ==========================================
+// イベントハンドラ層（onClick, onSubmit, onChange）
+// ==========================================
+
+// ==========================================
+// レンダリング層（JSX return）
+// ==========================================
+```
+
+### 1-2. 各層の詳細説明
+
+#### 型定義層
+- Props、内部型、API型の定義
+- インターフェース、型エイリアスの定義
+
+#### パラメータとルーティング層
+- Server Component: `searchParams`, `params`
+- Client Component: `useParams`, `useRouter`, `useSearchParams`
+
+#### 状態管理層
+- Client Component: `useState`, `useReducer`, Zustand
+- Server Component: 通常は不要
+
+#### データ取得層
+- Server Component: `async/await` でのデータ取得
+- Client Component: `useEffect`, カスタムフックでのデータ取得
+
+#### ビジネスロジック層
+- データの加工・計算・検証
+- ビジネスルールの実装
+- 複雑な処理ロジック
+
+#### 検証・バリデーション層
+- フォーム入力の検証
+- APIレスポンスの整合性チェック
+- データの妥当性確認
+
+#### 変換・フォーマット層
+- 日付フォーマット
+- 数値の表示形式変換
+- データ構造の変換
+
+#### エラーハンドリング層
+- エラーの分類と処理
+- フォールバックデータの準備
+- エラー状態の管理
+
+#### 副作用層
+- `useMemo`, `useCallback` での最適化
+- パフォーマンス最適化ロジック
+
+#### イベントハンドラ層
+- ユーザーインタラクションの処理
+- フォーム送信、ボタンクリック等
+
+#### レンダリング層
+- JSXのreturn文
+- 条件分岐による表示制御
+
+## 2.  ファイル分割ルール（肥大化対策）
+
+### 2-1. 分割判断基準
+- **1セクションが 50行を超える場合** → 外部ファイルに分離を検討
+- **page.tsx 全体が 200行を超える場合** → 段階的に分割を開始
+- **JSXがネスト3階層を超える場合** → components/ に切り出し
+- **複数のAPI呼び出しがある場合** → カスタムフックに集約
+
+### 2-2. 分離先と命名規則
+
+| 目的 | 分離先 | 命名例 | 説明 |
+|------|--------|--------|------|
+| データ取得・副作用 | `hooks/` | `useXxxData.ts`, `useXxxActions.ts` | データ取得とアクションを分離 |
+| UI構成要素 | `components/` | `XxxTable.tsx`, `XxxHeader.tsx` | 再利用可能なUIコンポーネント |
+| イベントハンドラ | `handlers/` | `useXxxHandlers.ts` | 複雑なイベント処理 |
+| 固定データ・定数 | `constants/` | `statuses.ts`, `labels.ts` | アプリケーション定数 |
+| APIクライアント | `lib/api/` | `fetchXxxList.ts` | API呼び出し関数 |
+| 型定義 | `types/` | `xxx.types.ts` | 型定義の集約 |
+| ユーティリティ | `utils/` | `xxxUtils.ts` | ヘルパー関数 |
+
+## 3. 📁 推奨ディレクトリ構成
+
+```
+app/
+└─ [feature]/
+   ├─ page.tsx                    # メインページ
+   ├─ loading.tsx                 # ローディング状態
+   ├─ error.tsx                   # エラー処理
+   ├─ not-found.tsx              # 404ページ
+   ├─ components/                 # UIコンポーネント（必要時のみ）
+   │  ├─ XxxHeader.tsx
+   │  ├─ XxxTable.tsx
+   │  ├─ XxxForm.tsx
+   │  └─ index.ts                 # エクスポート集約
+   ├─ hooks/                      # カスタムフック（必要時のみ）
+   │  ├─ useXxxData.ts
+   │  ├─ useXxxActions.ts
+   │  └─ useXxxHandlers.ts
+   ├─ constants/                  # 定数（必要時のみ）
+   │  ├─ statuses.ts
+   │  └─ labels.ts
+   ├─ types/                      # 型定義（必要時のみ）
+   │  └─ xxx.types.ts
+   ├─ utils/                      # ユーティリティ（必要時のみ）
+   │  └─ xxxUtils.ts
+   ├─ lib/                        # API・外部ライブラリ（必要時のみ）
+   │  └─ api/
+   │      └─ fetchXxxList.ts
+   └─ store/                      # 状態管理（必要時のみ）
+       └─ xxxStore.ts
+```
+
+## 4. 🚫 レイアウトに関する制約
+
+### 4-1. レイアウト継承の方針
+- **layout.tsx ファイルは作成しない**
+- **個別ページにレイアウトコンポーネントを作成しない**
+- **mainページ（app/layout.tsx）のレイアウト構造を継承する**
+- **ページ固有のレイアウトが必要な場合は、mainページのレイアウトを拡張する**
+
+### 4-2. レイアウト実装パターン
+```tsx
+// ❌ 避けるべき：個別ページでのレイアウトコンポーネント作成
+// app/[feature]/components/FeatureLayout.tsx
+export default function FeatureLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="feature-layout">
+      <FeatureHeader />
+      <main>{children}</main>
+      <FeatureFooter />
+    </div>
+  );
+}
+
+// ❌ 避けるべき：page.tsxでのレイアウトコンポーネント使用
+export default function Page() {
+  return (
+    <FeatureLayout>
+      <PageContent />
+    </FeatureLayout>
+  );
+}
+
+// ✅ 推奨：mainページのレイアウトを継承
+// app/layout.tsx で共通レイアウトを定義
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="ja">
+      <body>
+        <Header />
+        <Sidebar />
+        <main className="main-content">
+          {children}
+        </main>
+        <Footer />
+      </body>
+    </html>
+  );
+}
+
+// ✅ 推奨：page.tsxは直接コンテンツを返す
+export default function Page() {
+  return (
+    <div className="page-content">
+      <PageHeader title="データ一覧" />
+      <DataTable data={data} />
+      <Pagination page={page} limit={limit} />
+    </div>
+  );
+}
+```
+
+### 4-3. レイアウト拡張が必要な場合
+```tsx
+// ✅ 推奨：mainページのレイアウトを拡張
+// app/layout.tsx で条件付きレイアウトを実装
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="ja">
+      <body>
+        <Header />
+        <Sidebar />
+        <main className="main-content">
+          <div className="content-wrapper">
+            {children}
+          </div>
+        </main>
+        <Footer />
+      </body>
+    </html>
+  );
+}
+
+// ✅ 推奨：CSSクラスでページ固有のスタイルを適用
+// app/[feature]/page.tsx
+export default function Page() {
+  return (
+    <div className="feature-page">
+      <PageHeader title="データ一覧" />
+      <DataTable data={data} />
+      <Pagination page={page} limit={limit} />
+    </div>
+  );
+}
+```
+
+## 5. 📂 フォルダ分割ルール
+
+各機能ディレクトリでは、コードの分割が必要な場合に以下のフォルダを適宜作成すること：
+
+### 5-1. 推奨フォルダ一覧
+- **`components/`** - UIコンポーネント（再利用可能なUI要素）
+- **`constants/`** - 定数・設定値（アプリケーション定数）
+- **`hooks/`** - カスタムフック（データ取得・状態管理）
+- **`lib/`** - API・外部ライブラリ（外部サービス連携）
+- **`store/`** - 状態管理（Zustand）
+- **`types/`** - 型定義（TypeScript型定義）
+- **`utils/`** - ユーティリティ関数（ヘルパー関数）
+
+### 5-2. フォルダ作成の判断基準
+- **1つのファイルが50行を超える場合** → 適切なフォルダに分割
+- **関連する機能が複数ファイルに分散している場合** → 専用フォルダに集約
+- **再利用性が高いコードの場合** → 専用フォルダに配置
+- **テストが書きにくい構造の場合** → フォルダ分割を検討
+- **小規模なページ（100行以下）の場合** → フォルダ分割は不要
+
+### 5-3. 各フォルダの役割と命名規則
+
+#### `components/`
+```tsx
+// 再利用可能なUIコンポーネント
+// 命名例：XxxTable.tsx, XxxForm.tsx, XxxCard.tsx
+export default function XxxTable({ data }: XxxTableProps) {
+  // コンポーネント実装
+}
+```
+
+#### `constants/`
+```tsx
+// アプリケーション定数
+// 命名例：statuses.ts, labels.ts, config.ts
+export const STATUSES = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+} as const;
+
+export const LABELS = {
+  TITLE: 'タイトル',
+  SUBMIT: '送信',
+} as const;
+```
+
+#### `hooks/`
+```tsx
+// カスタムフック
+// 命名例：useXxxData.ts, useXxxActions.ts
+export const useXxxData = () => {
+  // フック実装
+  return { data, loading, error };
+};
+```
+
+#### `lib/`
+```tsx
+// API・外部ライブラリ
+// 命名例：api/fetchXxxList.ts, api/createXxx.ts
+export const fetchXxxList = async (params: FetchParams) => {
+  // API実装
+};
+```
+
+#### `store/`
+```tsx
+// 状態管理（Zustand）
+// 命名例：xxxStore.ts
+import { create } from 'zustand';
+
+interface XxxStore {
+  data: DataItem[];
+  loading: boolean;
+  error: string | null;
+  setData: (data: DataItem[]) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  fetchData: () => Promise<void>;
+}
+
+export const useXxxStore = create<XxxStore>((set, get) => ({
+  data: [],
+  loading: false,
+  error: null,
+  setData: (data) => set({ data }),
+  setLoading: (loading) => set({ loading }),
+  setError: (error) => set({ error }),
+  fetchData: async () => {
+    set({ loading: true, error: null });
+    try {
+      const data = await fetchXxxList();
+      set({ data, loading: false });
+    } catch (error) {
+      set({ error: error.message, loading: false });
+    }
+  },
+}));
+```
+
+#### `types/`
+```tsx
+// 型定義
+// 命名例：xxx.types.ts
+export interface XxxData {
+  id: string;
+  name: string;
+  // ...
+}
+```
+
+#### `utils/`
+```tsx
+// ユーティリティ関数
+// 命名例：xxxUtils.ts
+export const formatXxx = (data: XxxData): string => {
+  // ユーティリティ実装
+};
+```
+
+### 5-4. フォルダ作成のタイミング
+- **コードの可読性が低下した時**にフォルダ分割を検討
+- **機能の追加・変更時**に必要に応じてフォルダを追加
+- **リファクタリング時**にフォルダ構造を見直し
+- **小規模なページでは空フォルダを作成しない**（必要時のみ作成）
+
+## 6. 🚀 Next.js 14+ 特有の実装パターン
+
+### 6-1. Server Components vs Client Components
+```tsx
+// Server Component（デフォルト）
+export default async function Page() {
+  const data = await fetchData(); // サーバーサイドで実行
+  return <ClientComponent data={data} />;
+}
+
+// Client Component（必要時のみ）
+'use client';
+export default function ClientComponent({ data }: Props) {
+  const [state, setState] = useState();
+  // インタラクティブな処理
+}
+```
+
+### 6-2. データ取得パターン
+```tsx
+// Server Component でのデータ取得
+async function getData() {
+  const res = await fetch('https://api.example.com/data', {
+    cache: 'no-store', // または 'force-cache'
+    next: { revalidate: 3600 } // ISR
+  });
+  return res.json();
+}
+
+// Client Component でのデータ取得
+const useData = () => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    fetchData().then(setData).finally(() => setLoading(false));
+  }, []);
+  
+  return { data, loading };
+};
+```
+
+### 6-3. エラーハンドリング
+```tsx
+// error.tsx
+'use client';
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  return (
+    <div>
+      <h2>エラーが発生しました</h2>
+      <button onClick={() => reset()}>再試行</button>
+    </div>
+  );
+}
+```
+
+## 7. 🧠 実装ベストプラクティス
+
+### 7-1. パフォーマンス最適化
+- **Server Components** を優先使用。
+- **Client Components** 必要であれば、仕様。
+- **useMemo**, **useCallback** で不要な再レンダリングを防止
+- **React.memo** でコンポーネントのメモ化
+
+### 7-2. SEO・アクセシビリティ
+- **metadata** の適切な設定
+- **semantic HTML** の使用
+- **aria-label** などのアクセシビリティ属性
+- **alt** 属性の設定
+
+### 7-3. エラーハンドリング
+- **try-catch** での適切なエラー処理
+- **error boundary** の実装
+- **loading states** の提供
+- **ユーザーフレンドリーなエラーメッセージ**
+
+## 9. 🔧 開発時のチェックリスト
+
+## 📋 開発時のチェックリスト
+
+### 🆕 新規作成時
+- [ ] セクション構造が統一されているか
+- [ ] ファイルサイズが適切か（200行以下推奨）
+- [ ] Server/Client Component の使い分けが適切か
+- [ ] エラーハンドリングが実装されているか
+- [ ] ローディング状態が考慮されているか
+- [ ] アクセシビリティが考慮されているか
+- [ ] パフォーマンス最適化が行われているか
+- [ ] 型安全性が確保されているか
+- [ ] テストが書かれているか
+- [ ] 必要に応じてフォルダが作成されているか
+- [ ] 独自layout.tsxを作成していないか
+
+## 10. 📝 命名規則
+
+### 10-1. ファイル名
+- **page.tsx**: ページコンポーネント
+- **loading.tsx**: ローディングコンポーネント
+- **error.tsx**: エラーコンポーネント
+- **not-found.tsx**: 404ページ
+
+### 10-2. コンポーネント名
+- **PascalCase**: `UserProfile`, `DataTable`
+- **機能を表す名前**: `UserList`, `ProjectCard`
+- **接尾辞の統一**: `Table`, `Form`, `Card`, `Modal`
+
+### 10-3. フック名
+- **use** プレフィックス: `useUserData`, `useProjectActions`
+- **機能を表す名前**: `useFetchUsers`, `useHandleSubmit`
+
+## 11. 🚨 避けるべきパターン
+
+- ❌ **ビジネスロジックを適切な層に分離しない**
+- ❌ **大きなコンポーネントを1つのファイルに書く**
+- ❌ **型定義をインラインで書く**
+- ❌ **ハードコードされた値**
+- ❌ **適切でないエラーハンドリング**
+- ❌ **パフォーマンスを考慮しない実装**
+- ❌ **独自layout.tsxファイルの作成**
+- ❌ **個別ページにレイアウトコンポーネントを作成**
+- ❌ **不要なフォルダの作成**
+- ❌ **Server/Client Componentの混在**
+- ❌ **useState/useReducerでの複雑な状態管理（Zustandを使用）**
+
+## 12. ✅ 推奨パターン
+
+- ✅ **mainページのレイアウトを継承する**
+- ✅ **Zustandで状態管理を行う**
+- ✅ **適切なフォルダ分割を行う**
+- ✅ **適切な層分離を行う**
+- ✅ **型安全性を確保する**
+- ✅ **エラーハンドリングを実装する**
+- ✅ **パフォーマンス最適化を行う**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

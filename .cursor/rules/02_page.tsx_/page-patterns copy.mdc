@@ -1,0 +1,490 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# ✅ Next.js 14+ App Router `page.tsx` 実装ルール
+
+## 📋 ルール適用区分
+
+### 🆕 新規 page.tsx 作成時
+- 完全に新しいページを作成する場合
+- 既存ページをコピーして新しいページを作成する場合
+- 機能追加で新しいページが必要になった場合
+
+### 🔄 既存 page.tsx 変更時
+- 既存ページの機能を修正・拡張する場合
+- バグ修正を行う場合
+- パフォーマンス改善を行う場合
+- リファクタリングを行う場合
+
+---
+
+## 🆕 新規 page.tsx 作成時のルール
+
+### 1. 🔖 コードセクションの構造ルール（必須）
+
+### 2. 📦 ファイル分割ルール（新規作成時）
+
+#### 2-1. 分割判断基準
+- **1セクションが 50行を超える場合** → 外部ファイルに分離を検討
+- **page.tsx 全体が 200行を超える場合** → 段階的に分割を開始
+- **JSXがネスト3階層を超える場合** → components/ に切り出し
+- **複数のAPI呼び出しがある場合** → カスタムフックに集約
+
+#### 2-2. 分離先と命名規則
+
+| 目的 | 分離先 | 命名例 | 説明 |
+|---|-----|-----|---|
+| データ取得・副作用 | `hooks/` | `useXxxData.ts`, `useXxxActions.ts` | データ取得とアクションを分離 |
+| UI構成要素 | `components/` | `XxxTable.tsx`, `XxxHeader.tsx` | 再利用可能なUIコンポーネント |
+| イベントハンドラ | `handlers/` | `useXxxHandlers.ts` | 複雑なイベント処理 |
+| 固定データ・定数 | `constants/` | `statuses.ts`, `labels.ts` | アプリケーション定数 |
+| APIクライアント | `lib/api/` | `fetchXxxList.ts` | API呼び出し関数 |
+| 型定義 | `types/` | `xxx.types.ts` | 型定義の集約 |
+| ユーティリティ | `utils/` | `xxxUtils.ts` | ヘルパー関数 |
+
+### 3. 📁 推奨ディレクトリ構成
+
+```
+app/
+└─ [feature]/
+   ├─ page.tsx                    # メインページ
+   ├─ loading.tsx                 # ローディング状態
+   ├─ error.tsx                   # エラー処理
+   ├─ not-found.tsx              # 404ページ
+   ├─ components/                 # UIコンポーネント（必要時のみ）
+   │  ├─ XxxHeader.tsx
+   │  ├─ XxxTable.tsx
+   │  ├─ XxxForm.tsx
+   │  └─ index.ts                 # エクスポート集約
+   ├─ hooks/                      # カスタムフック（必要時のみ）
+   │  ├─ useXxxData.ts
+   │  ├─ useXxxActions.ts
+   │  └─ useXxxHandlers.ts
+   ├─ constants/                  # 定数（必要時のみ）
+   │  ├─ statuses.ts
+   │  └─ labels.ts
+   ├─ types/                      # 型定義（必要時のみ）
+   │  └─ xxx.types.ts
+   ├─ utils/                      # ユーティリティ（必要時のみ）
+   │  └─ xxxUtils.ts
+   ├─ lib/                        # API・外部ライブラリ（必要時のみ）
+   │  └─ api/
+   │      └─ fetchXxxList.ts
+   └─ store/                      # 状態管理（必要時のみ）
+       └─ xxxStore.ts
+```
+
+### 4. 🚫 レイアウトに関する制約（新規作成時）
+
+#### 4-1. レイアウト継承の方針
+- **layout.tsx ファイルは作成しない**
+- **個別ページにレイアウトコンポーネントを作成しない**
+- **mainページ（app/layout.tsx）のレイアウト構造を継承する**
+- **ページ固有のレイアウトが必要な場合は、mainページのレイアウトを拡張する**
+
+#### 4-2. レイアウト実装パターン
+```tsx
+// ❌ 避けるべき：個別ページでのレイアウトコンポーネント作成
+// app/[feature]/components/FeatureLayout.tsx
+export default function FeatureLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="feature-layout">
+      <FeatureHeader />
+      <main>{children}</main>
+      <FeatureFooter />
+    </div>
+  );
+}
+
+// ❌ 避けるべき：page.tsxでのレイアウトコンポーネント使用
+export default function Page() {
+  return (
+    <FeatureLayout>
+      <PageContent />
+    </FeatureLayout>
+  );
+}
+
+// ✅ 推奨：mainページのレイアウトを継承
+// app/layout.tsx で共通レイアウトを定義
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="ja">
+      <body>
+        <Header />
+        <Sidebar />
+        <main className="main-content">
+          {children}
+        </main>
+        <Footer />
+      </body>
+    </html>
+  );
+}
+
+// ✅ 推奨：page.tsxは直接コンテンツを返す
+export default function Page() {
+  return (
+    <div className="page-content">
+      <PageHeader title="データ一覧" />
+      <DataTable data={data} />
+      <Pagination page={page} limit={limit} />
+    </div>
+  );
+}
+```
+
+### 5. 🚀 Next.js 14+ 特有の実装パターン（新規作成時）
+
+#### 5-1. Server Components vs Client Components
+```tsx
+// Server Component（デフォルト）
+export default async function Page() {
+  const data = await fetchData(); // サーバーサイドで実行
+  return <ClientComponent data={data} />;
+}
+
+// Client Component（必要時のみ）
+'use client';
+export default function ClientComponent({ data }: Props) {
+  const [state, setState] = useState();
+  // インタラクティブな処理
+}
+```
+
+#### 5-2. データ取得パターン
+```tsx
+// Server Component でのデータ取得
+async function getData() {
+  const res = await fetch('https://api.example.com/data', {
+    cache: 'no-store', // または 'force-cache'
+    next: { revalidate: 3600 } // ISR
+  });
+  return res.json();
+}
+
+// Client Component でのデータ取得
+const useData = () => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    fetchData().then(setData).finally(() => setLoading(false));
+  }, []);
+  
+  return { data, loading };
+};
+```
+
+### 6. ✅ 理想的な新規 page.tsx ファイル構造
+
+#### 6-1. Server Component の例
+```tsx
+// ==========================================
+// 型定義層
+// ==========================================
+interface PageProps {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
+interface DataItem {
+  id: string;
+  name: string;
+  // ...
+}
+
+// ==========================================
+// パラメータ・ルーティング層
+// ==========================================
+export default async function Page({ searchParams }: PageProps) {
+  const page = Number(searchParams?.page) || 1;
+  const limit = Number(searchParams?.limit) || 10;
+
+// ==========================================
+// データ取得層（Server Component）
+// ==========================================
+  const data = await getData({ page, limit });
+
+// ==========================================
+// レンダリング層
+// ==========================================
+  return (
+    <div className="container mx-auto p-4">
+      <PageHeader title="データ一覧" />
+      <DataTable data={data} />
+      <Pagination page={page} limit={limit} />
+    </div>
+  );
+}
+```
+
+#### 6-2. Client Component の例
+```tsx
+'use client';
+
+// ==========================================
+// 型定義層
+// ==========================================
+interface PageProps {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}
+
+interface DataItem {
+  id: string;
+  name: string;
+  // ...
+}
+
+// ==========================================
+// パラメータ・ルーティング層
+// ==========================================
+export default function Page({ searchParams }: PageProps) {
+  const router = useRouter();
+  const page = Number(searchParams?.page) || 1;
+  const limit = Number(searchParams?.limit) || 10;
+
+// ==========================================
+// 状態管理層（Zustand）
+// ==========================================
+  const { data, loading, error, fetchData } = useXxxStore();
+
+// ==========================================
+// データ取得層
+// ==========================================
+  useEffect(() => {
+    fetchData({ page, limit });
+  }, [page, limit, fetchData]);
+
+// ==========================================
+// イベントハンドラ層
+// ==========================================
+  const handlePageChange = useCallback((newPage: number) => {
+    router.push(`?page=${newPage}&limit=${limit}`);
+  }, [router, limit]);
+
+// ==========================================
+// レンダリング層
+// ==========================================
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage message={error} />;
+
+  return (
+    <div className="page-content">
+      <PageHeader title="データ一覧" />
+      <DataTable data={data} />
+      <Pagination page={page} limit={limit} onPageChange={handlePageChange} />
+    </div>
+  );
+}
+```
+
+---
+
+## 🔄 既存 page.tsx 変更時のルール
+
+### 1. 📋 変更前の確認事項
+
+#### 1-1. 既存コードの構造確認
+- [ ] 現在のセクション構造を確認
+- [ ] 既存のフォルダ構成を確認
+- [ ] 使用されているライブラリ・フックを確認
+- [ ] 既存の型定義を確認
+- [ ] エラーハンドリングの実装状況を確認
+
+#### 1-2. 変更影響範囲の確認
+- [ ] 他のファイルへの依存関係を確認
+- [ ] API呼び出しの影響範囲を確認
+- [ ] 状態管理の影響範囲を確認
+- [ ] スタイリングの影響範囲を確認
+
+### 2. 🔧 変更時の実装ルール
+
+#### 2-1. 既存構造の維持
+- **既存のセクション構造を維持する**
+- **既存のフォルダ構成を活用する**
+- **既存の命名規則に従う**
+- **既存のコメントスタイルを維持する**
+
+#### 2-2. 段階的な改善
+- **一度に大きな変更を避ける**
+- **機能ごとに段階的に変更する**
+- **変更前後の動作確認を必ず行う**
+- **バックアップを取ってから変更する**
+
+#### 2-3. 既存コードの活用
+```tsx
+// ✅ 推奨：既存の型定義を活用
+// 既存の型定義がある場合は、新しく作成せずに既存のものを使用
+import { ExistingDataItem } from '../types/existing.types';
+
+// ✅ 推奨：既存のフックを活用
+// 既存のカスタムフックがある場合は、新しく作成せずに既存のものを使用
+import { useExistingData } from '../hooks/useExistingData';
+
+// ✅ 推奨：既存のコンポーネントを活用
+// 既存のUIコンポーネントがある場合は、新しく作成せずに既存のものを使用
+import { ExistingTable } from '../components/ExistingTable';
+```
+
+### 3. 🚨 変更時の注意事項
+
+#### 3-1. 破壊的変更の回避
+- **既存のAPIインターフェースを変更しない**
+- **既存のprops構造を変更しない**
+- **既存のCSSクラス名を変更しない**
+- **既存のファイル名を変更しない**
+
+#### 3-2. 後方互換性の維持
+- **既存の機能を削除しない**
+- **既存のオプションを削除しない**
+- **既存のデフォルト値を変更しない**
+- **既存のエラーメッセージを変更しない**
+
+#### 3-3. パフォーマンスの考慮
+- **既存のパフォーマンス特性を維持する**
+- **不要な再レンダリングを避ける**
+- **既存のメモ化を活用する**
+- **既存のキャッシュ戦略を維持する**
+
+### 4. 📝 変更時のドキュメント化
+
+#### 4-1. 変更内容の記録
+```tsx
+// 変更履歴をコメントで記録
+// 変更日: 2024-01-01
+// 変更者: 開発者名
+// 変更内容: 機能追加 - 検索機能の実装
+// 影響範囲: データ取得層、レンダリング層
+export default function Page() {
+  // 既存のコード...
+  
+  // 新規追加: 検索機能
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // 既存のコード...
+}
+```
+
+#### 4-2. TODOコメントの活用
+```tsx
+// TODO: 将来的な改善点を記録
+// TODO: パフォーマンス改善 - 仮想化の実装
+// TODO: 機能拡張 - フィルタリング機能の追加
+// TODO: リファクタリング - 共通コンポーネントの抽出
+```
+
+### 5. 🧪 変更時のテスト
+
+#### 5-1. 動作確認
+- [ ] 既存機能が正常に動作することを確認
+- [ ] 新規機能が正常に動作することを確認
+- [ ] エラーケースが適切に処理されることを確認
+- [ ] パフォーマンスが維持されていることを確認
+
+#### 5-2. 回帰テスト
+- [ ] 関連するページが正常に動作することを確認
+- [ ] API呼び出しが正常に動作することを確認
+- [ ] 状態管理が正常に動作することを確認
+- [ ] スタイリングが正常に表示されることを確認
+
+---
+
+## 📋 開発時のチェックリスト
+
+### 🆕 新規作成時
+- [ ] セクション構造が統一されているか
+- [ ] ファイルサイズが適切か（200行以下推奨）
+- [ ] Server/Client Component の使い分けが適切か
+- [ ] エラーハンドリングが実装されているか
+- [ ] ローディング状態が考慮されているか
+- [ ] SEO対策が施されているか
+- [ ] アクセシビリティが考慮されているか
+- [ ] パフォーマンス最適化が行われているか
+- [ ] 型安全性が確保されているか
+- [ ] テストが書かれているか
+- [ ] 必要に応じてフォルダが作成されているか
+- [ ] 独自layout.tsxを作成していないか
+
+### 🔄 既存変更時
+- [ ] 既存の構造を維持しているか
+- [ ] 既存の機能が正常に動作するか
+- [ ] 新規機能が正常に動作するか
+- [ ] パフォーマンスが維持されているか
+- [ ] エラーハンドリングが適切か
+- [ ] 変更内容がドキュメント化されているか
+- [ ] 関連するファイルへの影響がないか
+- [ ] 後方互換性が維持されているか
+- [ ] テストが更新されているか
+- [ ] コードレビューが行われているか
+
+---
+
+## 🚨 避けるべきパターン
+
+### 🆕 新規作成時
+- ❌ **page.tsx にビジネスロジックを書く**
+- ❌ **大きなコンポーネントを1つのファイルに書く**
+- ❌ **型定義をインラインで書く**
+- ❌ **ハードコードされた値**
+- ❌ **適切でないエラーハンドリング**
+- ❌ **パフォーマンスを考慮しない実装**
+- ❌ **独自layout.tsxファイルの作成**
+- ❌ **個別ページにレイアウトコンポーネントを作成**
+- ❌ **不要なフォルダの作成**
+- ❌ **Server/Client Componentの混在**
+- ❌ **useState/useReducerでの複雑な状態管理（Zustandを使用）**
+
+### 🔄 既存変更時
+- ❌ **既存の構造を大幅に変更する**
+- ❌ **既存のAPIインターフェースを変更する**
+- ❌ **既存のprops構造を変更する**
+- ❌ **既存のCSSクラス名を変更する**
+- ❌ **既存のファイル名を変更する**
+- ❌ **既存の機能を削除する**
+- ❌ **既存のオプションを削除する**
+- ❌ **既存のデフォルト値を変更する**
+- ❌ **既存のエラーメッセージを変更する**
+- ❌ **パフォーマンス特性を劣化させる**
+- ❌ **変更内容をドキュメント化しない**
+
+---
+
+## ✅ 推奨パターン
+
+### 🆕 新規作成時
+- ✅ **mainページのレイアウトを継承する**
+- ✅ **Zustandで状態管理を行う**
+- ✅ **Server Componentsを優先使用する**
+- ✅ **適切なフォルダ分割を行う**
+- ✅ **型安全性を確保する**
+- ✅ **エラーハンドリングを実装する**
+- ✅ **パフォーマンス最適化を行う**
+
+### 🔄 既存変更時
+- ✅ **既存の構造を維持する**
+- ✅ **既存の機能を活用する**
+- ✅ **段階的に変更する**
+- ✅ **変更内容をドキュメント化する**
+- ✅ **動作確認を徹底する**
+- ✅ **後方互換性を維持する**
+- ✅ **パフォーマンスを維持する**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

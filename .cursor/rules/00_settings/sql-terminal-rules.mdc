@@ -1,0 +1,403 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# デバッグヘッダー層（旧: 叫ぶ層）
+# !! DEBUG: このルールが読み込まれました
+- **Rule File:** `sql-terminal-rules.mdc`
+- **Description:** SQL操作をターミナルで安全かつ効率的に実行するための標準ルールとベストプラクティス
+
+# SQL操作ターミナルルール
+
+## 1. 基本原則
+
+### 1.1. 安全性第一
+- **本番環境での直接操作は禁止**
+- **必ずバックアップを取得してから操作**
+- **テスト環境で事前確認**
+- **権限の最小化原則**
+
+### 1.2. 操作前の確認事項
+- [ ] 対象データベースの確認
+- [ ] バックアップの取得
+- [ ] 実行時間の見積もり
+- [ ] 影響範囲の確認
+- [ ] ロールバック手順の準備
+
+## 2. データベース接続
+
+### 2.1. SQLite操作（推奨）
+```bash
+# データベースファイルの場所確認
+ls -la data/achievements.db
+
+# SQLite接続
+sqlite3 data/achievements.db
+
+# 接続確認
+.tables
+.schema
+.quit
+```
+
+### 2.2. 接続時の注意事項
+- **絶対パスでの指定を推奨**
+- **ファイル権限の確認**
+- **ディスク容量の確認**
+- **同時アクセスの確認**
+
+## 3. 基本操作コマンド
+
+### 3.1. データベース情報確認
+```sql
+-- テーブル一覧表示
+.tables
+
+-- スキーマ確認
+.schema [table_name]
+
+-- インデックス確認
+.indexes [table_name]
+
+-- データベース情報
+.databases
+
+-- 設定確認
+.show
+```
+
+### 3.2. データ確認操作
+```sql
+-- テーブル構造確認
+PRAGMA table_info([table_name]);
+
+-- レコード数確認
+SELECT COUNT(*) FROM [table_name];
+
+-- サンプルデータ確認
+SELECT * FROM [table_name] LIMIT 5;
+
+-- 重複チェック
+SELECT column_name, COUNT(*) 
+FROM [table_name] 
+GROUP BY column_name 
+HAVING COUNT(*) > 1;
+```
+
+## 4. 安全なデータ操作
+
+### 4.1. SELECT文のベストプラクティス
+```sql
+-- 大量データの場合はLIMITを使用
+SELECT * FROM large_table LIMIT 1000;
+
+-- インデックスを活用した検索
+SELECT * FROM users WHERE id = 123;
+
+-- 複雑なクエリはEXPLAINで実行計画確認
+EXPLAIN QUERY PLAN SELECT * FROM users WHERE name LIKE '%test%';
+
+-- 結果の件数確認
+SELECT COUNT(*) FROM (SELECT * FROM users WHERE status = 'active');
+```
+
+### 4.2. INSERT文の安全な実行
+```sql
+-- トランザクション開始
+BEGIN TRANSACTION;
+
+-- データ挿入
+INSERT INTO users (name, email, created_at) 
+VALUES ('test_user', 'test@example.com', datetime('now'));
+
+-- 結果確認
+SELECT * FROM users WHERE name = 'test_user';
+
+-- 問題なければコミット
+COMMIT;
+
+-- 問題があればロールバック
+ROLLBACK;
+```
+
+### 4.3. UPDATE文の安全な実行
+```sql
+-- 更新前のデータ確認
+SELECT * FROM users WHERE id = 123;
+
+-- トランザクション開始
+BEGIN TRANSACTION;
+
+-- 更新対象の件数確認
+SELECT COUNT(*) FROM users WHERE id = 123;
+
+-- 更新実行
+UPDATE users SET name = 'updated_name' WHERE id = 123;
+
+-- 更新後の確認
+SELECT * FROM users WHERE id = 123;
+
+-- 問題なければコミット
+COMMIT;
+```
+
+### 4.4. DELETE文の安全な実行
+```sql
+-- 削除前のデータ確認
+SELECT * FROM users WHERE id = 123;
+
+-- 削除対象の件数確認
+SELECT COUNT(*) FROM users WHERE id = 123;
+
+-- トランザクション開始
+BEGIN TRANSACTION;
+
+-- 削除実行
+DELETE FROM users WHERE id = 123;
+
+-- 削除後の確認
+SELECT COUNT(*) FROM users WHERE id = 123;
+
+-- 問題なければコミット
+COMMIT;
+```
+
+## 5. バックアップと復元
+
+### 5.1. バックアップ作成
+```bash
+# データベースファイルのバックアップ
+cp data/achievements.db data/achievements_backup_$(date +%Y%m%d_%H%M%S).db
+
+# SQLite形式でのバックアップ
+sqlite3 data/achievements.db ".backup data/achievements_backup_$(date +%Y%m%d_%H%M%S).db"
+
+# SQL形式でのバックアップ
+sqlite3 data/achievements.db ".dump" > data/backup_$(date +%Y%m%d_%H%M%S).sql
+```
+
+### 5.2. 復元操作
+```bash
+# ファイル復元
+cp data/achievements_backup_20241201_120000.db data/achievements.db
+
+# SQL形式からの復元
+sqlite3 data/achievements.db < data/backup_20241201_120000.sql
+```
+
+## 6. パフォーマンス最適化
+
+### 6.1. インデックス管理
+```sql
+-- インデックス一覧確認
+.indexes
+
+-- インデックス作成
+CREATE INDEX idx_users_email ON users(email);
+
+-- インデックス削除
+DROP INDEX idx_users_email;
+
+-- インデックス使用状況確認
+EXPLAIN QUERY PLAN SELECT * FROM users WHERE email = 'test@example.com';
+```
+
+### 6.2. 統計情報の更新
+```sql
+-- 統計情報の更新
+ANALYZE;
+
+-- 特定テーブルの統計情報更新
+ANALYZE users;
+```
+
+### 6.3. クエリ最適化
+```sql
+-- 実行計画の確認
+EXPLAIN QUERY PLAN SELECT * FROM users WHERE name LIKE '%test%';
+
+-- インデックスヒントの使用
+SELECT * FROM users INDEXED BY idx_users_name WHERE name = 'test';
+
+-- サブクエリの最適化
+-- 悪い例
+SELECT * FROM users WHERE id IN (SELECT user_id FROM orders WHERE amount > 1000);
+
+-- 良い例
+SELECT u.* FROM users u 
+JOIN orders o ON u.id = o.user_id 
+WHERE o.amount > 1000;
+```
+
+## 7. データ整合性チェック
+
+### 7.1. 外部キー制約
+```sql
+-- 外部キー制約の有効化
+PRAGMA foreign_keys = ON;
+
+-- 外部キー制約の確認
+PRAGMA foreign_key_check;
+
+-- 特定テーブルの外部キー確認
+PRAGMA foreign_key_check(table_name);
+```
+
+### 7.2. データ整合性チェック
+```sql
+-- NULL値の確認
+SELECT COUNT(*) FROM users WHERE email IS NULL;
+
+-- 重複データの確認
+SELECT email, COUNT(*) 
+FROM users 
+GROUP BY email 
+HAVING COUNT(*) > 1;
+
+-- 不正な日付の確認
+SELECT * FROM users WHERE created_at > datetime('now');
+```
+
+## 8. ログと監査
+
+### 8.1. 操作ログの記録
+```sql
+-- 操作履歴テーブルの作成
+CREATE TABLE IF NOT EXISTS operation_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    operation_type TEXT NOT NULL,
+    table_name TEXT NOT NULL,
+    affected_rows INTEGER,
+    executed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    user TEXT DEFAULT 'terminal'
+);
+
+-- 操作ログの記録例
+INSERT INTO operation_logs (operation_type, table_name, affected_rows)
+VALUES ('UPDATE', 'users', 1);
+```
+
+### 8.2. 変更履歴の追跡
+```sql
+-- 変更前後のデータを記録
+CREATE TABLE IF NOT EXISTS data_changes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    table_name TEXT NOT NULL,
+    record_id INTEGER,
+    old_data TEXT,
+    new_data TEXT,
+    changed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## 9. エラーハンドリング
+
+### 9.1. エラー確認
+```sql
+-- 最後のエラー確認
+SELECT last_insert_rowid();
+
+-- エラー情報の詳細確認
+PRAGMA integrity_check;
+```
+
+### 9.2. ロールバック手順
+```sql
+-- トランザクションの状態確認
+SELECT * FROM sqlite_master WHERE type = 'table';
+
+-- ロールバック実行
+ROLLBACK;
+
+-- データベースの整合性確認
+PRAGMA integrity_check;
+```
+
+## 10. 運用上の注意事項
+
+### 10.1. 実行前チェックリスト
+- [ ] 対象データベースの確認
+- [ ] バックアップの取得
+- [ ] 実行時間の見積もり
+- [ ] 影響範囲の確認
+- [ ] ロールバック手順の準備
+- [ ] 権限の確認
+- [ ] ディスク容量の確認
+
+### 10.2. 実行中チェックリスト
+- [ ] トランザクションの使用
+- [ ] 実行結果の確認
+- [ ] エラーの確認
+- [ ] パフォーマンスの監視
+- [ ] ログの記録
+
+### 10.3. 実行後チェックリスト
+- [ ] データの整合性確認
+- [ ] パフォーマンスの確認
+- [ ] ログの確認
+- [ ] バックアップの更新
+- [ ] 関連システムへの影響確認
+
+## 11. トラブルシューティング
+
+### 11.1. よくある問題と解決方法
+
+#### データベースがロックされている
+```bash
+# プロセスの確認
+lsof data/achievements.db
+
+# プロセスの終了
+kill -9 [process_id]
+
+# データベースの修復
+sqlite3 data/achievements.db "PRAGMA integrity_check;"
+```
+
+#### ディスク容量不足
+```bash
+# ディスク使用量の確認
+df -h
+
+# データベースサイズの確認
+ls -lh data/achievements.db
+
+# 不要なバックアップファイルの削除
+find data/ -name "*.db.backup*" -mtime +30 -delete
+```
+
+#### パフォーマンスの問題
+```sql
+-- スロークエリの特定
+EXPLAIN QUERY PLAN [slow_query];
+
+-- インデックスの確認
+.indexes
+
+-- 統計情報の更新
+ANALYZE;
+```
+
+## 12. ベストプラクティス
+
+### 12.1. セキュリティ
+- **最小権限の原則**
+- **定期的なバックアップ**
+- **アクセスログの記録**
+- **データの暗号化検討**
+
+### 12.2. パフォーマンス
+- **適切なインデックスの使用**
+- **クエリの最適化**
+- **定期的な統計情報の更新**
+- **不要なデータの削除**
+
+### 12.3. 保守性
+- **一貫した命名規則**
+- **適切なコメント**
+- **定期的な整合性チェック**
+- **ドキュメントの更新**
+
+
+

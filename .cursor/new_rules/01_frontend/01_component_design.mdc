@@ -1,0 +1,51 @@
+---
+description: "UIコンポーネントの設計思想、Shadcn UI、Radix UI、Tailwind CSSの利用ガイドラインを定義します。"
+globs: ["src/components/**/*.tsx"]
+alwaysApply: false
+---
+# 🎨 UIとスタイリング
+
+### 使用ライブラリ
+- **Shadcn UI**: 基本UIコンポーネント
+- **Radix UI**: アクセシブルなプリミティブ
+- **Tailwind CSS**: スタイリング
+
+### スタイリング原則
+- **モバイルファーストアプローチ**
+- **レスポンシブデザインの実装**
+- **一貫したスペーシングとカラーパレット**
+- **アクセシビリティの考慮**
+
+### コンポーネント例
+```tsx
+interface ButtonProps {
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}
+
+export function Button({ 
+  variant = 'default', 
+  size = 'default', 
+  children, 
+  onClick, 
+  disabled 
+}: ButtonProps) {
+  return (
+    <button
+      className={cn(
+        'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'disabled:pointer-events-none disabled:opacity-50',
+        buttonVariants({ variant, size })
+      )}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {children}
+    </button>
+  );
+}
+```

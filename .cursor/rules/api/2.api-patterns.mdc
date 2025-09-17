@@ -1,0 +1,493 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: "Next.js プロジェクトでの API 実装・使用ルール（Next.js + Axios 構成）"
+globs:
+  - "src/app/api/**"
+  - "src/lib/apiRequest.ts"
+  - "src/hooks/useApi*.ts"
+alwaysApply: false
+---
+# 叫ぶ層
+- 読み込んだら「は!!!api-patterns.mdc!!!」と叫ぶ
+
+# API 作成・使用ルール（Next.js + Axios 構成）
+
+
+## ✅ API 作成時のルール（route.ts）
+
+どのページの為に作ったAPIかを記述する。
+また、作成時でなく、参照時先が増えていることがわかれば、そのページについてもメモする。
+
+- `app/api/[...]/route.ts` 形式でエンドポイントを定義する。
+- `GET`/`POST`/`PUT`/`DELETE` などの HTTP メソッドごとに
+
+```ts
+export async function GET(req: Request) { … }
+export async function POST(req: Request) { … }
+// など
+```
+
+を必ず明示する。
+
+* リクエスト本文のパース (`await req.json()`) やクエリパラメータの取得 (`new URL(req.url).searchParams`) は自前で書かず、`src/lib/apiRequest.ts` 内の共通ユーティリティ関数を利用する。
+* 例外処理は必ず `try/catch` ブロックで行い、catch 内でエラーログを出力し、クライアントへは統一フォーマットのエラーレスポンスを返す。
+* レスポンスは必ず以下の構造で返却する:
+
+```ts
+import { NextResponse } from "next/server";
+
+// 成功時
+return NextResponse.json<ApiResponse<T>>({
+  success: true,
+  data: yourData
+});
+
+// 失敗時
+return NextResponse.json<ApiResponse<null>>({
+  success: false,
+  error: {
+    code: "YOUR_ERROR_CODE",
+    message: "詳細なエラーメッセージ",
+    status: 404
+  }
+}, { status: 404 });
+```
+
+* 共通型 `ApiResponse<T>`（`types/api.ts`）を必ず使用する。
+
+```ts
+// types/api.ts
+export type ApiSuccess<T> = {
+  success: true;
+  data: T;
+};
+
+export type ApiError = {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+    status?: number;
+  };
+};
+
+export type ApiResponse<T> = ApiSuccess<T> | ApiError;
+```
+
+## 🔧 実装例とベストプラクティス
+
+### 完全なAPI実装例
+```ts
+// app/api/users/[id]/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { parseQueryParams, parseRequestBody } from "@/lib/apiRequest";
+import { getRecord, updateRecord } from "@/lib/db/db_CRUD";
+import { ApiResponse, User } from "@/types/api";
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const id = parseInt(params.id);
+    if (isNaN(id)) {
+      return NextResponse.json<ApiResponse<null>>({
+        success: false,
+        error: {
+          code: "INVALID_ID",
+          message: "無効なIDです",
+          status: 400
+        }
+      }, { status: 400 });
+    }
+
+    const result = await getRecord<User>("users", id);
+    
+    if (!result.success) {
+      return NextResponse.json<ApiResponse<null>>({
+        success: false,
+        error: {
+          code: result.error.code,
+          message: result.error.message,
+          status: 404
+        }
+      }, { status: 404 });
+    }
+
+    return NextResponse.json<ApiResponse<User>>({
+      success: true,
+      data: result.data
+    });
+
+  } catch (error) {
+    console.error("GET /api/users/[id] error:", error);
+    return NextResponse.json<ApiResponse<null>>({
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "内部サーバーエラーが発生しました",
+        status: 500
+      }
+    }, { status: 500 });
+  }
+}
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const id = parseInt(params.id);
+    const body = await parseRequestBody(req);
+    
+    if (!body.name || !body.email) {
+      return NextResponse.json<ApiResponse<null>>({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "必須フィールドが不足しています",
+          status: 400
+        }
+      }, { status: 400 });
+    }
+
+    const result = await updateRecord<User>("users", id, body);
+    
+    if (!result.success) {
+      return NextResponse.json<ApiResponse<null>>({
+        success: false,
+        error: {
+          code: result.error.code,
+          message: result.error.message,
+          status: 404
+        }
+      }, { status: 404 });
+    }
+
+    return NextResponse.json<ApiResponse<User>>({
+      success: true,
+      data: result.data
+    });
+
+  } catch (error) {
+    console.error("PUT /api/users/[id] error:", error);
+    return NextResponse.json<ApiResponse<null>>({
+      success: false,
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "内部サーバーエラーが発生しました",
+        status: 500
+      }
+    }, { status: 500 });
+  }
+}
+```
+
+### 共通ユーティリティ関数の実装例
+```ts
+// lib/apiRequest.ts
+export const parseQueryParams = (req: NextRequest) => {
+  const url = new URL(req.url);
+  const params: Record<string, string> = {};
+  
+  url.searchParams.forEach((value, key) => {
+    params[key] = value;
+  });
+  
+  return params;
+};
+
+export const parseRequestBody = async <T>(req: NextRequest): Promise<T> => {
+  try {
+    return await req.json();
+  } catch (error) {
+    throw new Error("リクエストボディの解析に失敗しました");
+  }
+};
+
+export const validateRequiredFields = (
+  data: any,
+  requiredFields: string[]
+): { isValid: boolean; missingFields: string[] } => {
+  const missingFields = requiredFields.filter(field => !data[field]);
+  
+  return {
+    isValid: missingFields.length === 0,
+    missingFields
+  };
+};
+```
+
+---
+
+## ✅ データアクセス層（DAL:src/lib/db/**）でのルール
+
+### 📁 利用するファイル
+以下のファイルを必ず利用する:
+- `src/lib/db/db_advanced.ts`
+- `src/lib/db/db_connection.ts` 
+- `src/lib/db/db_CRUD.ts`
+- `src/lib/db/db_DeleteTable.ts`
+- `src/lib/db/db_GetData.ts`
+
+### 🔄 戻り値の統一フォーマット
+DB アクセス関数（例: `getRecord()`, `updateById()` など）は、戻り値に必ず以下の構造を含める:
+
+```ts
+// 成功時
+{
+  success: true,
+  data: T
+}
+
+// 失敗時  
+{
+  success: false,
+  error: {
+    code: string,
+    message: string
+  }
+}
+```
+
+### 🚫 例外処理の方針
+- DAL 側で `success: false` となった場合は**例外を投げない**
+- 呼び出し元の API 層で `ApiResponse<T>` にマッピングして返却する
+
+### 🔧 ORM使用時の注意
+Prisma・Knex・TypeORM などの ORM を利用する場合も、「結果が取得できたか/できなかったか」の判定を行うユーティリティを必ず挟む。
+
+#### 実装例:
+```ts
+// src/lib/db/db_CRUD.ts
+export async function getRecord<T>(table: string, id: number): Promise<DALResponse<T>> {
+  try {
+    const result = await db(table).where('id', id).first();
+    
+    if (!result) {
+      return {
+        success: false,
+        error: {
+          code: 'RECORD_NOT_FOUND',
+          message: `Record with id ${id} not found in ${table}`
+        }
+      };
+    }
+    
+    return {
+      success: true,
+      data: result as T
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: error instanceof Error ? error.message : 'Unknown database error'
+      }
+    };
+  }
+}
+```
+
+---
+
+## ✅ API 使用時のルール（フロントエンド:src/hooks/useApi*.ts）
+
+* `useApiGet<T>(url: string, params?: Record<string, any>)` /
+  `useApiPost<T>(url: string, body: any)` といったカスタムフックを必ず利用し、直接 `axios.xxx()` を呼ばない。
+* フックは以下を必ず行う:
+  1. リクエスト中のローディング状態管理
+  2. 正常レスポンス受信時のデータ返却
+  3. 異常レスポンス受信時のエラー状態管理
+* 共通の Axios インスタンス設定（`src/lib/apiRequest.ts`）側で、
+  * `baseURL`
+  * `timeout`
+  * `interceptors`（リクエストヘッダー追加、レスポンスエラーハンドリング）
+  
+  を一元管理し、フック内では個別設定しない。
+
+### カスタムフック実装例
+```ts
+// hooks/useApiGet.ts
+import { useState, useEffect } from 'react';
+import { apiClient } from '@/lib/apiRequest';
+import { ApiResponse } from '@/types/api';
+
+export const useApiGet = <T>(
+  url: string,
+  params?: Record<string, any>
+) => {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await apiClient.get<ApiResponse<T>>(url, { params });
+        
+        if (response.data.success) {
+          setData(response.data.data);
+        } else {
+          setError(response.data.error.message);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '予期しないエラーが発生しました');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [url, JSON.stringify(params)]);
+
+  return { data, loading, error, refetch: () => fetchData() };
+};
+
+// hooks/useApiPost.ts
+export const useApiPost = <T>() => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const postData = async (url: string, body: any): Promise<T | null> => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await apiClient.post<ApiResponse<T>>(url, body);
+      
+      if (response.data.success) {
+        return response.data.data;
+      } else {
+        setError(response.data.error.message);
+        return null;
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '予期しないエラーが発生しました';
+      setError(errorMessage);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { postData, loading, error };
+};
+```
+
+### Axios設定例
+```ts
+// lib/apiRequest.ts
+import axios from 'axios';
+
+export const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || '/api',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// リクエストインターセプター
+apiClient.interceptors.request.use(
+  (config) => {
+    // 認証トークンの追加など
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// レスポンスインターセプター
+apiClient.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response?.status === 401) {
+      // 認証エラーの処理
+      localStorage.removeItem('authToken');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+---
+
+## ✅ ESLint & TypeScript 設定例
+
+```jsonc
+// .eslintrc.json
+{
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "error",
+    "no-console": ["warn", { "allow": ["error"] }],
+    "import/order": ["error", { "groups": ["builtin", "external", "local"] }]
+  }
+}
+```
+
+```jsonc
+// tsconfig.json (抜粋)
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"]
+}
+```
+
+---
+
+## ✅ 運用上の注意
+
+* 新しいエンドポイントを追加するときは、この Cursor ルールを `false` → `true` にして一巡レビューを実施する。
+* 既存のルールを変更した場合は `alwaysApply: true` に切り替え、CI パイプラインで必ず ESLint/TS 型チェックを通過させる。
+
+## 🚨 避けるべきパターン
+
+- ❌ **直接axiosを呼び出す**
+- ❌ **例外を投げるDAL関数**
+- ❌ **統一されていないレスポンス形式**
+- ❌ **適切でないエラーハンドリング**
+- ❌ **ハードコードされたURL**
+- ❌ **型安全性を無視した実装**
+- ❌ **ローディング状態の管理を怠る**
+- ❌ **エラー状態の管理を怠る**
+
+## 📋 実装チェックリスト
+
+- [ ] 統一されたレスポンス形式を使用しているか
+- [ ] 適切なエラーハンドリングが実装されているか
+- [ ] カスタムフックを使用しているか
+- [ ] 型安全性が確保されているか
+- [ ] ローディング状態が管理されているか
+- [ ] エラー状態が管理されているか
+- [ ] 共通ユーティリティ関数を使用しているか
+- [ ] 適切なHTTPステータスコードを返しているか
+- [ ] バリデーションが実装されているか
+- [ ] ログ出力が適切に行われているか

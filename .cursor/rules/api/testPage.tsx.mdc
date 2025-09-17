@@ -1,0 +1,344 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# デバッグヘッダー層（旧: 叫ぶ層）
+# !! DEBUG: このルールが読み込まれました
+- **Rule File:** `testPage.tsx.mdc`
+- **Description:** Next.js + TypeScript プロジェクトにおけるテストページの作成、配置、管理に関するルールを定義する
+
+# テストページ専用ルール
+
+## 1. 目的と背景
+
+開発プロセスにおいて、新機能のテストや既存機能の動作確認を行うためのテストページは重要な役割を果たします。このルールでは、テストページの統一された作成方法、配置場所、管理方法を定義し、効率的なテスト環境を構築します。
+
+## 2. 適用範囲
+
+- テストページファイル（.tsx）
+- テストコンポーネントファイル（.tsx）
+- tRPCテストページ
+- テストページ一覧管理
+
+## 3. テストページのディレクトリ構成
+
+### 3.1. 基本構造
+```
+src/
+├── app/
+│   └── test/                     # テストページ専用ディレクトリ
+│       ├── page.tsx              # テストページ一覧（必須）
+│       ├── test-[feature]/       # 個別テストページ
+│       │   └── page.tsx          # テストページ本体
+│       └── test-[feature]-trpc/  # tRPCテストページ
+│           └── page.tsx          # tRPCテストページ本体
+└── components/
+    └── test/                     # テストコンポーネント専用ディレクトリ
+        ├── [Feature]Test.tsx     # テストコンポーネント
+        ├── [Feature]TRPCTest.tsx # tRPCテストコンポーネント
+        └── index.ts              # エクスポート集約
+```
+
+### 3.2. 配置場所のルール
+
+**テストページの配置場所：**
+- **テストページ**: `src/app/test/test-[feature]/page.tsx`
+- **tRPCテストページ**: `src/app/test/test-[feature]-trpc/page.tsx`
+- **テストコンポーネント**: `src/components/test/[Feature]Test.tsx`
+- **tRPCテストコンポーネント**: `src/components/test/[Feature]TRPCTest.tsx`
+
+## 4. 命名規則
+
+### 4.1. ディレクトリ名
+```typescript
+// テストページの命名例
+src/app/test/test-user/page.tsx           // ユーザー機能テスト
+src/app/test/test-post/page.tsx           // 投稿機能テスト
+src/app/test/test-user-trpc/page.tsx      // ユーザーtRPCテスト
+src/app/test/test-post-trpc/page.tsx      // 投稿tRPCテスト
+```
+
+### 4.2. コンポーネント名
+```typescript
+// テストコンポーネントの命名例
+src/components/test/UserTest.tsx          // ユーザー機能テストコンポーネント
+src/components/test/PostTest.tsx          // 投稿機能テストコンポーネント
+src/components/test/UserTRPCTest.tsx      // ユーザーtRPCテストコンポーネント
+src/components/test/PostTRPCTest.tsx      // 投稿tRPCテストコンポーネント
+```
+
+## 5. テストページ実装パターン
+
+### 5.1. テストページ本体（page.tsx）
+```tsx
+// src/app/test/test-[feature]/page.tsx
+import React from 'react';
+import { FeatureTest } from '@src/components/test/FeatureTest';
+
+export default function TestFeaturePage() {
+  return <FeatureTest />;
+}
+```
+
+### 5.2. tRPCテストページ本体（page.tsx）
+```tsx
+// src/app/test/test-[feature]-trpc/page.tsx
+import React from 'react';
+import { FeatureTRPCTest } from '@src/components/test/FeatureTRPCTest';
+
+export default function TestFeatureTRPCPage() {
+  return <FeatureTRPCTest />;
+}
+```
+
+### 5.3. テストコンポーネント
+```tsx
+// src/components/test/FeatureTest.tsx
+'use client';
+
+import React, { useState } from 'react';
+
+export function FeatureTest() {
+  const [testData, setTestData] = useState(null);
+
+  const handleTest = async () => {
+    // テストロジック
+  };
+
+  return (
+    <div className="container mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">Feature テストページ</h1>
+      <div className="space-y-4">
+        {/* テストUI */}
+      </div>
+    </div>
+  );
+}
+```
+
+### 5.4. tRPCテストコンポーネント
+```tsx
+// src/components/test/FeatureTRPCTest.tsx
+'use client';
+
+import React, { useState } from 'react';
+import { trpc } from '@src/lib/trpc/client';
+
+export function FeatureTRPCTest() {
+  const { data, isLoading } = trpc.feature.getAll.useQuery();
+  const createMutation = trpc.feature.create.useMutation();
+
+  const handleCreate = (formData: any) => {
+    createMutation.mutate(formData);
+  };
+
+  return (
+    <div className="container mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">Feature tRPC テストページ</h1>
+      <div className="space-y-4">
+        {/* tRPCテストUI */}
+      </div>
+    </div>
+  );
+}
+```
+
+## 6. テストページ一覧の管理
+
+### 6.1. テストページ一覧（src/app/test/page.tsx）
+```tsx
+// src/app/test/page.tsx
+import React from 'react';
+import Link from 'next/link';
+
+const testPages = [
+  {
+    name: 'ユーザー機能テスト',
+    href: '/test/test-user',
+    description: 'ユーザーCRUD機能のテスト'
+  },
+  {
+    name: 'ユーザーtRPCテスト',
+    href: '/test/test-user-trpc',
+    description: 'ユーザーtRPC機能のテスト'
+  },
+  {
+    name: '投稿機能テスト',
+    href: '/test/test-post',
+    description: '投稿CRUD機能のテスト'
+  },
+  {
+    name: '投稿tRPCテスト',
+    href: '/test/test-post-trpc',
+    description: '投稿tRPC機能のテスト'
+  },
+];
+
+export default function TestPage() {
+  return (
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">テストページ一覧</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {testPages.map((page) => (
+          <Link
+            key={page.href}
+            href={page.href}
+            className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+          >
+            <h2 className="text-xl font-semibold mb-2">{page.name}</h2>
+            <p className="text-gray-600">{page.description}</p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+## 7. 新しいテストページ追加時の手順
+
+### 7.1. テストページ追加手順
+1. **テストコンポーネント作成**: `src/components/test/[Feature]Test.tsx`
+2. **テストページ作成**: `src/app/test/test-[feature]/page.tsx`
+3. **tRPCテストコンポーネント作成**: `src/components/test/[Feature]TRPCTest.tsx`（必要時）
+4. **tRPCテストページ作成**: `src/app/test/test-[feature]-trpc/page.tsx`（必要時）
+5. **一覧に追加**: `src/app/test/page.tsx`にリンクを追加
+
+### 7.2. 一覧への追加例
+```tsx
+// src/app/test/page.tsx に新しいテストページを追加
+const testPages = [
+  // 既存のテストページ...
+  {
+    name: '新機能テスト',
+    href: '/test/test-new-feature',
+    description: '新機能のテスト'
+  },
+  {
+    name: '新機能tRPCテスト',
+    href: '/test/test-new-feature-trpc',
+    description: '新機能のtRPCテスト'
+  },
+];
+```
+
+## 8. テストページのベストプラクティス
+
+### 8.1. コンポーネント設計
+- **単一責任**: 1つのテストページは1つの機能をテスト
+- **再利用性**: テストコンポーネントは再利用可能に設計
+- **明確性**: テストの目的と結果が明確に分かるUI
+
+### 8.2. エラーハンドリング
+```tsx
+// エラーハンドリングの例
+export function FeatureTest() {
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleTest = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      // テストロジック
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">Feature テストページ</h1>
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+      <div className="space-y-4">
+        <button
+          onClick={handleTest}
+          disabled={isLoading}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+        >
+          {isLoading ? 'テスト中...' : 'テスト実行'}
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+### 8.3. データ表示
+```tsx
+// データ表示の例
+export function FeatureTRPCTest() {
+  const { data, isLoading, error } = trpc.feature.getAll.useQuery();
+
+  if (isLoading) {
+    return <div>読み込み中...</div>;
+  }
+
+  if (error) {
+    return <div>エラー: {error.message}</div>;
+  }
+
+  return (
+    <div className="container mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">Feature tRPC テストページ</h1>
+      <div className="space-y-4">
+        <pre className="bg-gray-100 p-4 rounded">
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      </div>
+    </div>
+  );
+}
+```
+
+## 9. 注意事項
+
+### 9.1. セキュリティ
+- テストページは開発環境でのみ使用
+- 本番環境ではテストページへのアクセスを制限
+- 機密情報を含むテストデータは使用禁止
+
+### 9.2. パフォーマンス
+- 大量のデータを扱うテストは適切に制限
+- 無限ループやメモリリークを避ける
+- テスト実行後は適切にクリーンアップ
+
+### 9.3. 保守性
+- テストページは定期的に見直し
+- 不要になったテストページは削除
+- テスト結果はログに記録
+
+## 10. 関連ルール
+
+- インポート順序については `.cursor\rules\02_page.tsx_\1.2.tsx codeselection.mdc` のルールを参照してください。
+  @file 02_page.tsx_/1.2.tsx codeselection.mdc
+
+- 型定義については `.cursor\rules\types.mdc` のルールを参照してください。
+  @file types.mdc
+
+## 11. トラブルシューティング
+
+### 11.1. よくある問題
+- テストページが表示されない
+- tRPCクエリが動作しない
+- テストデータが正しく表示されない
+
+### 11.2. 解決方法
+- ファイルパスとインポートを確認
+- tRPCクライアントの設定を確認
+- ブラウザの開発者ツールでエラーを確認
+
+## 12. 参考資料
+
+- [Next.js Testing](mdc:https:/nextjs.org/docs/testing)
+- [tRPC Documentation](mdc:https:/trpc.io/docs)
+- [React Testing Library](mdc:https:/testing-library.com/docs/react-testing-library/intro)
+
+

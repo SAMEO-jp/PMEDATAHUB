@@ -1,0 +1,70 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: "Next.js プロジェクトにおける page.tsx の構造・分割ルール"
+globs:
+  - "src/app/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# 📋ルール
+
+## ⚠️ 重要：必ず以下のルールファイルを参照してください
+
+### 📖 参照必須ファイル
+- **`.cursor\rules\2.api-patterns.mdc`** - API呼び出しの実装パターン
+- **`.cursor\rules\1.0.tsx.mdc`** - .tsx作成ルール
+- **`.cursor\rules\1.1.tsx-section-name.mdc`** - .tsxのセクション名前
+- **`.cursor\rules\1.2.tsx codeselection.mdc`** - .tsxのセクション説明
+
+## 🔍 実装前の確認事項
+
+1. **page-patterns.mdc** の内容を確認
+   - セクション構造ルール
+   - ファイル分割ルール
+   - フォルダ構成ルール
+   - Server/Client Component の使い分け
+
+2. **api-patterns.mdc** の内容を確認
+   - API呼び出しパターン
+   - エラーハンドリング
+   - データ取得方法
+
+## ✅ 実装時のチェックリスト
+
+- [ ] page-patterns.mdc のセクション構造に従っているか
+- [ ] 適切なServer/Client Componentの選択をしているか
+- [ ] ファイルサイズが200行以下になっているか（一旦作業でできていなけでば、その状況をおしえてください。）
+- [ ] 必要に応じてフォルダ分割を行っているか（一旦作業でできていなけでば、その状況をおしえてください。）
+- [ ] 独自layout.tsxを作成していないか
+- [ ] mainページのレイアウトを継承しているか
+- [ ] 型安全性が確保されているか
+- [ ] エラーハンドリングが実装されているか
+- [ ] 型は、typesフォルダに集められているか？
+- [ ] importはtsconfigのショートカットを使った形に出来ているか？
+
+
+### 🆕 新規作成時
+- ❌ **page.tsx にビジネスロジックを書く**
+- ❌ **大きなコンポーネントを1つのファイルに書く**
+- ❌ **型定義をインラインで書く**
+- ❌ **ハードコードされた値**
+- ❌ **適切でないエラーハンドリング**
+- ❌ **パフォーマンスを考慮しない実装**
+- ❌ **独自layout.tsxファイルの作成**
+- ❌ **個別ページにレイアウトコンポーネントを作成**
+- ❌ **不要なフォルダの作成**
+- ❌ **Server/Client Componentの混在**
+- ❌ **useState/useReducerでの複雑な状態管理（Zustandを使用）**
+
+## 📚 詳細ルール
+
+
+
+
+
+
+

@@ -1,0 +1,192 @@
+---
+description: Guidelines for writing Next.js apps with tRPC
+globs: 
+alwaysApply: false
+---
+---
+description: Guidelines for writing Next.js apps with tRPC
+globs: "**/*.ts, **/*.tsx, **/*.js, **/*.jsx"
+---
+
+# 統合API実装ルール
+
+## 🎯 アプローチ選択ガイド
+
+### 1. **tRPC推奨ケース**
+以下の場合は**tRPC**を使用してください：
+
+- ✅ **新規機能開発**
+- ✅ **複雑なデータ操作**
+- ✅ **型安全性が重要な場合**
+- ✅ **リアルタイム更新が必要**
+- ✅ **複数のAPI呼び出しを組み合わせる場合**
+
+
+## 🏗️ 統合プロジェクト構造
+
+```
+src/
+├── app/
+│   └── api/
+│       ├── trpc/
+│       │   └── [trpc]/
+│       │       └── route.ts          # tRPC HTTPハンドラー
+│       ├── external/
+│       │   └── [...path]/
+│       │       └── route.ts          # 外部API連携
+│       └── legacy/
+│           └── [...path]/
+│               └── route.ts          # レガシーシステム連携
+├── lib/
+│   ├── trpc/                         # tRPC関連
+│   │   ├── trpc.ts                   # tRPC初期化
+│   │   ├── client.ts                 # クライアント設定
+│   │   ├── Provider.tsx              # Reactプロバイダー
+│   │   └── routers/
+│   │       ├── _app.ts               # メインルーター
+│   │       └── [feature].ts          # 機能別ルーター
+│   ├── api/                          # 従来API関連
+│   │   ├── apiRequest.ts             # Axios設定
+│   │   └── apiUtils.ts               # 共通ユーティリティ
+│   └── db/                           # データベース層
+├── hooks/
+│   ├── useTrpc*.ts                   # tRPC用フック
+│   └── useApi*.ts                    # 従来API用フック
+└── types/
+    ├── trpc.ts                       # tRPC型定義
+    └── api.ts                        # 従来API型定義
+```
+
+## 🔧 実装パターン
+
+### **tRPC実装パターン**
+
+```typescript
+// src/lib/trpc/routers/user.ts
+import { z } from 'zod';
+import { createTRPCRouter, publicProcedure } from '../trpc';
+import { getUserById, createUser } from '@src/lib/db/db_CRUD';
+
+export const userRouter = createTRPCRouter({
+  // クエリ（データ取得）
+  getById: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      const result = await getUserById('users', input.id);
+      
+      if (!result.success) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: result.error?.message || 'ユーザーが見つかりません'
+        });
+      }
+      
+      return result.data;
+    }),
+
+  // ミューテーション（データ変更）
+  create: publicProcedure
+    .input(z.object({
+      name: z.string().min(1),
+      email: z.string().email()
+    }))
+    .mutation(async ({ input }) => {
+      const result = await createUser('users', input);
+      
+      if (!result.success) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: result.error?.message || 'ユーザーの作成に失敗しました'
+        });
+      }
+      
+      return result.data;
+    })
+});
+```
+
+## 🔄 データベース層の統一
+
+### **統一されたDALレスポンス形式**
+
+```typescript
+// src/lib/db/types.ts
+export interface DALResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+// 両方のアプローチで同じDAL関数を使用
+export async function getUserById<T>(table: string, id: number): Promise<DALResponse<T>> {
+  // 実装
+}
+```
+
+## 🎨 フロントエンド統合
+
+### **tRPCフック**
+
+```typescript
+// src/hooks/useTrpcUser.ts
+import { trpc } from '@src/lib/trpc/client';
+
+export const useTrpcUser = (id: number) => {
+  return trpc.user.getById.useQuery({ id });
+};
+
+export const useTrpcCreateUser = () => {
+  return trpc.user.create.useMutation();
+};
+```
+
+
+## 📋 選択ガイドライン
+
+### **機能別選択基準**
+
+| 機能 | 推奨アプローチ | 理由 |
+|------|---------------|------|
+| ユーザー管理 | tRPC | 型安全性、複雑な操作 |
+| ファイルアップロード | Next.js API Routes | ファイル処理、外部連携 |
+| 認証・認可 | Next.js API Routes | セッション管理、外部認証 |
+| データ分析 | tRPC | 複雑なクエリ、型安全性 |
+| 外部API連携 | Next.js API Routes | 外部システムとの互換性 |
+| リアルタイム機能 | tRPC | WebSocket統合、型安全性 |
+
+## 🔧 移行戦略
+
+### **段階的移行**
+
+1. **フェーズ1**: 新規機能はtRPCで実装
+2. **フェーズ2**: 既存APIを段階的にtRPCに移行
+3. **フェーズ3**: 外部連携のみNext.js API Routesに残す
+
+### **共存期間中の注意点**
+
+- レスポンス形式の違いを吸収するアダプター層を作成
+- エラーハンドリングの統一
+- 型定義の重複を避ける
+
+## ✅ 品質基準
+
+### **共通品質基準**
+
+- [ ] 型安全性の確保
+- [ ] エラーハンドリングの実装
+- [ ] ログ出力の統一
+- [ ] パフォーマンス最適化
+- [ ] セキュリティ対策
+- [ ] テストの実装
+
+### **tRPC固有基準**
+
+- [ ] Zodスキーマによる入力検証
+- [ ] 適切なプロシージャ型の使用
+- [ ] ミドルウェアの活用
+- [ ] キャッシュ戦略の実装
+
+

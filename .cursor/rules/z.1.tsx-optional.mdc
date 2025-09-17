@@ -1,0 +1,481 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+
+
+
+## 3. 🧠 .tsx パフォーマンス最適化
+
+### 3-1. メモ化
+```tsx
+// React.memo でコンポーネントをメモ化
+const MemoizedComponent = React.memo(function ComponentName({ data }: Props) {
+  return <div>{/* JSX */}</div>;
+});
+
+// useMemo で計算結果をメモ化
+const expensiveValue = useMemo(() => {
+  return data.filter(item => item.active).map(item => item.name);
+}, [data]);
+
+// useCallback で関数をメモ化
+const handleClick = useCallback((id: string) => {
+  onAction?.(id);
+}, [onAction]);
+```
+
+### 3-2. 不要な再レンダリングの防止
+```tsx
+// ❌ 避けるべき：インライン関数
+<button onClick={() => handleClick(id)}>Click</button>
+
+// ✅ 推奨：メモ化された関数
+<button onClick={handleClick}>Click</button>
+
+// ❌ 避けるべき：インラインオブジェクト
+<div style={{ color: 'red', fontSize: '16px' }}>Text</div>
+
+// ✅ 推奨：定数またはuseMemo
+const styles = useMemo(() => ({ color: 'red', fontSize: '16px' }), []);
+<div style={styles}>Text</div>
+```
+
+### 3-3. 条件付きレンダリングの最適化
+```tsx
+// ❌ 避けるべき：複雑な条件分岐
+{isLoading ? (
+  <LoadingSpinner />
+) : error ? (
+  <ErrorMessage error={error} />
+) : data ? (
+  <DataTable data={data} />
+) : (
+  <EmptyState />
+)}
+
+// ✅ 推奨：早期リターン
+if (isLoading) return <LoadingSpinner />;
+if (error) return <ErrorMessage error={error} />;
+if (!data) return <EmptyState />;
+
+return <DataTable data={data} />;
+```
+
+## 4. 🔒 .tsx 型安全性
+
+### 4-1. 型定義のベストプラクティス
+```tsx
+// ✅ 推奨：厳密な型定義
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'user' | 'guest';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ✅ 推奨：オプショナルプロパティの明示
+interface ComponentProps {
+  required: string;
+  optional?: number;
+  withDefault?: boolean;
+}
+
+// ✅ 推奨：デフォルト値の型安全な設定
+const Component = ({ 
+  required, 
+  optional, 
+  withDefault = false 
+}: ComponentProps) => {
+  // コンポーネント実装
+};
+```
+
+### 4-2. 型ガードの活用
+```tsx
+// 型ガード関数
+function isUserData(data: unknown): data is UserData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'id' in data &&
+    'name' in data &&
+    'email' in data
+  );
+}
+
+// 型ガードの使用
+const handleData = (data: unknown) => {
+  if (isUserData(data)) {
+    // data は UserData 型として扱える
+    console.log(data.name);
+  }
+};
+```
+
+### 4-3. ジェネリクスの活用
+```tsx
+// ジェネリックコンポーネント
+interface ListProps<T> {
+  items: T[];
+  renderItem: (item: T, index: number) => React.ReactNode;
+  keyExtractor: (item: T) => string;
+}
+
+function List<T>({ items, renderItem, keyExtractor }: ListProps<T>) {
+  return (
+    <ul>
+      {items.map((item, index) => (
+        <li key={keyExtractor(item)}>
+          {renderItem(item, index)}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## 5. 🛡️ .tsx エラーハンドリング
+
+### 5-1. エラーバウンダリ
+```tsx
+// ErrorBoundary コンポーネント
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <ErrorFallback error={this.state.error} />;
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+### 5-2. 非同期処理のエラーハンドリング
+```tsx
+// カスタムフックでのエラーハンドリング
+const useAsyncData = <T>(fetchFn: () => Promise<T>) => {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await fetchFn();
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchFn]);
+
+  return { data, loading, error, refetch: fetchData };
+};
+```
+
+### 5-3. フォームバリデーション
+```tsx
+// フォームエラーハンドリング
+interface FormErrors {
+  [key: string]: string;
+}
+
+const useFormValidation = <T extends Record<string, any>>(initialData: T) => {
+  const [data, setData] = useState<T>(initialData);
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const validate = useCallback((field: keyof T, value: any): string | null => {
+    // バリデーションロジック
+    if (!value) return `${field} is required`;
+    return null;
+  }, []);
+
+  const handleChange = useCallback((field: keyof T, value: any) => {
+    setData(prev => ({ ...prev, [field]: value }));
+    const error = validate(field, value);
+    setErrors(prev => ({
+      ...prev,
+      [field]: error || ''
+    }));
+  }, [validate]);
+
+  return { data, errors, handleChange };
+};
+```
+
+## 6. ♿ .tsx アクセシビリティ
+
+### 6-1. セマンティックHTML
+```tsx
+// ✅ 推奨：セマンティックなHTML構造
+<article className="user-profile">
+  <header>
+    <h1>User Profile</h1>
+  </header>
+  <main>
+    <section aria-labelledby="personal-info">
+      <h2 id="personal-info">Personal Information</h2>
+      {/* コンテンツ */}
+    </section>
+  </main>
+</article>
+```
+
+### 6-2. ARIA属性の活用
+```tsx
+// アクセシビリティ属性の使用
+<button
+  aria-label="Close modal"
+  aria-describedby="modal-description"
+  onClick={handleClose}
+>
+  ×
+</button>
+
+<div id="modal-description" className="sr-only">
+  This will close the current modal dialog
+</div>
+
+// フォームのアクセシビリティ
+<label htmlFor="username">Username</label>
+<input
+  id="username"
+  type="text"
+  aria-required="true"
+  aria-describedby="username-error"
+  aria-invalid={!!errors.username}
+/>
+{errors.username && (
+  <div id="username-error" role="alert" className="error">
+    {errors.username}
+  </div>
+)}
+```
+
+### 6-3. キーボードナビゲーション
+```tsx
+// キーボードイベントの処理
+const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
+  switch (event.key) {
+    case 'Enter':
+      handleSubmit();
+      break;
+    case 'Escape':
+      handleCancel();
+      break;
+    case 'Tab':
+      // フォーカス管理
+      break;
+  }
+}, [handleSubmit, handleCancel]);
+
+// フォーカス管理
+const focusRef = useRef<HTMLInputElement>(null);
+
+useEffect(() => {
+  if (isVisible && focusRef.current) {
+    focusRef.current.focus();
+  }
+}, [isVisible]);
+```
+
+## 7. 🎨 .tsx スタイリング
+
+### 7-1. CSS-in-JS パターン
+```tsx
+// styled-components パターン
+import styled from 'styled-components';
+
+const StyledButton = styled.button<{ variant: 'primary' | 'secondary' }>`
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: ${props => 
+    props.variant === 'primary' ? '#007bff' : '#6c757d'
+  };
+  color: white;
+  cursor: pointer;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+// CSS Modules パターン
+import styles from './Component.module.css';
+
+const Component = () => (
+  <div className={styles.container}>
+    <h1 className={styles.title}>Title</h1>
+  </div>
+);
+```
+
+### 7-2. 条件付きスタイリング
+```tsx
+// 条件付きクラス名
+const getClassName = (isActive: boolean, isDisabled: boolean) => {
+  return [
+    'base-class',
+    isActive && 'active',
+    isDisabled && 'disabled'
+  ].filter(Boolean).join(' ');
+};
+
+// clsx/classnames ライブラリの使用
+import clsx from 'clsx';
+
+const className = clsx(
+  'base-class',
+  {
+    'active': isActive,
+    'disabled': isDisabled
+  }
+);
+```
+
+## 8. 🔄 .tsx 状態管理
+
+### 8-1. ローカル状態管理
+```tsx
+// useState の適切な使用
+const [count, setCount] = useState(0);
+const [user, setUser] = useState<User | null>(null);
+const [loading, setLoading] = useState(false);
+
+// useReducer の適切な使用
+interface State {
+  count: number;
+  loading: boolean;
+}
+
+type Action = 
+  | { type: 'INCREMENT' }
+  | { type: 'DECREMENT' }
+  | { type: 'SET_LOADING'; payload: boolean };
+
+const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case 'INCREMENT':
+      return { ...state, count: state.count + 1 };
+    case 'DECREMENT':
+      return { ...state, count: state.count - 1 };
+    case 'SET_LOADING':
+      return { ...state, loading: action.payload };
+    default:
+      return state;
+  }
+};
+```
+
+### 8-2. コンテキストの活用
+```tsx
+// コンテキストの作成
+interface ThemeContextType {
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+}
+
+const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
+
+// プロバイダーコンポーネント
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  }, []);
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+// カスタムフック
+export const useTheme = () => {
+  const context = React.useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
+```
+
+## 9. 🧪 .tsx テスト
+
+### 9-1. コンポーネントテスト
+```tsx
+// React Testing Library パターン
+import { render, screen, fireEvent } from '@testing-library/react';
+import { ComponentName } from './ComponentName';
+
+describe('ComponentName', () => {
+  it('renders correctly', () => {
+    render(<ComponentName title="Test" />);
+    expect(screen.getByText('Test')).toBeInTheDocument();
+  });
+
+  it('handles user interaction', () => {
+    const mockOnAction = jest.fn();
+    render(<ComponentName title="Test" onAction={mockOnAction} />);
+    
+    fireEvent.click(screen.getByRole('button'));
+    expect(mockOnAction).toHaveBeenCalled();
+  });
+});
+```
+
+### 9-2. カスタムフックテスト
+```tsx
+// フックテスト
+import { renderHook, act } from '@testing-library/react-hooks';
+import { useCustomHook } from './useCustomHook';
+
+describe('useCustomHook', () => {
+  it('returns initial state', () => {
+    const { result } = renderHook(() => useCustomHook());
+    expect(result.current.data).toBeNull();
+    expect(result.current.loading).toBe(false);
+  });
+
+  it('updates state correctly', async () => {
+    const { result } = renderHook(() => useCustomHook());
+    
+    await act(async () => {
+      await result.current.fetchData();
+    });
+    
+    expect(result.current.loading).toBe(false);
+  });
+});
+```
+

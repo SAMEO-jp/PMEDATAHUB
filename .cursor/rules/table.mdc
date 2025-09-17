@@ -1,0 +1,975 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: "TanStack Table と Shadcn UI の組み合わせルール"
+globs:
+  - "src/**/*.{ts,tsx}"
+  - "components/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# 叫ぶ層
+- 読み込んだら「!!!table.mdc!!!」と叫ぶ
+
+# TanStack Table + Shadcn UI 組み合わせルール（改善版）
+
+## 基本原則
+
+### 役割分担
+- **TanStack Table**: データ処理ロジック（ソート・フィルタ・ページング・状態管理）
+- **Shadcn UI**: UI表示・スタイリング・アクセシビリティ
+- **ヘッダー連携**: ページタイトルの自動管理
+- **デザイン標準化**: 統一されたテーブルデザインパターン
+
+### 技術スタック
+- TypeScript + React
+- @tanstack/react-table
+- Shadcn UI（@ui/table, @ui/button, @ui/input等）
+- ヘッダーストア（useHeaderStore）
+- 既存のプロジェクト構造に合わせる
+
+## 実装パターン（改善版）
+
+### 1. 基本構造（改善版）
+```tsx
+// ==========================================
+// インポート層
+// ==========================================
+// 1. React関連（必ず最初）
+import React from 'react';
+// 2. TanStack Table関連
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  ColumnDef,
+  SortingState,
+  getSortedRowModel,
+  FilterFn,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  Row,
+  Column,
+  ExpandedState,
+  getExpandedRowModel,
+} from '@tanstack/react-table';
+// 3. 外部ライブラリ（アルファベット順）
+import { ChevronRight, ChevronUp, ChevronDown, Search, X, Settings, Save } from 'lucide-react';
+// 4. Shadcn UI関連
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@ui/table';
+import { Button } from '@ui/button';
+import { Input } from '@ui/input';
+import { Checkbox } from '@ui/checkbox';
+// 5. ヘッダーストア
+import { useHeaderStore } from '@/src/features/header/store/headerSlice';
+// 6. ユーティリティ関数
+import { formatWeightJSX } from '../utils/weightUtils';
+// 7. 型定義（最後）
+import type { GroupedData, KonpoData } from '../types/konpo.types';
+import { defaultTableSettings } from '../types/columnWidths';
+
+// ==========================================
+// 型定義層（改善版）
+// ==========================================
+interface DataType {
+  id: string;
+  name: string;
+  age: number;
+  email: string;
+  details?: any; // 展開可能な詳細データ
+}
+
+// テーブル行データの型定義（改善版）
+interface TableRowData {
+  key: string;
+  zumenName: string;
+  partName: string;
+  konpoTanniId: string;
+  konpoListId: string;
+  totalWeight: number;
+  konpoData: KonpoData;
+  totalWeightWithQuantity: number;
+  details?: any; // 展開可能な詳細データ
+}
+
+// ==========================================
+// カラム定義層（改善版）
+// ==========================================
+/**
+ * TanStack Table用のカラム定義を生成（改善版）
+ * テーブル設定層 → カラム定義
+ */
+const createTableColumns = (
+  selectedRows: Set<string>,
+  expandedRows: Set<string>,
+  onToggleRow: (key: string) => void,
+  onToggleExpand: (key: string) => void,
+  showSorting: boolean = true
+): ColumnDef<TableRowData>[] => [
+  {
+    id: 'select',
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="すべて選択"
+        className="h-4 w-4"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={selectedRows.has(row.original.key)}
+        onCheckedChange={() => onToggleRow(row.original.key)}
+        aria-label="行を選択"
+        className="h-4 w-4"
+      />
+    ),
+    enableSorting: false,
+    size: 50,
+  },
+  {
+    id: 'expand',
+    header: () => <span className="sr-only">展開</span>,
+    cell: ({ row }) => {
+      const isExpanded = expandedRows.has(row.original.key);
+      return (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onToggleExpand(row.original.key)}
+          className="p-0 h-6 w-6"
+          aria-label={isExpanded ? "詳細を閉じる" : "詳細を開く"}
+        >
+          <ChevronRight 
+            className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
+          />
+        </Button>
+      );
+    },
+    enableSorting: false,
+    size: 40,
+  },
+  {
+    accessorKey: 'zumenName',
+    header: ({ column }) => showSorting ? (
+      <SortableHeader column={column}>
+        図面名
+      </SortableHeader>
+    ) : (
+      <span>図面名</span>
+    ),
+    cell: ({ getValue }) => <span>{getValue<string>()}</span>,
+    size: 200,
+  },
+  {
+    accessorKey: 'partName',
+    header: ({ column }) => showSorting ? (
+      <SortableHeader column={column}>
+        部品名
+      </SortableHeader>
+    ) : (
+      <span>部品名</span>
+    ),
+    cell: ({ getValue }) => <span>{getValue<string>()}</span>,
+    size: 200,
+  },
+  {
+    accessorKey: 'konpoTanniId',
+    header: ({ column }) => showSorting ? (
+      <SortableHeader column={column}>
+        単位ID
+      </SortableHeader>
+    ) : (
+      <span>単位ID</span>
+    ),
+    cell: ({ getValue }) => <span>{getValue<string>()}</span>,
+    size: 150,
+  },
+  {
+    accessorKey: 'konpoListId',
+    header: ({ column }) => showSorting ? (
+      <SortableHeader column={column}>
+        リストID
+      </SortableHeader>
+    ) : (
+      <span>リストID</span>
+    ),
+    cell: ({ getValue }) => <span>{getValue<string>() || '-'}</span>,
+    size: 150,
+  },
+  {
+    accessorKey: 'totalWeightWithQuantity',
+    header: ({ column }) => showSorting ? (
+      <SortableHeader column={column}>
+        全重量
+      </SortableHeader>
+    ) : (
+      <span>全重量</span>
+    ),
+    cell: ({ getValue }) => formatWeightJSX(getValue<number>()),
+    size: 120,
+  },
+];
+
+// ==========================================
+// テーブル設定層（Props, 内部型, API型）
+// ==========================================
+// テーブル設定とサブコンポーネントの詳細実装は `.cursor\rules\table-settings.mdc` を参照してください。
+// @file table-settings.mdc
+
+// 基本的なProps定義例（改善版）
+interface DataTableProps<T> {
+  data: T[];
+  columns: ColumnDef<T>[];
+  isLoading?: boolean;
+  error?: string | null;
+  showSearch?: boolean;
+  showPagination?: boolean;
+  showSorting?: boolean;
+  showTabs?: boolean;
+  onRowClick?: (row: T) => void;
+  selectedRows?: Set<string>;
+  expandedRows?: Set<string>;
+  onToggleRow?: (key: string) => void;
+  onToggleExpand?: (key: string) => void;
+  pageTitle?: string;
+  defaultPageTitle?: string;
+  detailRenderer?: (data: T) => React.ReactNode;
+}
+
+// ==========================================
+// サブコンポーネント層（改善版）
+// ==========================================
+// 検索欄、条件分けタブ、その他のサブコンポーネントの詳細実装は 
+// `.cursor\rules\table-settings.mdc` を参照してください。
+// @file table-settings.mdc
+
+// ==========================================
+// コンポーネント層（改善版）
+// ==========================================
+/**
+ * 工法データを表示するテーブルコンポーネント（改善版）
+ * TanStack Table + Shadcn UIの組み合わせで実装
+ * テーブル表示層 → 工法データ一覧表示
+ */
+export const DataTable: React.FC<DataTableProps<TableRowData>> = ({ 
+  data,
+  columns,
+  isLoading = false,
+  error = null,
+  showSearch = true,
+  showPagination = true,
+  showSorting = true,
+  showTabs = true,
+  selectedRows = new Set(),
+  expandedRows = new Set(),
+  onToggleRow,
+  onToggleExpand,
+  pageTitle,
+  defaultPageTitle = 'プロジェクト管理',
+  detailRenderer,
+}) => {
+  // ==========================================
+  // 状態管理層（改善版）
+  // ==========================================
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = React.useState('');
+  const [pagination, setPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: 15,
+  });
+  const { setPageTitle } = useHeaderStore();
+
+  // ==========================================
+  // ページタイトル設定層（改善版）
+  // ==========================================
+  React.useEffect(() => {
+    // コンポーネントマウント時にページタイトルを設定
+    if (pageTitle) {
+      setPageTitle(pageTitle);
+    }
+    
+    // コンポーネントアンマウント時にデフォルトタイトルに戻す
+    return () => {
+      setPageTitle(defaultPageTitle);
+    };
+  }, [pageTitle, defaultPageTitle, setPageTitle]);
+
+  // ==========================================
+  // TanStack Table設定層（改善版）
+  // ==========================================
+  const table = useReactTable({
+    data,
+    columns,
+    state: {
+      sorting,
+      globalFilter,
+      pagination,
+      expanded: expandedRows,
+    },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 15,
+      },
+    },
+  });
+
+  // ==========================================
+  // レンダリング層（JSX return）（改善版）
+  // ==========================================
+  return (
+    <div className="w-full">
+      {/* 上部コントロールエリア - 1段構成（改善版） */}
+      <div className="flex items-center justify-between gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 mb-4">
+        {/* 左側: 検索欄 */}
+        <div className="flex items-center gap-4">
+          {showSearch && (
+            <div className="relative w-48">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="検索..."
+                value={globalFilter}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                className="pl-9 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+              />
+            </div>
+          )}
+          {globalFilter && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setGlobalFilter('')}
+              className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-800"
+              aria-label="検索をクリア"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+          <div className="text-sm text-muted-foreground bg-slate-50 dark:bg-slate-800 px-3 py-1 rounded-md">
+            {table.getFilteredRowModel().rows.length} 件中 {table.getRowModel().rows.length} 件表示
+          </div>
+        </div>
+        
+        {/* 右側: ソート情報、ページネーション */}
+        <div className="flex items-center gap-3">
+          {/* ソート情報 */}
+          {table.getState().sorting.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
+                ソート: {table.getState().sorting.map(sort => 
+                  `${sort.id} ${sort.desc ? '降順' : '昇順'}`
+                ).join(', ')}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => table.resetSorting()}
+                className="h-6 px-2 text-xs hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                リセット
+              </Button>
+            </div>
+          )}
+          
+          {/* ページネーション */}
+          {showPagination && (
+            <div className="flex items-center gap-2">
+              <div className="text-sm text-muted-foreground bg-white dark:bg-slate-700 px-3 py-1 rounded-md border border-slate-200 dark:border-slate-600">
+                ページ {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
+              </div>
+              <div className="flex gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                  aria-label="前のページへ"
+                >
+                  前へ
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                  aria-label="次のページへ"
+                >
+                  次へ
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* テーブル本体（改善版） */}
+      <div className="rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden bg-white">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map(headerGroup => (
+              <TableRow key={headerGroup.id} className="bg-blue-600 border-b border-blue-700">
+                {headerGroup.headers.map(header => (
+                  <TableHead 
+                    key={header.id}
+                    style={{ width: header.getSize() }}
+                    className="font-semibold text-white"
+                    aria-sort={
+                      header.column.getIsSorted() === 'asc' 
+                        ? 'ascending' 
+                        : header.column.getIsSorted() === 'desc' 
+                        ? 'descending' 
+                        : undefined
+                    }
+                  >
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody className="bg-white">
+            {table.getRowModel().rows.map(row => (
+              <React.Fragment key={row.id}>
+                <TableRow 
+                  className={`
+                    hover:bg-slate-50 dark:hover:bg-slate-800/50 
+                    transition-colors duration-150
+                    ${selectedRows.has(row.original.key) ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500' : 'bg-white'}
+                    ${expandedRows.has(row.original.key) ? 'bg-slate-25 dark:bg-slate-750' : ''}
+                  `}
+                >
+                  {row.getVisibleCells().map(cell => (
+                    <TableCell 
+                      key={cell.id}
+                      className={`
+                        border-b border-slate-100 dark:border-slate-700
+                        ${selectedRows.has(row.original.key) ? 'text-blue-900 dark:text-blue-100' : 'text-slate-900 dark:text-slate-300'}
+                        bg-white font-semibold
+                      `}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {/* 展開された詳細行（改善版） */}
+                {expandedRows.has(row.original.key) && detailRenderer && (
+                  <TableRow className="bg-slate-50 dark:bg-slate-800/50 border-l-4 border-blue-500">
+                    <TableCell colSpan={row.getVisibleCells().length} className="p-4">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            詳細情報
+                          </h4>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onToggleExpand?.(row.original.key)}
+                            className="h-6 w-6 p-0"
+                            aria-label="詳細を閉じる"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="bg-white dark:bg-slate-700 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
+                          {detailRenderer(row.original)}
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+};
+
+### 2. 高度な機能実装（改善版）
+
+#### ソート機能（改善版）
+```tsx
+// ソート可能なヘッダーコンポーネント（改善版）
+const SortableHeader: React.FC<{
+  column: Column<TableRowData, unknown>;
+  children: React.ReactNode;
+  className?: string;
+}> = ({ column, children, className = "" }) => {
+  const sortStatus = column.getIsSorted();
+  const sortDirection = sortStatus === 'asc' ? '昇順' : sortStatus === 'desc' ? '降順' : 'ソートなし';
+  
+  return (
+    <Button
+      variant="ghost"
+      onClick={() => column.toggleSorting(sortStatus === 'asc')}
+      className={`h-auto p-0 font-semibold text-white hover:bg-blue-700 transition-all duration-200 group ${className}`}
+      aria-label={`${children}で${sortDirection}にソート`}
+    >
+      {children}
+      <div className="ml-1 flex items-center">
+        {sortStatus === 'asc' ? (
+          <ChevronUp className="h-4 w-4 text-white" />
+        ) : sortStatus === 'desc' ? (
+          <ChevronDown className="h-4 w-4 text-white" />
+        ) : (
+          <div className="h-4 w-4 flex flex-col items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity">
+            <ChevronUp className="h-2 w-4 text-white" />
+            <ChevronDown className="h-2 w-4 -mt-1 text-white" />
+          </div>
+        )}
+      </div>
+    </Button>
+  );
+};
+
+// カラム定義にソート機能を追加（改善版）
+const columns: ColumnDef<DataType>[] = [
+  {
+    accessorKey: 'name',
+    header: ({ column }) => (
+      <SortableHeader column={column}>
+        名前
+      </SortableHeader>
+    ),
+    cell: ({ getValue }) => <span>{getValue<string>()}</span>,
+  },
+  // ... 他のカラム
+];
+```
+
+#### フィルタ機能（改善版）
+```tsx
+// フィルタ状態管理（改善版）
+const [globalFilter, setGlobalFilter] = React.useState('');
+const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+
+// TanStack Table設定にフィルタを追加（改善版）
+const table = useReactTable({
+  data,
+  columns,
+  state: {
+    sorting,
+    globalFilter,
+    columnFilters,
+  },
+  onSortingChange: setSorting,
+  onGlobalFilterChange: setGlobalFilter,
+  onColumnFiltersChange: setColumnFilters,
+  getCoreRowModel: getCoreRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+});
+
+// フィルタ入力コンポーネント（改善版）
+<div className="mb-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+  <div className="flex items-center justify-between gap-4">
+    <div className="flex items-center gap-4">
+      <div className="relative w-48">
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="検索..."
+          value={globalFilter ?? ''}
+          onChange={e => setGlobalFilter(e.target.value)}
+          className="pl-9 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+        />
+      </div>
+      {globalFilter && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setGlobalFilter('')}
+          className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-800"
+          aria-label="検索をクリア"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
+    <div className="text-sm text-muted-foreground bg-slate-50 dark:bg-slate-800 px-3 py-1 rounded-md">
+      {table.getFilteredRowModel().rows.length} 件中 {table.getRowModel().rows.length} 件表示
+    </div>
+  </div>
+</div>
+```
+
+#### ページネーション（改善版）
+```tsx
+// ページネーション状態管理（改善版）
+const [pagination, setPagination] = React.useState({
+  pageIndex: 0,
+  pageSize: 15,
+});
+
+// TanStack Table設定にページネーションを追加（改善版）
+const table = useReactTable({
+  data,
+  columns,
+  state: {
+    sorting,
+    pagination,
+  },
+  onSortingChange: setSorting,
+  onPaginationChange: setPagination,
+  getCoreRowModel: getCoreRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+  getPaginationRowModel: getPaginationRowModel(),
+});
+
+// ページネーションUI（改善版）
+<div className="flex items-center justify-between space-x-2 py-4">
+  <div className="flex items-center space-x-2">
+    <p className="text-sm font-medium">表示件数</p>
+    <Select value={pagination.pageSize.toString()} onValueChange={(value) => setPagination(prev => ({ ...prev, pageSize: Number(value) }))}>
+      <SelectTrigger className="h-8 w-[70px]">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {[10, 15, 20, 30, 40, 50].map((size) => (
+          <SelectItem key={size} value={size.toString()}>
+            {size}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+    <span className="text-sm text-muted-foreground">
+      全 {table.getFilteredRowModel().rows.length} 件中 {((pagination.pageIndex) * pagination.pageSize) + 1} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, table.getFilteredRowModel().rows.length)} 件
+    </span>
+  </div>
+  
+  <div className="flex items-center space-x-2">
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => table.previousPage()}
+      disabled={!table.getCanPreviousPage()}
+      aria-label="前のページへ"
+    >
+      前へ
+    </Button>
+    <div className="text-sm bg-white dark:bg-slate-700 px-3 py-1 rounded-md border border-slate-200 dark:border-slate-600">
+      ページ {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
+    </div>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => table.nextPage()}
+      disabled={!table.getCanNextPage()}
+      aria-label="次のページへ"
+    >
+      次へ
+    </Button>
+  </div>
+</div>
+```
+
+#### 展開可能な行の詳細表示（新規追加）
+```tsx
+// 展開状態管理
+const [expanded, setExpanded] = React.useState<ExpandedState>({});
+
+// TanStack Table設定に展開機能を追加
+const table = useReactTable({
+  data,
+  columns,
+  state: {
+    sorting,
+    expanded,
+  },
+  onSortingChange: setSorting,
+  onExpandedChange: setExpanded,
+  getCoreRowModel: getCoreRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+  getExpandedRowModel: getExpandedRowModel(),
+});
+
+// 展開可能な行のレンダリング
+{table.getRowModel().rows.map(row => (
+  <React.Fragment key={row.id}>
+    <TableRow 
+      className={`
+        hover:bg-slate-50 dark:hover:bg-slate-800/50 
+        transition-colors duration-150
+        ${row.getIsSelected() ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500' : 'bg-white'}
+      `}
+    >
+      {row.getVisibleCells().map(cell => (
+        <TableCell key={cell.id}>
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
+      ))}
+    </TableRow>
+    {/* 展開された詳細行 */}
+    {row.getIsExpanded() && (
+      <TableRow className="bg-slate-50 dark:bg-slate-800/50 border-l-4 border-blue-500">
+        <TableCell colSpan={row.getVisibleCells().length} className="p-4">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                詳細情報
+              </h4>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => row.toggleExpanded()}
+                className="h-6 w-6 p-0"
+                aria-label="詳細を閉じる"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="bg-white dark:bg-slate-700 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
+              {/* 詳細コンテンツ */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="space-y-1">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">図面ID</span>
+                  <div className="text-sm font-semibold">{row.original.zumenId}</div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">部品ID</span>
+                  <div className="text-sm font-semibold">{row.original.partId}</div>
+                </div>
+                {/* 他の詳細情報 */}
+              </div>
+            </div>
+          </div>
+        </TableCell>
+      </TableRow>
+    )}
+  </React.Fragment>
+))}
+```
+
+## ベストプラクティス（改善版）
+
+### 1. パフォーマンス最適化（改善版）
+```tsx
+// メモ化による最適化（改善版）
+const columns = React.useMemo<ColumnDef<DataType>[]>(() => [
+  // カラム定義
+], []);
+
+// データのメモ化（改善版）
+const memoizedData = React.useMemo(() => data, [data]);
+
+// フィルタリングの最適化（改善版）
+const filteredData = React.useMemo(() => {
+  return data.filter(item => {
+    // フィルタリングロジック
+    return true;
+  });
+}, [data, globalFilter, columnFilters]);
+```
+
+### 2. 型安全性の確保（改善版）
+```tsx
+// 厳密な型定義（改善版）
+interface TableProps<T> {
+  data: T[];
+  columns: ColumnDef<T>[];
+  onRowClick?: (row: T) => void;
+  selectedRows?: Set<string>;
+  expandedRows?: Set<string>;
+  onToggleRow?: (key: string) => void;
+  onToggleExpand?: (key: string) => void;
+  pageTitle?: string;
+  defaultPageTitle?: string;
+  detailRenderer?: (data: T) => React.ReactNode;
+}
+
+export const DataTable = <T extends Record<string, any>>({
+  data,
+  columns,
+  onRowClick,
+  selectedRows,
+  expandedRows,
+  onToggleRow,
+  onToggleExpand,
+  pageTitle,
+  defaultPageTitle,
+  detailRenderer,
+}: TableProps<T>) => {
+  // 実装
+};
+```
+
+### 3. アクセシビリティ対応（改善版）
+```tsx
+// アクセシビリティ属性の追加（改善版）
+<Table>
+  <TableHeader>
+    {table.getHeaderGroups().map(headerGroup => (
+      <TableRow key={headerGroup.id}>
+        {headerGroup.headers.map(header => (
+          <TableHead 
+            key={header.id}
+            aria-sort={header.column.getIsSorted() || undefined}
+            scope="col"
+          >
+            {flexRender(
+              header.column.columnDef.header,
+              header.getContext()
+            )}
+          </TableHead>
+        ))}
+      </TableRow>
+    ))}
+  </TableHeader>
+  <TableBody>
+    {table.getRowModel().rows.map(row => (
+      <TableRow 
+        key={row.id}
+        aria-selected={row.getIsSelected()}
+        aria-expanded={row.getIsExpanded()}
+      >
+        {row.getVisibleCells().map(cell => (
+          <TableCell key={cell.id}>
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        ))}
+      </TableRow>
+    ))}
+  </TableBody>
+</Table>
+```
+
+### 4. エラーハンドリング（改善版）
+```tsx
+// エラー状態の管理（改善版）
+const [error, setError] = React.useState<string | null>(null);
+
+if (error) {
+  return (
+    <div className="flex items-center justify-center p-8">
+      <div className="text-center bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 max-w-md">
+        <div className="text-red-600 dark:text-red-400 font-semibold mb-2">エラーが発生しました</div>
+        <div className="text-slate-600 dark:text-slate-400 text-sm">{error}</div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.location.reload()}
+          className="mt-4"
+        >
+          再読み込み
+        </Button>
+      </div>
+    </div>
+  );
+}
+```
+
+### 5. ローディング状態（改善版）
+```tsx
+// ローディング状態の管理（改善版）
+const [isLoading, setIsLoading] = React.useState(false);
+
+if (isLoading) {
+  return (
+    <div className="w-full">
+      <div className="mb-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+        <div className="flex items-center gap-4">
+          <div className="h-8 w-48 bg-slate-200 dark:bg-slate-700 animate-pulse rounded" />
+          <div className="h-6 w-24 bg-slate-200 dark:bg-slate-700 animate-pulse rounded" />
+        </div>
+      </div>
+      <div className="rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden bg-white">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map(headerGroup => (
+              <TableRow key={headerGroup.id} className="bg-blue-600">
+                {headerGroup.headers.map(header => (
+                  <TableHead key={header.id}>
+                    <div className="h-4 bg-blue-500 animate-pulse rounded" />
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody className="bg-white">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <TableRow key={index} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 bg-white">
+                {Array.from({ length: columns.length }).map((_, cellIndex) => (
+                  <TableCell key={cellIndex} className="border-b border-slate-100 dark:border-slate-700 bg-white">
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 animate-pulse rounded" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+```
+
+## 実装チェックリスト（改善版）
+
+- [ ] TanStack Tableでロジックを実装しているか
+- [ ] Shadcn UIでUIを実装しているか
+- [ ] 型安全性が確保されているか
+- [ ] パフォーマンス最適化が行われているか
+- [ ] アクセシビリティが考慮されているか
+- [ ] エラーハンドリングが実装されているか
+- [ ] ローディング状態が実装されているか
+- [ ] 適切なコメントが記載されているか
+- [ ] 既存のプロジェクト構造に合わせているか
+- [ ] Tailwind CSSクラスが適切に使用されているか
+- [ ] ヘッダー連携（ページタイトル管理）が実装されているか
+- [ ] 標準的なデザインパターンに従っているか
+- [ ] 展開可能な行の詳細表示が実装されているか
+- [ ] カスタムフィルタ機能が実装されているか
+- [ ] テーブル設定の保存・読み込み機能が実装されているか
+- [ ] カラム設定機能が実装されているか
+
+## 避けるべきパターン（改善版）
+
+- ❌ **TanStack TableのUIコンポーネントを直接使用**
+- ❌ **Shadcn UIでロジックを実装**
+- ❌ **型安全性を無視した実装**
+- ❌ **パフォーマンスを考慮しない実装**
+- ❌ **アクセシビリティを無視した実装**
+- ❌ **エラーハンドリングを怠る**
+- ❌ **既存のプロジェクト構造を無視**
+- ❌ **Tailwind CSSクラスを適切に使用しない**
+- ❌ **テーブルコンポーネント内に使用しない**
+- ❌ **ヘッダー連携を無視した実装**
+- ❌ **標準的なデザインパターンを無視**
+- ❌ **展開可能な行の詳細表示を実装しない**
+- ❌ **カスタムフィルタ機能を実装しない**
+- ❌ **テーブル設定の保存・読み込み機能を実装しない**
+- ❌ **カラム設定機能を実装しない**
+
+## 関連ルールファイル
+
+- 新規機能には常に `.cursor\rules\page-patterns.mdc` のルールを活用してください。
+  @file page-patterns.mdc
+
+- API 呼び出しは `.cursor\rules\api-patterns.mdc` を参照して実装してください。
+  @file api-patterns.mdc
+
+- テーブル設定とサブコンポーネントの詳細実装は `.cursor\rules\table-settings.mdc` を参照してください。
+  @file table-settings.mdc
+
+- TypeScript実装は `.cursor\rules\1.0.tsx.mdc` を参照してください。

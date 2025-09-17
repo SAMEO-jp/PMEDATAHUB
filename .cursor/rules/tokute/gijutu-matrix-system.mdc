@@ -1,0 +1,152 @@
+# 📄 技術資料 × 商品 星鳥表システム設計ドキュメント
+
+## ✅ プロジェクトルール抜粋
+
+- **tRPC v11** に準拠し、`createTRPCReact + Provider` を使用
+- データアクセス層は `db_CRUD.ts` などに集約
+- 画面は `src/app/test/gijutu-matrix/` 以下に実装
+- 型・バリデーションは **Zod** で統一
+- 内部リンクは `/documents/[id]` を参照（外部リンク非対応）
+
+## ✅ 要件ジャッジ結果
+
+| 項目 | 結果 |
+|------|------|
+| **やるべきか** | Yes |
+| **優先度** | 高 |
+| **理由** | 資料検索・再利用性向上、対応関係の俯瞰可視化が重要 |
+| **影響範囲** | 4テーブル追加、複数画面・API実装、UIコンポーネント拡張 |
+
+## ✅ 変更対象ファイル・関数リスト
+
+| パス | 役割 |
+|------|------|
+| `src/app/test/gijutu-matrix/page.tsx` | 表のエントリーポイント |
+| `src/app/test/gijutu-matrix/components/MatrixTable.tsx` | 表本体＋モーダル呼び出し |
+| `src/app/test/gijutu-matrix/components/LinkModal.tsx` | 資料リンク一覧表示・削除・登録 |
+| `src/lib/trpc/routers/db/gijutuMatrix.ts` | tRPC API ルーター（create, delete, get） |
+| `src/lib/db/db_matrix.ts` | DBアクセスユーティリティ（JOIN集計等） |
+
+## ✅ データ設計方針
+
+### テーブル構成（4つ）
+
+```sql
+-- 要素技術マスタ
+CREATE TABLE tech_elements (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL
+);
+
+-- 商品マスタ
+CREATE TABLE products (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL
+);
+
+-- 資料マスタ
+CREATE TABLE documents (
+  id INTEGER PRIMARY KEY,
+  title TEXT NOT NULL,
+  url TEXT NOT NULL  -- 例: /documents/123
+);
+
+-- 星鳥エントリ（交点情報）
+CREATE TABLE matrix_entries (
+  id INTEGER PRIMARY KEY,
+  tech_id INTEGER NOT NULL,
+  product_id INTEGER NOT NULL,
+  document_id INTEGER NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (tech_id) REFERENCES tech_elements(id),
+  FOREIGN KEY (product_id) REFERENCES products(id),
+  FOREIGN KEY (document_id) REFERENCES documents(id)
+);
+```
+
+## ✅ 画面設計方針
+
+- **横軸**: 商品名
+- **縦軸**: 要素技術
+- **中央**: 件数表示（リンク付き）
+- **件数クリック**: LinkModal を開き、資料のリスト表示・リンクジャンプ
+- **モーダル機能**: 資料追加・削除可能（tRPC API連携）
+
+## ✅ 処理フロー
+
+```mermaid
+flowchart TD
+  U[ユーザー] -->|画面ロード| A[星鳥表一覧表示]
+  A -->|セルクリック| B[技術×商品に対応する資料を取得]
+  B --> C[リンクモーダルで一覧表示]
+
+  C -->|リンク追加| D[フォーム入力]
+  D --> E[tRPC: createEntry]
+  E --> F1[documentsにINSERT or 取得]
+  F1 --> F2[matrix_entriesにINSERT]
+
+  C -->|リンク削除| G[tRPC: deleteEntry]
+  G --> H[matrix_entriesからDELETE]
+```
+
+## ✅ 開発工数見積
+
+| 作業内容 | 時間 |
+|----------|------|
+| DB設計・作成 | 1.5 h |
+| API（tRPC）実装 | 4 h |
+| フロント実装 | 4 h |
+| カスタムフックなど | 1.5 h |
+| テスト・調整 | 2 h |
+| **合計** | **13 h（約2人日）** |
+
+## ✅ 未確定事項 & TODO
+
+| 項目 | ステータス | 備考 |
+|------|-----------|------|
+| 要素技術・商品マスタの登録運用 | 要確認 | UIから追加が必要か？ |
+| 資料のタグ・分類 | 将来的に検討可 | documentsにカテゴリ追加可 |
+| 権限管理 | 要検討 | 編集操作制限の必要有無 |
+
+## 🔧 実装ガイドライン
+
+### 1. データベース設計
+- 4つのテーブルを適切に設計
+- 外部キー制約を設定
+- インデックスを考慮（tech_id, product_id, document_id）
+
+### 2. tRPC API設計
+- `createEntry`: 新規エントリ作成
+- `deleteEntry`: エントリ削除
+- `getMatrixData`: マトリックスデータ取得
+- `getDocumentsByEntry`: 特定エントリの資料一覧取得
+
+### 3. フロントエンド実装
+- レスポンシブ対応
+- モーダルでの資料追加・削除機能
+- 件数表示のクリックイベント
+- ローディング状態の管理
+
+### 4. 型定義
+- Zodスキーマでバリデーション
+- TypeScript型の適切な定義
+- APIレスポンス型の統一
+
+### 5. エラーハンドリング
+- データベースエラーの適切な処理
+- フロントエンドでのエラー表示
+- ユーザーフレンドリーなエラーメッセージ
+
+## 📋 チェックリスト
+
+- [ ] データベーステーブル作成
+- [ ] tRPCルーター実装
+- [ ] フロントエンドコンポーネント実装
+- [ ] 型定義・バリデーション実装
+- [ ] エラーハンドリング実装
+- [ ] テスト・動作確認
+- [ ] ドキュメント更新
+description:
+globs:
+alwaysApply: false
+---

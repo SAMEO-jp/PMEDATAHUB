@@ -1,0 +1,197 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 叫ぶ層
+- 読み込んだら「!!!0.make.mdc!!!」と叫ぶ
+
+# 新しいアプリ構成設計思考ルール
+
+## 🎯 Step 1: 何を作る？（要件定義）
+### 基本質問
+- この機能の目的は何か？
+- 誰が使うのか？
+- どのような価値を提供するのか？
+- 既存機能との関係は？
+
+### 機能要件の整理
+```typescript
+// 機能要件テンプレート
+interface FeatureRequirements {
+  primary: string;           // 主要機能
+  secondary?: string[];      // 副次機能
+  constraints: string[];     // 制約条件
+  dependencies: string[];    // 依存関係
+  userStories: string[];     // ユーザーストーリー
+}
+```
+
+## 🏗️ Step 2: アーキテクチャ設計
+### Server vs Client の選択基準
+- **Server Component を選択する場合:**
+  - データ取得のみ
+  - SEOが必要
+  - 初期表示が重要
+  - インタラクションが少ない
+
+- **Client Component を選択する場合:**
+  - ユーザーインタラクションが多い
+  - リアルタイム更新が必要
+  - 複雑な状態管理が必要
+  - ブラウザAPIを使用
+
+### コンポーネント階層設計
+```typescript
+// 推奨階層構造
+interface ComponentHierarchy {
+  page: string;              // ページレベル
+  layout?: string;           // レイアウトレベル
+  sections: string[];        // セクションレベル
+  components: string[];      // コンポーネントレベル
+  hooks: string[];           // カスタムフック
+  utils: string[];           // ユーティリティ
+}
+```
+
+## 📊 Step 3: データフロー設計
+### データ取得戦略
+1. **API エンドポイント設計**
+   - RESTful パターンの適用
+   - エラーハンドリングの統一
+   - レスポンス形式の標準化
+
+2. **状態管理選択**
+   - **Zustand**: 複雑な状態管理
+   - **React State**: ローカル状態
+   - **Server State**: サーバーサイド状態
+   - **URL State**: ページ状態
+
+3. **データフロー図**
+```typescript
+// データフロー例
+interface DataFlow {
+  source: 'API' | 'Local' | 'URL' | 'Store';
+  transformation: string[];
+  destination: 'UI' | 'Store' | 'API';
+  caching?: 'SWR' | 'React Query' | 'Custom';
+}
+```
+
+## 🎨 Step 4: UI/UX 設計
+### コンポーネント分離原則
+- **Presentation Component**: UI表示のみ
+- **Container Component**: ロジックとデータ管理
+- **Layout Component**: レイアウト構造
+- **Page Component**: ページ全体の統合
+
+### 再利用性設計
+```typescript
+// コンポーネント設計テンプレート
+interface ComponentDesign {
+  props: Record<string, any>;    // 外部から受け取る値
+  state: Record<string, any>;    // 内部状態
+  events: string[];              // 発火するイベント
+  dependencies: string[];        // 依存関係
+  reusability: 'High' | 'Medium' | 'Low';
+}
+```
+
+## 🔧 Step 5: 型設計
+### 型定義の優先順位
+1. **API レスポンス型**
+2. **コンポーネント Props 型**
+3. **状態管理型**
+4. **ユーティリティ型**
+
+### 型設計パターン
+```typescript
+// 基本型パターン
+interface BaseTypes {
+  // API レスポンス
+  ApiResponse<T> = {
+    success: boolean;
+    data?: T;
+    error?: string;
+  };
+
+  // コンポーネント Props
+  ComponentProps<T> = {
+    data: T;
+    loading?: boolean;
+    error?: string;
+    onAction?: (data: T) => void;
+  };
+
+  // 状態管理
+  StoreState<T> = {
+    data: T[];
+    loading: boolean;
+    error: string | null;
+    filters: Record<string, any>;
+  };
+}
+```
+
+## 📋 Step 6: 実装優先順位
+### 段階的実装計画
+1. **Phase 1: 基盤構築**
+   - 型定義完了
+   - 基本コンポーネント構造
+   - API エンドポイント設計
+
+2. **Phase 2: 基本機能**
+   - データ取得・表示
+   - 基本的なインタラクション
+   - エラーハンドリング
+
+3. **Phase 3: 拡張機能**
+   - フィルタリング・検索
+   - パフォーマンス最適化
+   - アクセシビリティ対応
+
+4. **Phase 4: 品質向上**
+   - テスト実装
+   - ドキュメント整備
+   - コードレビュー
+
+## 🎯 推奨思考パターン
+
+### 設計原則
+- **単一責任原則**: 1つのコンポーネントは1つの責務のみ
+- **開放閉鎖原則**: 拡張に開いて、修正に閉じている
+- **依存性逆転**: 抽象に依存し、具象に依存しない
+- **DRY原則**: 重複を避ける
+- **KISS原則**: シンプルに保つ
+
+### 実装ガイドライン
+- **型ファースト**: 型定義から始める
+- **小さく始める**: 最小限の機能から実装
+- **段階的拡張**: 機能を段階的に追加
+- **テスト駆動**: テストを先に書く
+- **ドキュメント先行**: 設計を文書化する
+
+### 品質チェックリスト
+- [ ] 型安全性が確保されているか
+- [ ] エラーハンドリングが適切か
+- [ ] パフォーマンスが考慮されているか
+- [ ] アクセシビリティが対応されているか
+- [ ] 再利用性が確保されているか
+- [ ] テストが実装されているか
+- [ ] ドキュメントが整備されているか
+
+## 🔄 継続的改善
+### 定期的な見直し
+- アーキテクチャの妥当性確認
+- パフォーマンス測定
+- ユーザーフィードバック収集
+- 技術的負債の解消
+
+### 学習と改善
+- 新しいパターンの導入検討
+- 既存コードのリファクタリング
+- ベストプラクティスの更新
+- チーム内での知識共有
+
+
+

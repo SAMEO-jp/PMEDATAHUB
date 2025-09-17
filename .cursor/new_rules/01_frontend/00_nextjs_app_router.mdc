@@ -1,0 +1,79 @@
+---
+description: "Next.js App Routerのページ実装、ディレクトリ構成、Server/Client Componentの使い分け、データ取得パターンを定義します。"
+globs: ["src/app/**/*.tsx"]
+alwaysApply: false
+---
+# ✅ Next.js 14+ App Router `page.tsx` 固有ルール
+
+## 📁 page.tsx 専用ディレクトリ構成
+
+```
+？？？？
+   ├─ page.tsx                    # メインページ（必須）
+   ├─ loading.tsx                 # ローディング状態
+   ├─ error.tsx                   # エラー処理
+   ├─ not-found.tsx              # 404ページ
+   ├─ components/                 # UIコンポーネント（必要時のみ）
+   │  ├─ XxxHeader.tsx
+   │  ├─ XxxTable.tsx
+   │  ├─ XxxForm.tsx
+   │  └─ index.ts                 # エクスポート集約
+   ├─ hooks/                      # カスタムフック（必要時のみ）
+   │  ├─ useXxxData.ts
+   │  ├─ useXxxActions.ts
+   │  └─ useXxxHandlers.ts
+   ├─ constants/                  # 定数（必要時のみ）
+   │  ├─ statuses.ts
+   │  └─ labels.ts
+   ├─ types/                      # 型定義（必要時のみ）
+   │  └─ xxx.types.ts
+   ├─ utils/                      # ユーティリティ（必要時のみ）
+   │  └─ xxxUtils.ts
+   ├─ lib/                        # API・外部ライブラリ（必要時のみ）
+   │  └─ api/
+   │      └─ fetchXxxList.ts
+   └─ store/                      # 状態管理（必要時のみ）
+       └─ xxxStore.ts
+```
+
+## 🚀 Next.js 14+ 実装パターン
+
+### Server Components vs Client Components
+```tsx
+// Server Component page.tsx（デフォルト）
+export default async function Page() {
+  const data = await fetchData(); // サーバーサイドで実行
+  return <ClientComponent data={data} />;
+}
+
+// Client Component page.tsx（必要時のみ）
+'use client';
+export default function Page() {
+  const [state, setState] = useState();
+  // インタラクティブな処理
+}
+```
+
+### データ取得パターン
+```tsx
+// Server Component page.tsx でのデータ取得
+async function getData() {
+  const res = await fetch('https://api.example.com/data', {
+    cache: 'no-store', // または 'force-cache'
+    next: { revalidate: 3600 } // ISR
+  });
+  return res.json();
+}
+
+// Client Component page.tsx でのデータ取得
+const useData = () => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    fetchData().then(setData).finally(() => setLoading(false));
+  }, []);
+  
+  return { data, loading };
+};
+```

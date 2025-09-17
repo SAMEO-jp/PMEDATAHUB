@@ -1,0 +1,795 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 叫ぶ層
+- 読み込んだら「!!!table-settings.mdc!!!」と叫ぶ
+
+# TanStack Table 設定層とサブコンポーネント実装ルール（改善版）
+
+## 基本原則
+
+### 役割分担
+- **TanStack Table基本実装**: データ処理ロジック（ソート・フィルタ・ページング・状態管理）
+  - 詳細は `.cursor\rules\table.mdc` を参照してください。
+  @file table.mdc
+- **テーブル設定層**: Props、内部型、API型の定義
+- **サブコンポーネント層**: 検索欄、条件分けタブ、その他のUI要素
+- **ヘッダー連携**: ページタイトルの自動管理
+- **デザイン標準化**: 統一されたテーブルデザインパターン
+
+### 技術スタック
+- TypeScript + React
+- @tanstack/react-table
+- Shadcn UI
+- ヘッダーストア（useHeaderStore）
+- 既存のプロジェクト構造に合わせる
+
+### 親子ルールの連携
+このルールは `.cursor\rules\table.mdc` の子ルールとして機能し、以下の連携を行います：
+- **親ルール（table.mdc）**: TanStack Tableの基本実装パターン
+- **子ルール（table-settings.mdc）**: テーブル設定とサブコンポーネントの詳細実装
+- 両ルールを組み合わせることで、完全なテーブルコンポーネントを構築できます。
+
+## テーブル設定層（Props, 内部型, API型）
+
+### 1. Props定義（改善版）
+```tsx
+// ==========================================
+// テーブル設定層（Props, 内部型, API型）
+// ==========================================
+/**
+ * テーブル設定コンポーネントのProps（標準化）
+ * @property data - テーブルデータ
+ * @property columns - カラム定義
+ * @property isLoading - ローディング状態
+ * @property error - エラー状態
+ * @property selectedRows - 選択された行のキーセット
+ * @property expandedRows - 展開された行のキーセット
+ * @property activeTab - 現在アクティブなタブ
+ * @property onToggleRow - 行選択の切り替えハンドラ
+ * @property onToggleExpand - 行展開の切り替えハンドラ
+ * @property onTabChange - タブ変更ハンドラ
+ * @property onCreateListId - リストID作成ハンドラ
+ * @property showSearch - 検索欄の表示/非表示
+ * @property showPagination - ページネーションの表示/非表示
+ * @property showSorting - ソート機能の表示/非表示
+ * @property showTabs - タブの表示/非表示
+ * @property rowHeight - 行の高さ設定
+ * @property tableSize - テーブルのサイズ設定
+ * @property fontSize - フォントサイズ設定
+ * @property pageTitle - ページタイトル（ヘッダー連携用）
+ * @property defaultPageTitle - デフォルトページタイトル
+ * @property customFilters - カスタムフィルタ
+ * @property customActions - カスタムアクション
+ * @property detailRenderer - 展開行の詳細レンダラー
+ */
+interface TableSettingsProps<T> {
+  // データ関連
+  data: T[];
+  columns: ColumnDef<T>[];
+  isLoading?: boolean;
+  error?: string | null;
+  
+  // 状態管理
+  selectedRows?: Set<string>;
+  expandedRows?: Set<string>;
+  activeTab?: string;
+  
+  // イベントハンドラ
+  onToggleRow?: (key: string) => void;
+  onToggleExpand?: (key: string) => void;
+  onTabChange?: (value: string) => void;
+  onCreateListId?: () => void;
+  
+  // 表示設定
+  showSearch?: boolean;
+  showPagination?: boolean;
+  showSorting?: boolean;
+  showTabs?: boolean;
+  
+  // スタイル設定
+  rowHeight?: 'sm' | 'md' | 'lg';
+  tableSize?: 'sm' | 'md' | 'lg';
+  fontSize?: 'xs' | 'sm' | 'base' | 'lg';
+  
+  // ヘッダー連携
+  pageTitle?: string;
+  defaultPageTitle?: string;
+  
+  // カスタマイズ
+  customFilters?: React.ReactNode;
+  customActions?: React.ReactNode;
+  detailRenderer?: (data: T) => React.ReactNode;
+}
+```
+
+### 2. 内部型定義（改善版）
+```tsx
+// 内部状態管理型
+interface TableState<T> {
+  sorting: SortingState;
+  pagination: PaginationState;
+  globalFilter: string;
+  columnFilters: ColumnFiltersState;
+  selectedRows: Set<string>;
+  expandedRows: Set<string>;
+  activeTab: string;
+}
+
+// カラム設定型（改善版）
+interface ColumnConfig {
+  id: string;
+  header: string;
+  accessorKey: string;
+  sortable?: boolean;
+  filterable?: boolean;
+  width?: number;
+  minWidth?: number;
+  maxWidth?: number;
+  cellRenderer?: (value: any, row: any) => React.ReactNode;
+}
+
+// テーブル設定型（改善版）
+interface TableConfig {
+  rowHeight: 'sm' | 'md' | 'lg';
+  tableSize: 'sm' | 'md' | 'lg';
+  fontSize: 'xs' | 'sm' | 'base' | 'lg';
+  showSearch: boolean;
+  showPagination: boolean;
+  showSorting: boolean;
+  showTabs: boolean;
+  pageTitle?: string;
+  defaultPageTitle?: string;
+}
+
+// タブ設定型（新規追加）
+interface TabConfig {
+  value: string;
+  label: string;
+  count?: number;
+  icon?: React.ReactNode;
+}
+
+// フィルタ設定型（新規追加）
+interface FilterConfig {
+  id: string;
+  label: string;
+  type: 'select' | 'input' | 'date' | 'range';
+  options?: Array<{ value: string; label: string }>;
+  placeholder?: string;
+}
+```
+
+### 3. API型定義（改善版）
+```tsx
+// APIレスポンス型
+interface ApiTableResponse<T> {
+  data: T[];
+  totalCount: number;
+  pageCount: number;
+  currentPage: number;
+  pageSize: number;
+  filters?: Record<string, any>;
+  sorting?: Array<{ field: string; direction: 'asc' | 'desc' }>;
+}
+
+// フィルタ型（改善版）
+interface TableFilter {
+  field: string;
+  operator: 'equals' | 'contains' | 'startsWith' | 'endsWith' | 'greaterThan' | 'lessThan' | 'between' | 'in';
+  value: string | number | boolean | Array<string | number>;
+}
+
+// ソート型（改善版）
+interface TableSort {
+  field: string;
+  direction: 'asc' | 'desc';
+}
+
+// ページネーション型（新規追加）
+interface TablePagination {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  pageCount: number;
+}
+
+// テーブル設定保存型（新規追加）
+interface TableSettingsSave {
+  id: string;
+  name: string;
+  config: TableConfig;
+  columns: ColumnConfig[];
+  filters: FilterConfig[];
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+## メインコンポーネント層（改善版）
+
+### 1. 検索欄の非表示設定（改善版）
+```tsx
+// 検索欄の表示/非表示を制御（改善版）
+const TableComponent: React.FC<TableSettingsProps<T>> = ({ 
+  showSearch = true,
+  customFilters,
+  // ... その他のprops
+}) => {
+  return (
+    <div className="w-full">
+      {/* 検索・フィルタエリア */}
+      {(showSearch || customFilters) && (
+        <div className="mb-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-between gap-4">
+            {/* 検索欄 */}
+            {showSearch && (
+              <div className="flex items-center gap-4">
+                <SearchBar 
+                  value={globalFilter}
+                  onChange={setGlobalFilter}
+                  placeholder="検索..."
+                />
+                {globalFilter && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setGlobalFilter('')}
+                    className="h-8 w-8 p-0"
+                    aria-label="検索をクリア"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            )}
+            
+            {/* カスタムフィルタ */}
+            {customFilters && (
+              <div className="flex items-center gap-4">
+                {customFilters}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* テーブル本体 */}
+      <DataTable {...tableProps} />
+    </div>
+  );
+};
+```
+
+### 2. 行高さの設定（改善版）
+```tsx
+// 行高さの動的設定（改善版）
+const getRowHeightClass = (rowHeight: 'sm' | 'md' | 'lg') => {
+  switch (rowHeight) {
+    case 'sm':
+      return 'h-8';
+    case 'md':
+      return 'h-12';
+    case 'lg':
+      return 'h-16';
+    default:
+      return 'h-12';
+  }
+};
+
+// 行高さのピクセル値を取得（改善版）
+const getRowHeightPixels = (rowHeight: 'sm' | 'md' | 'lg') => {
+  switch (rowHeight) {
+    case 'sm':
+      return 32; // 8 * 4
+    case 'md':
+      return 48; // 12 * 4
+    case 'lg':
+      return 64; // 16 * 4
+    default:
+      return 48;
+  }
+};
+
+// テーブル行に適用（改善版）
+<TableRow 
+  key={row.id}
+  className={`${getRowHeightClass(rowHeight)} hover:bg-muted/50 transition-colors duration-150`}
+  style={{ height: `${getRowHeightPixels(rowHeight)}px` }}
+>
+  {/* セル内容 */}
+</TableRow>
+```
+
+### 3. テーブルコンポーネント全体の大きさ設定（改善版）
+```tsx
+// テーブルサイズの動的設定（改善版）
+const getTableSizeClass = (tableSize: 'sm' | 'md' | 'lg') => {
+  switch (tableSize) {
+    case 'sm':
+      return 'text-xs';
+    case 'md':
+      return 'text-sm';
+    case 'lg':
+      return 'text-base';
+    default:
+      return 'text-sm';
+  }
+};
+
+// テーブル全体に適用（改善版）
+<div className={`w-full ${getTableSizeClass(tableSize)}`}>
+  <Table>
+    {/* テーブル内容 */}
+  </Table>
+</div>
+```
+
+### 4. 文字の大きさ、余白設定の外だし（改善版）
+```tsx
+// スタイル設定の外部化（改善版）
+const tableStyles = {
+  fontSize: {
+    xs: 'text-xs',
+    sm: 'text-sm',
+    base: 'text-base',
+    lg: 'text-lg'
+  },
+  padding: {
+    sm: 'px-2 py-1.5',
+    md: 'px-3 py-2',
+    lg: 'px-4 py-3'
+  },
+  margin: {
+    sm: 'm-1',
+    md: 'm-2',
+    lg: 'm-3'
+  },
+  rowHeight: {
+    sm: 'h-8',
+    md: 'h-12',
+    lg: 'h-16'
+  },
+  tableSize: {
+    sm: 'text-xs',
+    md: 'text-sm',
+    lg: 'text-base'
+  },
+  colors: {
+    header: 'bg-blue-600 text-white',
+    row: {
+      default: 'bg-white hover:bg-slate-50 dark:hover:bg-slate-800/50',
+      selected: 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500',
+      expanded: 'bg-slate-25 dark:bg-slate-750'
+    },
+    border: {
+      default: 'border-slate-200 dark:border-slate-700',
+      cell: 'border-slate-100 dark:border-slate-700'
+    }
+  }
+};
+
+// 使用例（改善版）
+<TableCell className={`${tableStyles.fontSize[fontSize]} ${tableStyles.padding[tableSize]} ${tableStyles.colors.border.cell}`}>
+  {cellContent}
+</TableCell>
+```
+
+## サブコンポーネント層（改善版）
+
+### 1. 検索欄の書き方（改善版）
+```tsx
+// 検索欄コンポーネント（改善版）
+interface SearchBarProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+  onClear?: () => void;
+  disabled?: boolean;
+}
+
+export const SearchBar: React.FC<SearchBarProps> = ({
+  value,
+  onChange,
+  placeholder = "検索...",
+  className = "",
+  onClear,
+  disabled = false
+}) => {
+  return (
+    <div className={`flex items-center space-x-2 ${className}`}>
+      <div className="relative flex-1 max-w-sm">
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="pl-9 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+          disabled={disabled}
+        />
+      </div>
+      {value && onClear && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClear}
+          className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-800"
+          disabled={disabled}
+          aria-label="検索をクリア"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
+  );
+};
+```
+
+### 2. 条件分けタブの書き方（改善版）
+```tsx
+// 条件分けタブコンポーネント（改善版）
+interface FilterTabsProps {
+  tabs: TabConfig[];
+  activeTab: string;
+  onTabChange: (filter: string) => void;
+  className?: string;
+  showCounts?: boolean;
+}
+
+export const FilterTabs: React.FC<FilterTabsProps> = ({
+  tabs,
+  activeTab,
+  onTabChange,
+  className = "",
+  showCounts = true
+}) => {
+  return (
+    <div className={`flex items-center gap-1 ${className}`}>
+      {tabs.map((tab) => (
+        <button
+          key={tab.value}
+          onClick={() => onTabChange(tab.value)}
+          className={`
+            px-3 py-1 text-xs font-medium rounded-full transition-all duration-200 flex items-center gap-2
+            ${activeTab === tab.value
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+            }
+          `}
+        >
+          {tab.icon && <span>{tab.icon}</span>}
+          <span>{tab.label}</span>
+          {showCounts && tab.count !== undefined && (
+            <span className="ml-1 rounded-full bg-current/20 px-1.5 py-0.5 text-xs">
+              {tab.count}
+            </span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+};
+```
+
+### 3. その他の便利なサブコンポーネント（改善版）
+
+#### ページネーションコンポーネント（改善版）
+```tsx
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  pageSize: number;
+  onPageSizeChange: (size: number) => void;
+  totalCount: number;
+  className?: string;
+}
+
+export const TablePagination: React.FC<PaginationProps> = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  pageSize,
+  onPageSizeChange,
+  totalCount,
+  className = ""
+}) => {
+  return (
+    <div className={`flex items-center justify-between space-x-2 py-4 ${className}`}>
+      <div className="flex items-center space-x-2">
+        <p className="text-sm font-medium">表示件数</p>
+        <Select value={pageSize.toString()} onValueChange={(value) => onPageSizeChange(Number(value))}>
+          <SelectTrigger className="h-8 w-[70px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[10, 20, 30, 40, 50].map((size) => (
+              <SelectItem key={size} value={size.toString()}>
+                {size}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span className="text-sm text-muted-foreground">
+          全 {totalCount} 件中 {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, totalCount)} 件
+        </span>
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage <= 1}
+          aria-label="前のページへ"
+        >
+          前へ
+        </Button>
+        <div className="text-sm bg-white dark:bg-slate-700 px-3 py-1 rounded-md border border-slate-200 dark:border-slate-600">
+          ページ {currentPage} / {totalPages}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage >= totalPages}
+          aria-label="次のページへ"
+        >
+          次へ
+        </Button>
+      </div>
+    </div>
+  );
+};
+```
+
+#### カラム設定コンポーネント（改善版）
+```tsx
+interface ColumnSettingsProps {
+  columns: ColumnConfig[];
+  visibleColumns: string[];
+  onColumnToggle: (columnId: string) => void;
+  onColumnReorder?: (columns: string[]) => void;
+  className?: string;
+}
+
+export const ColumnSettings: React.FC<ColumnSettingsProps> = ({
+  columns,
+  visibleColumns,
+  onColumnToggle,
+  onColumnReorder,
+  className = ""
+}) => {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className={className}>
+          <Settings className="h-4 w-4" />
+          カラム設定
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>表示カラム</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {columns.map((column) => (
+          <DropdownMenuCheckboxItem
+            key={column.id}
+            checked={visibleColumns.includes(column.id)}
+            onCheckedChange={() => onColumnToggle(column.id)}
+          >
+            {column.header}
+          </DropdownMenuCheckboxItem>
+        ))}
+        {onColumnReorder && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>カラム順序</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <div className="p-2">
+              <p className="text-xs text-muted-foreground">
+                ドラッグ&ドロップで順序を変更できます
+              </p>
+            </div>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+```
+
+#### テーブル設定保存コンポーネント（新規追加）
+```tsx
+interface TableSettingsSaveProps {
+  currentSettings: TableConfig;
+  onSave: (name: string, settings: TableConfig) => void;
+  onLoad: (settings: TableSettingsSave) => void;
+  savedSettings: TableSettingsSave[];
+  className?: string;
+}
+
+export const TableSettingsSave: React.FC<TableSettingsSaveProps> = ({
+  currentSettings,
+  onSave,
+  onLoad,
+  savedSettings,
+  className = ""
+}) => {
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [settingsName, setSettingsName] = useState('');
+
+  const handleSave = () => {
+    if (settingsName.trim()) {
+      onSave(settingsName.trim(), currentSettings);
+      setSettingsName('');
+      setShowSaveDialog(false);
+    }
+  };
+
+  return (
+    <div className={className}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Settings className="h-4 w-4" />
+            設定
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-64">
+          <DropdownMenuLabel>テーブル設定</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          
+          <DropdownMenuItem onClick={() => setShowSaveDialog(true)}>
+            <Save className="h-4 w-4 mr-2" />
+            現在の設定を保存
+          </DropdownMenuItem>
+          
+          {savedSettings.length > 0 && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>保存済み設定</DropdownMenuLabel>
+              {savedSettings.map((setting) => (
+                <DropdownMenuItem
+                  key={setting.id}
+                  onClick={() => onLoad(setting)}
+                >
+                  <span className="truncate">{setting.name}</span>
+                  <span className="text-xs text-muted-foreground ml-2">
+                    {new Date(setting.updatedAt).toLocaleDateString()}
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* 保存ダイアログ */}
+      {showSaveDialog && (
+        <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>設定を保存</DialogTitle>
+              <DialogDescription>
+                現在のテーブル設定に名前を付けて保存します
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Label htmlFor="settings-name">設定名</Label>
+              <Input
+                id="settings-name"
+                value={settingsName}
+                onChange={(e) => setSettingsName(e.target.value)}
+                placeholder="設定名を入力"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowSaveDialog(false)}>
+                キャンセル
+              </Button>
+              <Button onClick={handleSave} disabled={!settingsName.trim()}>
+                保存
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+};
+```
+
+#### 展開可能な行の詳細表示コンポーネント（新規追加）
+```tsx
+interface ExpandedRowProps<T> {
+  row: Row<T>;
+  detailRenderer: (data: T) => React.ReactNode;
+  className?: string;
+}
+
+export const ExpandedRow: React.FC<ExpandedRowProps<any>> = ({
+  row,
+  detailRenderer,
+  className = ""
+}) => {
+  return (
+    <TableRow className={`bg-slate-50 dark:bg-slate-800/50 border-l-4 border-blue-500 ${className}`}>
+      <TableCell colSpan={row.getVisibleCells().length} className="p-4">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              詳細情報
+            </h4>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => row.toggleExpanded()}
+              className="h-6 w-6 p-0"
+              aria-label="詳細を閉じる"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="bg-white dark:bg-slate-700 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
+            {detailRenderer(row.original)}
+          </div>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+};
+```
+
+## 実装チェックリスト（改善版）
+
+- [ ] Props、内部型、API型が適切に定義されているか
+- [ ] 検索欄の表示/非表示が制御されているか
+- [ ] 行高さが動的に設定されているか
+- [ ] テーブルサイズが適切に設定されているか
+- [ ] 文字サイズと余白が外部化されているか
+- [ ] サブコンポーネントが適切に分離されているか
+- [ ] ヘッダー連携（ページタイトル管理）が実装されているか
+- [ ] 型安全性が確保されているか
+- [ ] アクセシビリティが考慮されているか
+- [ ] パフォーマンスが最適化されているか
+- [ ] 既存のプロジェクト構造に合わせているか
+- [ ] 標準的なデザインパターンに従っているか
+- [ ] 展開可能な行の詳細表示が実装されているか
+- [ ] カスタムフィルタ機能が実装されているか
+- [ ] テーブル設定の保存・読み込み機能が実装されているか
+- [ ] カラム設定機能が実装されているか
+
+## 避けるべきパターン（改善版）
+
+- ❌ **設定をハードコードする**
+- ❌ **サブコンポーネントをメインコンポーネントに混在させる**
+- ❌ **型定義を省略する**
+- ❌ **スタイルをインラインで書く**
+- ❌ **アクセシビリティを無視する**
+- ❌ **パフォーマンスを考慮しない**
+- ❌ **既存のプロジェクト構造を無視する**
+- ❌ **ヘッダー連携を無視した実装**
+- ❌ **標準的なデザインパターンを無視**
+- ❌ **展開可能な行の詳細表示を実装しない**
+- ❌ **カスタムフィルタ機能を実装しない**
+- ❌ **テーブル設定の保存・読み込み機能を実装しない**
+
+## 関連ルールファイル
+
+- **親ルール**: TanStack Table基本実装は `.cursor\rules\table.mdc` を参照してください。
+  @file table.mdc
+
+- 新規機能には常に `.cursor\rules\page-patterns.mdc` のルールを活用してください。
+  @file page-patterns.mdc
+
+- API 呼び出しは `.cursor\rules\api-patterns.mdc` を参照して実装してください。
+  @file api-patterns.mdc
+
+- TypeScript実装は `.cursor\rules\1.0.tsx.mdc` を参照してください。
+
+
+
+

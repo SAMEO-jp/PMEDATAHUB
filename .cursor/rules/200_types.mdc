@@ -1,0 +1,395 @@
+---
+ruleType: Agent Requested
+description: "プロジェクトにおける型定義の分類、配置、ベストプラクティスを定義する"
+globs:
+  - "src/**/*.ts"
+  - "src/**/*.tsx"
+  - "src/types/**/*.ts"
+tags:
+  - 型
+  - types
+  - type-definition
+alwaysApply: false
+priority: 2
+version: "1.0.0"
+---
+# デバッグヘッダー層（旧: 叫ぶ層）
+# !! DEBUG: このルールが読み込まれました
+- Rule File: `types.mdc`
+- Description: Next.js + TypeScript プロジェクトにおける型定義の分類、配置、ベストプラクティスを定義する
+
+# 型定義ルール
+## 1. 目的と背景
+TypeScriptプロジェクトにおいて、型定義の適切な分類と配置は、コードの保守性、再利用性、型安全性を向上させる重要な要素です。このルールでは、型定義を適切に分類し、最適な配置場所を決定するためのガイドラインを提供します。
+
+## 2. 適用範囲
+
+- TypeScriptファイル（.ts, .tsx）
+- 型定義ファイル（types/）
+- コンポーネントファイル
+- ユーティリティファイル
+- API関連ファイル
+
+## 3. 型定義の分類と配置
+
+### 3.1. プロジェクト全体の型（@src/types/）
+
+**配置場所：** `src/types/` ディレクトリ
+
+**対象：**
+- 複数のページ/コンポーネントで共有される型
+- ビジネスロジックの核心部分
+- データベースのエンティティ
+- APIのレスポンス型
+- アプリケーション全体の設定型
+
+**実装例：**
+```typescript
+// @src/types/index.ts
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'user' | 'guest';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  status: 'active' | 'inactive' | 'archived';
+  ownerId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ApiResponse<T> {
+  data: T;
+  status: number;
+  message: string;
+  timestamp: Date;
+}
+
+// @src/types/config.ts
+export interface DatabaseConfig {
+  host: string;
+  port: number;
+  database: string;
+  username: string;
+  password: string;
+}
+
+export interface AppConfig {
+  apiUrl: string;
+  environment: 'development' | 'staging' | 'production';
+  version: string;
+}
+```
+
+### 3.2. ページ固有の型（./types/）
+
+**配置場所：** 各ページディレクトリ内の `types/` フォルダ
+
+**対象：**
+- そのページ専用の複雑な状態管理型
+- フォームの型定義
+- ページ固有のビジネスロジック型
+- 複数のコンポーネントで共有されるが、そのページ内のみ
+
+**実装例：**
+```typescript
+// ./types/forms.ts
+export interface ProjectFormData {
+  name: string;
+  description: string;
+  category: 'web' | 'mobile' | 'desktop';
+  priority: 'low' | 'medium' | 'high';
+  deadline: Date;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: Record<string, string[]>;
+  warnings: Record<string, string[]>;
+}
+
+// ./types/page.ts
+export interface PageState {
+  isLoading: boolean;
+  data: Project[];
+  filters: FilterOptions;
+  pagination: PaginationState;
+  sortConfig: SortConfig;
+}
+
+export interface FilterOptions {
+  status: string[];
+  category: string[];
+  dateRange: DateRange;
+  searchQuery: string;
+}
+
+export interface PaginationState {
+  currentPage: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}
+```
+
+### 3.3. コンポーネント内の型
+
+**配置場所：** コンポーネントファイル内に直接記述
+
+**対象：**
+- そのコンポーネント内でのみ使用される型
+- シンプルな構造
+- 再利用されない型
+- UIの設定値
+
+**実装例：**
+```typescript
+// page.tsx 内に直接書く
+interface LocalState {
+  isModalOpen: boolean;
+  selectedItem: string | null;
+  isEditing: boolean;
+}
+
+interface TableColumn {
+  key: string;
+  label: string;
+  width: number;
+  sortable: boolean;
+}
+
+const columns: TableColumn[] = [
+  { key: 'name', label: '名前', width: 200, sortable: true },
+  { key: 'status', label: 'ステータス', width: 150, sortable: true },
+  { key: 'actions', label: '操作', width: 100, sortable: false },
+];
+```
+
+## 4. 型定義のベストプラクティス
+
+### 4.1. 命名規則
+
+**インターフェース：**
+```typescript
+// 良い例
+interface UserProfile { }
+interface ProjectListProps { }
+interface ApiResponse<T> { }
+
+// 悪い例
+interface user { }
+interface project_list { }
+interface api_response { }
+```
+
+**型エイリアス：**
+```typescript
+// 良い例
+type UserRole = 'admin' | 'user' | 'guest';
+type SortDirection = 'asc' | 'desc';
+type ApiStatus = 'loading' | 'success' | 'error';
+
+// 悪い例
+type user_role = 'admin' | 'user' | 'guest';
+type sort_direction = 'asc' | 'desc';
+```
+
+### 4.2. 型の構造化
+
+**基本原則：**
+```typescript
+// 良い例 - 明確で再利用可能
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  profile: UserProfile;
+  settings: UserSettings;
+}
+
+interface UserProfile {
+  avatar: string;
+  bio: string;
+  location: string;
+}
+
+interface UserSettings {
+  theme: 'light' | 'dark';
+  notifications: boolean;
+  language: string;
+}
+
+// 悪い例 - フラットすぎる
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  bio: string;
+  location: string;
+  theme: 'light' | 'dark';
+  notifications: boolean;
+  language: string;
+}
+```
+
+### 4.3. ジェネリクスの活用
+
+```typescript
+// 良い例 - 再利用可能
+interface ApiResponse<T> {
+  data: T;
+  status: number;
+  message: string;
+  timestamp: Date;
+}
+
+interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+  };
+}
+
+// 使用例
+type UserResponse = ApiResponse<User>;
+type ProjectListResponse = PaginatedResponse<Project>;
+```
+
+### 4.4. ユニオン型の活用
+
+```typescript
+// 良い例 - 型安全性
+type ProjectStatus = 'draft' | 'in_progress' | 'review' | 'completed' | 'archived';
+
+type SortField = 'name' | 'createdAt' | 'status' | 'priority';
+type SortDirection = 'asc' | 'desc';
+
+interface SortConfig {
+  field: SortField;
+  direction: SortDirection;
+}
+
+// 悪い例 - 文字列リテラル
+const status = 'in_progress'; // 型安全性なし
+const sortField = 'name'; // 型安全性なし
+```
+
+### 4.5. オプショナルプロパティの適切な使用
+
+```typescript
+// 良い例 - 明確な意図
+interface UserForm {
+  name: string;           // 必須
+  email: string;          // 必須
+  avatar?: string;        // オプショナル
+  bio?: string;           // オプショナル
+}
+
+// 悪い例 - 曖昧
+interface UserForm {
+  name?: string;          // 本当にオプショナル？
+  email?: string;         // 本当にオプショナル？
+  avatar?: string;
+  bio?: string;
+}
+```
+
+## 5. 型定義のチェックリスト
+
+### 5.1. プロジェクト全体の型
+- [ ] 複数のファイルで使用されるか
+- [ ] ビジネスロジックの核心部分か
+- [ ] データベースのエンティティか
+- [ ] APIの型定義か
+- [ ] 適切な命名規則に従っているか
+- [ ] ドキュメント化されているか
+
+### 5.2. ページ固有の型
+- [ ] そのページ専用の複雑な状態管理か
+- [ ] フォームの型定義か
+- [ ] ページ固有のビジネスロジックか
+- [ ] 複数のコンポーネントで共有されるか（そのページ内のみ）
+- [ ] 適切に構造化されているか
+
+### 5.3. コンポーネント内の型
+- [ ] そのコンポーネント内でのみ使用されるか
+- [ ] シンプルな構造か
+- [ ] 再利用されないか
+- [ ] UIの設定値か
+
+## 6. 避けるべきパターン
+
+### 6.1. any型の使用
+```typescript
+// 悪い例
+const data: any = response.data;
+const user: any = await fetchUser();
+
+// 良い例
+const data: ApiResponse<User> = reser```乱用
+```typescript
+// 悪い例
+const element = document.getElementById('app') as HTMLElement;
+
+// 良い例
+const element = document.getElementById('app');
+if (element) {
+  // elementはHTMLElementとして安全に使用可能
+}
+```
+
+### 6.3. 過度に複雑な型
+```typescript
+// 悪い例 - 理解困難
+type ComplexType = {
+  [K in keyof T]: T[K] extends infer U ? U extends string ? U : never : never;
+} & {
+  [K in keyof T as T[K] extends string ? K : never]: string;
+};
+
+// 良い例 - 理解しやすい
+interface UserPermissions {
+  canRead: boolean;
+  canWrite: boolean;
+  canDelete: boolean;
+}
+```
+
+## 7. 関連ルール
+
+- インポート順序については `.cursor\rules\02_page.tsx_\1.2.tsx codeselection.mdc` のルールを参照してください。
+  @file 02_page.tsx_/1.2.tsx codeselection.mdc
+
+- ESLint設定については `.cursor\rules\eslint-config.mdc` のルールを参照してください。
+  @file eslint-config.mdc
+
+## 8. トラブルシューティング
+
+### 8.1. よくある問題
+- 型定義の配置場所が曖昧
+- 命名規則が統一されていない
+- 過度に複雑な型定義
+- any型の使用
+
+### 8.2. 解決方法
+- このルールの分類基準に従って配置を決定
+- 命名規則を統一
+- 型定義を適切に分割
+- 具体的な型定義を使用
+
+## 9. 参考資料
+
+- [TypeScript Handbook](mdc:https:/www.typescriptlang.org/docs)
+- [React TypeScript Cheatsheet](mdc:https:/react-typescript-cheatsheet.netlify.app)
+- [Next.js TypeScript](https://nextjs.org/docs/basic-fea
