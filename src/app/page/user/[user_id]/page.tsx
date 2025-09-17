@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from '@src/lib/trpc/client';
-import { useUserDetail, useUserTimeline } from '@src/hooks/useProjectData';
+import { useUserDetail, useUserTimeline } from '@src/hooks/useUserData';
 import {
   ArrowLeft,
   User,

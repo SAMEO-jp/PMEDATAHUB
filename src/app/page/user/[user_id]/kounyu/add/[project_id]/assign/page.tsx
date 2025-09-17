@@ -42,13 +42,10 @@ export default function UserKounyuAssignPage({ params }: UserKounyuAssignPagePro
     user_id: params.user_id
   });
 
-  // TODO: プロジェクト情報取得の実装が必要
-  // const { data: projectDetail, isLoading: projectLoading } = trpc.sql.executeQuery.useQuery({
-  //   query: 'SELECT * FROM projects WHERE project_id = ?',
-  //   params: [params.project_id]
-  // });
-  const projectDetail = null;
-  const projectLoading = false;
+  // プロジェクト詳細取得
+  const { data: projectDetail, isLoading: projectLoading } = trpc.project.getById.useQuery({
+    project_id: params.project_id
+  });
 
   const { data: kounyuDetail, isLoading: kounyuLoading } = trpc.kounyu.getDetail.useQuery(
     { kounyu_id: parseInt(kounyuId || '0') },

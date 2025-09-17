@@ -1,31 +1,34 @@
 import { OnLocalChange, OnCommit } from '../ui/types';
 
-interface SetsubiOption {
-  id: number;
-  code: string;
-  name: string;
+interface ProjectSetsubiOption {
+  projectId: string;
+  projectName: string;
+  setsubiId: number;
+  setsubiCode: string;
+  setsubiName: string;
   assignmentId: number;
+  displayText: string;
 }
 
-interface SetsubiSelectProps {
+interface ProjectSetsubiSelectProps {
   value: string;
   onLocalChange: OnLocalChange;
   onCommit?: OnCommit;
-  setsubiList: SetsubiOption[];
+  combinations: ProjectSetsubiOption[];
   label?: string;
   placeholder?: string;
   disabled?: boolean;
 }
 
-export const SetsubiSelect = ({
+export const ProjectSetsubiSelect = ({
   value,
   onLocalChange,
   onCommit,
-  setsubiList = [],
-  label = "担当装置",
-  placeholder = "装置を選択してください",
+  combinations = [],
+  label = "プロジェクト-担当装置",
+  placeholder = "プロジェクト-担当装置を選択してください",
   disabled = false
-}: SetsubiSelectProps) => {
+}: ProjectSetsubiSelectProps) => {
   return (
     <div className="flex-1">
       {label && (
@@ -41,9 +44,9 @@ export const SetsubiSelect = ({
         className="w-full p-1.5 border border-gray-300 rounded text-xs disabled:bg-gray-100 disabled:cursor-not-allowed"
       >
         <option value="">{placeholder}</option>
-        {setsubiList.map((setsubi) => (
-          <option key={setsubi.id} value={setsubi.code}>
-            {setsubi.name} (製番: {setsubi.code})
+        {combinations.map((combination) => (
+          <option key={`${combination.projectId}-${combination.setsubiId}`} value={`${combination.projectId}|${combination.setsubiCode}`}>
+            {combination.displayText}
           </option>
         ))}
       </select>

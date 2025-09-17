@@ -55,12 +55,10 @@ export default function UserKounyuSelectPage({ params }: UserKounyuSelectPagePro
     user_id: params.user_id
   });
 
-  // TODO: プロジェクト情報取得の実装が必要
-  // const { data: projectDetail, isLoading: projectLoading } = trpc.project.getDetail.useQuery({
-  //   project_id: params.project_id
-  // });
-  const projectDetail = null;
-  const projectLoading = false;
+  // プロジェクト詳細取得
+  const { data: projectDetail, isLoading: projectLoading } = trpc.project.getById.useQuery({
+    project_id: params.project_id
+  });
 
   const { data: kounyuList, isLoading: kounyuLoading } = trpc.kounyu.getAllByProject.useQuery(
     { project_id: params.project_id },

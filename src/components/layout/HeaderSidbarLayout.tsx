@@ -11,11 +11,11 @@ interface HeaderSidbarLayoutProps {
 
 export const HeaderSidbarLayout: React.FC<HeaderSidbarLayoutProps> = ({ children }) => {
   return (
-    <div className="app-container">
+    <div className="app-container h-screen flex flex-col">
       <SidebarContent />
       <HeaderContent />
-      <div className="main-content-wrapper">
-        <main className="main-content">
+      <div className="main-content-wrapper flex-1 overflow-hidden">
+        <main className="main-content h-full overflow-y-auto">
           {children}
         </main>
       </div>

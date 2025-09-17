@@ -71,7 +71,7 @@ export const ProjectSelect = ({
         value={value}
         onChange={(e) => onLocalChange(e.target.value)}
         onBlur={(e) => onCommit?.(e.target.value)}
-        className="w-full p-2 border rounded text-sm"
+        className="w-full p-1.5 border border-gray-300 rounded text-xs"
       >
         <option value="">{placeholder}</option>
         {normalizedProjects.map((project, index) => (

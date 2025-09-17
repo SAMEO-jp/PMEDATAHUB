@@ -30,6 +30,10 @@ const SetsubiFormSchema = z.object({
   location_code: z.string().optional(),
 });
 
+const SetsubiCreateWithProjectSchema = SetsubiFormSchema.extend({
+  project_id: z.string().min(1, 'プロジェクトIDは必須です'),
+});
+
 const SetsubiUpdateSchema = SetsubiFormSchema.partial();
 
 const SetsubiAssignmentSchema = z.object({
@@ -235,6 +239,57 @@ export const setsubiRouter = createTRPCRouter({
         return { success: true, data: result.data };
       } catch (error) {
         console.error('tRPC setsubi.createMaster error:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '製番の作成に失敗しました',
+        });
+      }
+    }),
+
+  /**
+   * 製番マスター作成（プロジェクト登録込み）
+   */
+  createMasterWithProject: publicProcedure
+    .input(SetsubiCreateWithProjectSchema)
+    .mutation(async ({ input }) => {
+      try {
+        // テーブルが存在するか確認
+        const tableCheck = await checkSetsubiTablesExist();
+        if (!tableCheck.success || !tableCheck.data) {
+          // テーブルが存在しない場合は作成
+          console.log('設備テーブルが存在しないため、作成します');
+          const createResult = await createSetsubiTables();
+          if (!createResult.success) {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: '設備テーブルの作成に失敗しました',
+            });
+          }
+        }
+
+        // 設備マスター作成
+        const { project_id, ...setsubiData } = input;
+        const result = await createSetsubiMaster(setsubiData);
+
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: result.error || '製番の作成に失敗しました',
+          });
+        }
+
+        // プロジェクトに登録
+        const registerResult = await registerSetsubiToProject(project_id, setsubiData.seiban);
+        if (!registerResult.success) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: registerResult.error || '製番のプロジェクト登録に失敗しました',
+          });
+        }
+
+        return { success: true, data: result.data };
+      } catch (error) {
+        console.error('tRPC setsubi.createMasterWithProject error:', error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: '製番の作成に失敗しました',

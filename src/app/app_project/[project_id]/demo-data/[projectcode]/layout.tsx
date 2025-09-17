@@ -64,6 +64,7 @@ export default function ProjectDetailLayout({
     }
   }, [userData]);
 
+  useEffect(() => {
     const fetchEmployees = async () => {
       try {
         const response = await fetch("/api/employees")

@@ -27,16 +27,18 @@ export const KounyuSelect = ({
   disabled = false
 }: KounyuSelectProps) => {
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label>
+    <div className="flex-1">
+      {label && (
+        <label className="block text-xs font-medium text-gray-700 mb-1">
+          {label}
+        </label>
+      )}
       <select
         value={value}
         onChange={(e) => onLocalChange(e.target.value)}
         onBlur={(e) => onCommit?.(e.target.value)}
         disabled={disabled}
-        className="w-full p-2 border rounded text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className="w-full p-1.5 border border-gray-300 rounded text-xs disabled:bg-gray-100 disabled:cursor-not-allowed"
       >
         <option value="">{placeholder}</option>
         {kounyuList.map((kounyu) => (
@@ -45,11 +47,6 @@ export const KounyuSelect = ({
           </option>
         ))}
       </select>
-      {kounyuList.length === 0 && !disabled && (
-        <p className="text-xs text-gray-500 mt-1">
-          このプロジェクトには担当購入品がありません
-        </p>
-      )}
     </div>
   );
 };

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from '@src/lib/trpc/client';
 import {
   ArrowLeft,
@@ -15,7 +16,8 @@ import {
   Loader2,
   User,
   ChevronRight,
-  Calendar
+  Calendar,
+  FolderPlus
 } from 'lucide-react';
 
 interface UserProjectAddPageProps {
@@ -27,12 +29,24 @@ interface UserProjectAddPageProps {
 export default function UserProjectAddPage({ params }: UserProjectAddPageProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // フォームデータ
   const [formData, setFormData] = useState({
     project_id: '',
     role: '閲覧者',
     joined_at: new Date().toISOString().split('T')[0] // 今日の日付をデフォルト
+  });
+
+  // 新規プロジェクト作成フォーム
+  const [newProjectData, setNewProjectData] = useState({
+    PROJECT_ID: '',
+    PROJECT_NAME: '',
+    PROJECT_STATUS: 'active' as 'active' | 'completed' | 'archived',
+    PROJECT_CLIENT_NAME: '',
+    PROJECT_START_DATE: '',
+    PROJECT_START_ENDDATE: '',
+    PROJECT_DESCRIPTION: ''
   });
 
   // バリデーションエラー
@@ -43,10 +57,8 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
     user_id: params.user_id
   });
 
-  // TODO: プロジェクトリスト取得の実装が必要
-  // const { data: projectList, isLoading: projectLoading } = trpc.project.getAll.useQuery();
-  const projectList = { data: [] };
-  const projectLoading = false;
+  // プロジェクト一覧取得
+  const { data: projectList, isLoading: projectLoading } = trpc.project.getAll.useQuery();
 
   const { mutate: addProjectMember } = trpc.projectMember.add.useMutation({
     onSuccess: () => {
@@ -56,6 +68,34 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
       console.error('プロジェクトメンバー追加エラー:', error);
       setErrors({ general: 'プロジェクトメンバーの追加に失敗しました' });
       setIsSubmitting(false);
+    }
+  });
+
+  const utils = trpc.useUtils();
+
+  const { mutate: createProject } = trpc.project.create.useMutation({
+    onSuccess: (data) => {
+      // 新規作成したプロジェクトを自動選択
+      setFormData(prev => ({ ...prev, project_id: data.data?.PROJECT_ID || '' }));
+      setIsDialogOpen(false);
+      // プロジェクトリストを再取得
+      void utils.project.getAll.invalidate();
+      // フォームをリセット
+      setNewProjectData({
+        PROJECT_ID: '',
+        PROJECT_NAME: '',
+        PROJECT_STATUS: 'active',
+        PROJECT_CLIENT_NAME: '',
+        PROJECT_START_DATE: '',
+        PROJECT_START_ENDDATE: '',
+        PROJECT_DESCRIPTION: ''
+      });
+      // エラーをクリア
+      setErrors({});
+    },
+    onError: (error) => {
+      console.error('プロジェクト作成エラー:', error);
+      setErrors({ general: 'プロジェクトの作成に失敗しました' });
     }
   });
 
@@ -70,6 +110,43 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
+  };
+
+  const handleNewProjectInputChange = (field: keyof typeof newProjectData, value: string) => {
+    setNewProjectData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const validateNewProjectForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!newProjectData.PROJECT_ID.trim()) {
+      newErrors.PROJECT_ID = 'プロジェクトIDは必須です';
+    }
+    if (!newProjectData.PROJECT_NAME.trim()) {
+      newErrors.PROJECT_NAME = 'プロジェクト名は必須です';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleCreateProject = () => {
+    if (!validateNewProjectForm()) {
+      return;
+    }
+
+    createProject({
+      PROJECT_ID: newProjectData.PROJECT_ID,
+      PROJECT_NAME: newProjectData.PROJECT_NAME,
+      PROJECT_STATUS: newProjectData.PROJECT_STATUS,
+      PROJECT_CLIENT_NAME: newProjectData.PROJECT_CLIENT_NAME || undefined,
+      PROJECT_START_DATE: newProjectData.PROJECT_START_DATE || undefined,
+      PROJECT_START_ENDDATE: newProjectData.PROJECT_START_ENDDATE || undefined,
+      PROJECT_DESCRIPTION: newProjectData.PROJECT_DESCRIPTION || undefined
+    });
   };
 
   const validateForm = () => {
@@ -203,9 +280,124 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
       <form onSubmit={handleSubmit}>
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Users className="mr-2 h-5 w-5" />
-              プロジェクト参加情報
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Users className="mr-2 h-5 w-5" />
+                プロジェクト参加情報
+              </div>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <FolderPlus className="mr-2 h-4 w-4" />
+                    新規プロジェクト作成
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>新規プロジェクト作成</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="PROJECT_ID">プロジェクトID <span className="text-red-500">*</span></Label>
+                      <Input
+                        id="PROJECT_ID"
+                        value={newProjectData.PROJECT_ID}
+                        onChange={(e) => handleNewProjectInputChange('PROJECT_ID', e.target.value)}
+                        className={errors.PROJECT_ID ? 'border-red-500' : ''}
+                        placeholder="プロジェクトIDを入力してください"
+                      />
+                      {errors.PROJECT_ID && (
+                        <p className="text-sm text-red-500">{errors.PROJECT_ID}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="PROJECT_NAME">プロジェクト名 <span className="text-red-500">*</span></Label>
+                      <Input
+                        id="PROJECT_NAME"
+                        value={newProjectData.PROJECT_NAME}
+                        onChange={(e) => handleNewProjectInputChange('PROJECT_NAME', e.target.value)}
+                        className={errors.PROJECT_NAME ? 'border-red-500' : ''}
+                        placeholder="プロジェクト名を入力してください"
+                      />
+                      {errors.PROJECT_NAME && (
+                        <p className="text-sm text-red-500">{errors.PROJECT_NAME}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="PROJECT_STATUS">ステータス</Label>
+                      <Select
+                        value={newProjectData.PROJECT_STATUS}
+                        onValueChange={(value) => handleNewProjectInputChange('PROJECT_STATUS', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="ステータスを選択してください" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">進行中</SelectItem>
+                          <SelectItem value="completed">完了</SelectItem>
+                          <SelectItem value="archived">アーカイブ</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="PROJECT_CLIENT_NAME">クライアント名</Label>
+                      <Input
+                        id="PROJECT_CLIENT_NAME"
+                        value={newProjectData.PROJECT_CLIENT_NAME}
+                        onChange={(e) => handleNewProjectInputChange('PROJECT_CLIENT_NAME', e.target.value)}
+                        placeholder="クライアント名を入力してください"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="PROJECT_START_DATE">開始日</Label>
+                      <Input
+                        id="PROJECT_START_DATE"
+                        type="date"
+                        value={newProjectData.PROJECT_START_DATE}
+                        onChange={(e) => handleNewProjectInputChange('PROJECT_START_DATE', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="PROJECT_START_ENDDATE">終了日</Label>
+                      <Input
+                        id="PROJECT_START_ENDDATE"
+                        type="date"
+                        value={newProjectData.PROJECT_START_ENDDATE}
+                        onChange={(e) => handleNewProjectInputChange('PROJECT_START_ENDDATE', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="PROJECT_DESCRIPTION">説明</Label>
+                      <Input
+                        id="PROJECT_DESCRIPTION"
+                        value={newProjectData.PROJECT_DESCRIPTION}
+                        onChange={(e) => handleNewProjectInputChange('PROJECT_DESCRIPTION', e.target.value)}
+                        placeholder="プロジェクトの説明を入力してください"
+                      />
+                    </div>
+                    {errors.general && (
+                      <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+                        <p className="text-sm text-red-600">{errors.general}</p>
+                      </div>
+                    )}
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsDialogOpen(false)}
+                      >
+                        キャンセル
+                      </Button>
+                      <Button
+                        onClick={handleCreateProject}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <FolderPlus className="mr-2 h-4 w-4" />
+                        作成
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -234,7 +426,7 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
                 <p className="text-sm text-red-500">{errors.project_id}</p>
               )}
               {availableProjects.length === 0 && (
-                <p className="text-sm text-orange-600">参加可能なプロジェクトがありません</p>
+                <p className="text-sm text-orange-600">参加可能なプロジェクトがありません。新規プロジェクトを作成してください。</p>
               )}
             </div>
 

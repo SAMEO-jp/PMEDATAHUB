@@ -73,7 +73,7 @@ export const projectRouter = createTRPCRouter({
         if (!result.success) {
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
-            message: result.error || 'プロジェクト一覧の取得に失敗しました',
+            message: typeof result.error === 'string' ? result.error : 'プロジェクト一覧の取得に失敗しました',
           });
         }
         
@@ -198,7 +198,7 @@ export const projectRouter = createTRPCRouter({
         if (!result.success) {
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
-            message: result.error || 'プロジェクトの作成に失敗しました',
+            message: result.error?.message || 'プロジェクトの作成に失敗しました',
           });
         }
         
@@ -225,12 +225,12 @@ export const projectRouter = createTRPCRouter({
     }))
     .mutation(async ({ input }) => {
       try {
-        const result = await updateRecord('PROJECT', input.project_id, input.data, 'PROJECT_ID');
+        const result = await updateRecord('PROJECT', input.project_id as any, input.data, 'PROJECT_ID');
         
         if (!result.success) {
           throw new TRPCError({
             code: 'NOT_FOUND',
-            message: result.error || 'プロジェクトが見つからないか、更新に失敗しました',
+            message: result.error?.message || 'プロジェクトが見つからないか、更新に失敗しました',
           });
         }
         
@@ -256,16 +256,16 @@ export const projectRouter = createTRPCRouter({
     }))
     .mutation(async ({ input }) => {
       try {
-        const result = await deleteRecord('PROJECT', input.project_id, 'PROJECT_ID');
+        const result = await deleteRecord('PROJECT', input.project_id as any, 'PROJECT_ID');
         
         if (!result.success) {
           throw new TRPCError({
             code: 'NOT_FOUND',
-            message: result.error || 'プロジェクトが見つかりません',
+            message: result.error?.message || 'プロジェクトが見つかりません',
           });
         }
         
-        return { success: true, data: result.data };
+        return { success: true, data: null };
       } catch (error) {
         console.error("tRPC project.delete error:", error);
         if (error instanceof TRPCError) {

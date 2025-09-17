@@ -54,10 +54,8 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
     user_id: params.user_id
   });
 
-  // TODO: プロジェクトリスト取得の実装が必要
-  // const { data: projectList, isLoading: projectLoading } = trpc.project.getAll.useQuery();
-  const projectList = { data: [] };
-  const projectLoading = false;
+  // プロジェクト一覧取得
+  const { data: projectList, isLoading: projectLoading } = trpc.project.getAll.useQuery();
 
   const { data: projectKounyuList, isLoading: projectKounyuLoading } = trpc.kounyu.getAllByProject.useQuery(
     { project_id: selectedProject },
@@ -145,6 +143,11 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
 
   const handleCreateKounyu = () => {
     if (!validateNewKounyuForm()) {
+      return;
+    }
+
+    if (!selectedProject) {
+      setErrors({ general: 'プロジェクトを選択してください' });
       return;
     }
 

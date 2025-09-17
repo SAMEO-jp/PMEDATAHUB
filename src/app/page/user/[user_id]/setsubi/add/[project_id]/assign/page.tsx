@@ -42,12 +42,10 @@ export default function UserSetsubiAssignPage({ params }: UserSetsubiAssignPageP
     user_id: params.user_id
   });
 
-  // TODO: プロジェクト情報取得の実装が必要
-  // const { data: projectDetail, isLoading: projectLoading } = trpc.project.getDetail.useQuery({
-  //   project_id: params.project_id
-  // });
-  const projectDetail = null;
-  const projectLoading = false;
+  // プロジェクト詳細取得
+  const { data: projectDetail, isLoading: projectLoading } = trpc.project.getById.useQuery({
+    project_id: params.project_id
+  });
 
   const { data: setsubiDetail, isLoading: setsubiLoading } = trpc.setsubi.getDetail.useQuery(
     { setsubi_id: parseInt(setsubiId || '0') },

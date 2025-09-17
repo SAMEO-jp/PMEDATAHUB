@@ -15,6 +15,8 @@ import {
   ProjectSelect,
   SetsubiSelect,
   KounyuSelect,
+  ProjectSetsubiSelect,
+  ProjectKounyuSelect,
   ColorPicker,
   ProgressSelect
 } from "./ui";
@@ -44,7 +46,13 @@ export const ZissekiSidebar = () => {
   console.log('ZissekiSidebar: userInfo from DatabaseContext:', userInfo);
 
   // プロジェクト参加情報と担当装備・購入品情報を取得
-  const { userProjects, getSetsubiByProject, getKounyuByProject } = useProjectAssignments(userInfo);
+  const { 
+    userProjects, 
+    getSetsubiByProject, 
+    getKounyuByProject,
+    getProjectSetsubiCombinations,
+    getProjectKounyuCombinations
+  } = useProjectAssignments(userInfo);
 
   console.log('ZissekiSidebar: userProjects from hook:', userProjects);
 
@@ -158,6 +166,58 @@ export const ZissekiSidebar = () => {
     dispatch(eventActions.setSelectedEvent(updatedEvent));
   };
 
+  // プロジェクト-担当装置の組み合わせ選択時の処理
+  const handleProjectSetsubiCombinationChange = (value: string) => {
+    if (!selectedEvent || !value) return;
+
+    // 値の形式: "projectId|setsubiCode"
+    const [projectId, setsubiCode] = value.split('|');
+    
+    if (projectId && setsubiCode) {
+      setLocalValues(prev => ({
+        ...prev,
+        project: projectId,
+        setsubi: setsubiCode,
+        kounyu: '' // 購入品はリセット
+      }));
+
+      const updatedEvent = {
+        ...selectedEvent,
+        project: projectId,
+        setsubi: setsubiCode,
+        kounyu: ''
+      };
+      updateEvent(updatedEvent);
+      dispatch(eventActions.setSelectedEvent(updatedEvent));
+    }
+  };
+
+  // プロジェクト-購入品の組み合わせ選択時の処理
+  const handleProjectKounyuCombinationChange = (value: string) => {
+    if (!selectedEvent || !value) return;
+
+    // 値の形式: "projectId|kounyuCode"
+    const [projectId, kounyuCode] = value.split('|');
+    
+    if (projectId && kounyuCode) {
+      setLocalValues(prev => ({
+        ...prev,
+        project: projectId,
+        kounyu: kounyuCode,
+        setsubi: '' // 装備はリセット
+      }));
+
+      const updatedEvent = {
+        ...selectedEvent,
+        project: projectId,
+        kounyu: kounyuCode,
+        setsubi: ''
+      };
+      updateEvent(updatedEvent);
+      dispatch(eventActions.setSelectedEvent(updatedEvent));
+    }
+  };
+
   const handleDeleteEvent = () => {
     if (selectedEvent) {
       deleteEvent();
@@ -210,33 +270,57 @@ export const ZissekiSidebar = () => {
             />
         </div>
 
-        {/* プロジェクトが選択されている場合のみ表示 */}
-        {localValues.project && (
-          <>
-            {/* 装備選択（購入品タブ以外の場合） */}
-            {!isPurchaseTab() && (
-              <div className="sidebar-section">
+        {/* 装置/購入品選択（常に表示） */}
+        {/* 装置選択（購入品タブ以外の場合） */}
+        {!isPurchaseTab() && (
+          <div className="sidebar-section sidebar-section-compact">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-gray-600 w-16 pl-1">担当装置</span>
+              {!localValues.project ? (
+                // プロジェクト未選択時はプロジェクト-担当装置の組み合わせ選択
+                <ProjectSetsubiSelect
+                  value={`${localValues.project}|${localValues.setsubi}`}
+                  onLocalChange={handleProjectSetsubiCombinationChange}
+                  combinations={getProjectSetsubiCombinations()}
+                  label=""
+                />
+              ) : (
+                // プロジェクト選択済み時は通常の担当装置選択
                 <SetsubiSelect
                   value={localValues.setsubi}
                   onLocalChange={(value) => handleSelectChange('setsubi', value)}
                   setsubiList={getSetsubiByProject(localValues.project)}
-                  disabled={!localValues.project}
+                  label=""
                 />
-              </div>
-            )}
+              )}
+            </div>
+          </div>
+        )}
 
-            {/* 購入品選択（購入品タブの場合） */}
-            {isPurchaseTab() && (
-              <div className="sidebar-section">
+        {/* 購入品選択（購入品タブの場合） */}
+        {isPurchaseTab() && (
+          <div className="sidebar-section sidebar-section-compact">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-gray-600 w-16 pl-1">担当購入品</span>
+              {!localValues.project ? (
+                // プロジェクト未選択時はプロジェクト-購入品の組み合わせ選択
+                <ProjectKounyuSelect
+                  value={`${localValues.project}|${localValues.kounyu}`}
+                  onLocalChange={handleProjectKounyuCombinationChange}
+                  combinations={getProjectKounyuCombinations()}
+                  label=""
+                />
+              ) : (
+                // プロジェクト選択済み時は通常の購入品選択
                 <KounyuSelect
                   value={localValues.kounyu}
                   onLocalChange={(value) => handleSelectChange('kounyu', value)}
                   kounyuList={getKounyuByProject(localValues.project)}
-                  disabled={!localValues.project}
+                  label=""
                 />
-              </div>
-            )}
-          </>
+              )}
+            </div>
+          </div>
         )}
 
         <hr className="sidebar-divider" />
@@ -251,22 +335,28 @@ export const ZissekiSidebar = () => {
           }}
         />
         
-        {/* イベントの色設定 */}
-        <div className="sidebar-section sidebar-section-compact">
-          <ColorPicker
-            currentColor={localValues.color}
-            onColorChange={(color) => handleSelectChange('color', color)}
-            label="イベントの色"
-          />
-        </div>
-        
-        {/* 進捗状況設定 */}
-        <div className="sidebar-section sidebar-section-compact">
-          <ProgressSelect
-            currentProgress={localValues.status}
-            onProgressChange={(status) => handleSelectChange('status', status)}
-            label="進捗状況"
-          />
+        {/* イベントの色と進捗状況設定 */}
+        <div className="sidebar-section sidebar-section-compact mt-0">
+          <div className="grid grid-cols-2 gap-2">
+            {/* 色設定 */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-gray-600 w-6 pl-2">色</span>
+              <ColorPicker
+                currentColor={localValues.color}
+                onColorChange={(color) => handleSelectChange('color', color)}
+                label=""
+              />
+            </div>
+            {/* 進捗設定 */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-gray-600 w-6">進捗</span>
+              <ProgressSelect
+                currentProgress={localValues.status}
+                onProgressChange={(status) => handleSelectChange('status', status)}
+                label=""
+              />
+            </div>
+          </div>
         </div>
         
         {/* 業務分類コードエディター */}

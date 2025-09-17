@@ -8,6 +8,8 @@ export { DescriptionField } from './DescriptionField';
 export { ProjectSelect } from '../components/ProjectSelect';
 export { SetsubiSelect } from '../components/SetsubiSelect';
 export { KounyuSelect } from '../components/KounyuSelect';
+export { ProjectSetsubiSelect } from '../components/ProjectSetsubiSelect';
+export { ProjectKounyuSelect } from '../components/ProjectKounyuSelect';
 export { ActivityCodeField } from './ActivityCodeField';
 export { TabSelector } from './TabSelector';
 

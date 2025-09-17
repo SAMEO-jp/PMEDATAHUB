@@ -193,6 +193,9 @@ export async function registerSetsubiToProject(projectId: string, seiban: string
   try {
     db = await initializeDatabase();
 
+    // 外部キー制約を一時的に無効にする
+    await db.run('PRAGMA foreign_keys = OFF');
+
     // 製番マスターが存在するか確認
     const masterExists = await db.get('SELECT id FROM setsubi_master WHERE seiban = ?', [seiban]);
     if (!masterExists) {
@@ -224,6 +227,9 @@ export async function registerSetsubiToProject(projectId: string, seiban: string
 
     const result = await db.run(query, [projectId, seiban]);
 
+    // 外部キー制約を再度有効にする
+    await db.run('PRAGMA foreign_keys = ON');
+
     if (result.lastID) {
       const selectQuery = 'SELECT * FROM setsubi_history WHERE id = ?';
       const newRecord = await db.get<SetsubiHistory>(selectQuery, [result.lastID]);
@@ -250,6 +256,8 @@ export async function registerSetsubiToProject(projectId: string, seiban: string
   } finally {
     if (db) {
       try {
+        // 外部キー制約を再度有効にする
+        await db.run('PRAGMA foreign_keys = ON');
         await db.close();
       } catch (closeErr) {
         console.warn('DBクローズ時にエラーが発生しました:', closeErr);

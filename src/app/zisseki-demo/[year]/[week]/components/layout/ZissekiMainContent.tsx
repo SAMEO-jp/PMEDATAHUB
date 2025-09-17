@@ -1,10 +1,9 @@
 'use client';
 
-import React, { Suspense, useEffect, useRef } from 'react';
+import React, { Suspense, useEffect, useRef, useCallback } from 'react';
 import { TimeGrid } from '../weekgrid/TimeGrid';
 import { ZissekiSidebar } from '../sidebar/ZissekiSidebar';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
-import { TimeGridHeader } from '../TimeGridHeader';
 import { useEventContext } from '../../context/EventContext';
 import { useDatabase } from '../../context/DatabaseContext';
 import { useWorkTimeReducer } from '../../hooks/reducer/useWorkTimeReducer';
@@ -15,9 +14,11 @@ import { eventActions } from '../../hooks/reducer/event/eventActions';
 interface ZissekiMainContentProps {
   year: number;
   week: number;
+  onSave?: () => void;
+  saveFunctionRef?: React.MutableRefObject<(() => Promise<void>) | null>;
 }
 
-export function ZissekiMainContent({ year, week }: ZissekiMainContentProps) {
+export function ZissekiMainContent({ year, week, onSave, saveFunctionRef }: ZissekiMainContentProps) {
   // ========================================
   // 状態管理フック
   // ========================================
@@ -34,6 +35,38 @@ export function ZissekiMainContent({ year, week }: ZissekiMainContentProps) {
   const database = useDatabase();
   const workTimeState = useWorkTimeReducer();
 
+  // 保存機能の実装
+  const handleSave = useCallback(async () => {
+    try {
+      // 現在のイベントデータを取得
+      const currentEvents = eventState.events || [];
+      const currentWorkTimes: any[] = []; // 空配列として扱う
+
+      // データベースに保存
+      const result = await database.saveWeekData(currentEvents, currentWorkTimes);
+
+      // 保存成功後、データベースを再読み込み
+      database.refetch();
+
+      // 親コンポーネントに保存完了を通知
+      if (onSave) {
+        onSave();
+      }
+
+    } catch (error: unknown) {
+      console.error('保存エラー:', error);
+      // エラーは親コンポーネントで処理
+    }
+  }, [eventState.events, database, onSave]);
+
+  // 保存機能を親に渡す
+  useEffect(() => {
+    if (saveFunctionRef) {
+      // 保存関数をrefに設定
+      saveFunctionRef.current = handleSave;
+    }
+  }, [saveFunctionRef, handleSave]);
+
   // 初回データ同期フラグ
   const hasInitialized = useRef(false);
   const lastDatabaseEventsCount = useRef(0);
@@ -45,7 +78,6 @@ export function ZissekiMainContent({ year, week }: ZissekiMainContentProps) {
   useEffect(() => {
     // DatabaseContextを初期化（初回のみ）
     if (!database.isInitialized) {
-      console.log('DatabaseContext初期化を開始');
       database.initialize();
     }
   }, [database]);
@@ -53,21 +85,11 @@ export function ZissekiMainContent({ year, week }: ZissekiMainContentProps) {
   useEffect(() => {
     // データベースの読み込みが完了したら、初回のみ同期
     if (!hasInitialized.current && database.isInitialized && !database.isLoading) {
-      console.log('初期化チェック:', {
-        hasInitialized: hasInitialized.current,
-        databaseInitialized: database.isInitialized,
-        databaseLoading: database.isLoading,
-        databaseEvents: database.events?.length || 0,
-        eventStateEvents: eventState.events?.length || 0
-      });
-
       if (database.events && database.events.length > 0) {
         // データベースにデータがある場合
-        console.log('初回データ同期: DatabaseContextからEventContextに同期中...', database.events);
         eventState.dispatch(eventActions.setEvents(database.events));
       } else {
-        // データベースにデータがない場合でも、EventContextを初期化
-        console.log('初回データ同期: データベースにデータがないため、EventContextを初期化');
+        // データベースにデータがない場合でも、EventContextを初期化');
         eventState.dispatch(eventActions.setEvents([]));
       }
       hasInitialized.current = true;
@@ -148,9 +170,7 @@ export function ZissekiMainContent({ year, week }: ZissekiMainContentProps) {
   return (
     <div className="zisseki-demo flex h-screen bg-gray-50">
       {/* メインコンテンツ */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        {/* ヘッダー */}
-        <TimeGridHeader year={year} week={week} />
+      <div className="main-content-area overflow-hidden flex flex-col">
         
         {/* タイムグリッド */}
         <div className="flex-1 overflow-hidden">
@@ -172,6 +192,9 @@ export function ZissekiMainContent({ year, week }: ZissekiMainContentProps) {
       <Suspense fallback={<LoadingSpinner />}>
         <ZissekiSidebar />
       </Suspense>
+      
+      {/* フッタースペーサー（画面下部固定） */}
+      <div className="footer-spacer"></div>
     </div>
   );
 }

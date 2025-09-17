@@ -17,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body style={{ overflow: 'auto' }}>
+      <body style={{ overflow: 'hidden' }}>
         <TRPCProvider>
           <AuthProvider>
             <HeaderSidbarLayout>

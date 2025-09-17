@@ -78,7 +78,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
             className="w-6 h-6 rounded border border-gray-300"
             style={{ backgroundColor: currentColor }}
           />
-          <span className="text-sm text-gray-700 flex-1 text-left">
+          <span className="text-xs text-gray-700 flex-1 text-left">
             {currentColor.toUpperCase()}
           </span>
           <svg
@@ -134,7 +134,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                     }
                   }}
                   placeholder="#000000"
-                  className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded font-mono"
+                  className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded font-mono"
                 />
               </div>
             </div>

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from '@src/lib/trpc/client';
-import { useUserAll } from '@src/hooks/useProjectData';
+import { useUserAll } from '@src/hooks/useUserData';
 import { Search, Users, ChevronRight, Building, User, ChevronLeft, ChevronRight as ChevronRightIcon } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 25;

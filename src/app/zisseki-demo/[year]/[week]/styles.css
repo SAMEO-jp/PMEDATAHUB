@@ -211,9 +211,33 @@
 }
 
 /* ===== 共通レイアウトスタイル ===== */
+.zisseki-demo {
+  position: relative; /* フッターの基準点として設定 */
+}
+
 .zisseki-demo .sidebar-container {
-  width: 20rem;
+  width: 26%; /* 5/19 ≈ 26.3% に近い値 */
   margin-left: 1rem;
+  height: calc(100vh - 1px); /* フッター分を除いた高さ */
+  overflow-y: auto; /* サイドバー内でスクロール可能 */
+}
+
+/* メインコンテンツエリアの幅を14:5比率に調整 */
+.zisseki-demo .main-content-area {
+  width: 74%; /* 14/19 ≈ 73.7% に近い値 */
+  height: calc(100vh - 1px); /* フッター分を除いた高さ */
+}
+
+/* フッターエリア（ページ下部） */
+.zisseki-demo .footer-spacer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: rgba(0, 0, 0, 0.05);
+  z-index: 1;
+  pointer-events: none;
 }
 
 .zisseki-demo .sidebar-card {
@@ -274,7 +298,7 @@
 .zisseki-demo .tab-selector-button {
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--border-radius-md);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   transition: all 0.15s ease-in-out;
   cursor: pointer;
@@ -297,7 +321,7 @@
 .zisseki-demo .sub-tab-button {
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius-lg);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   transition: all 0.15s ease-in-out;
   cursor: pointer;
   white-space: nowrap;
@@ -503,14 +527,14 @@
   box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
 }
 
-/* TimeInputField */
+/* TimeInputField - スタイリッシュでコンパクトなデザイン */
 .zisseki-demo .time-input-field {
   width: 100%;
   padding: var(--spacing-sm);
   border: 1px solid var(--border-light);
   border-radius: var(--border-radius-md);
   font-size: 0.875rem;
-  transition: border-color 0.15s ease-in-out;
+  transition: all 0.2s ease-in-out;
   background-color: var(--bg-primary);
 }
 
@@ -518,6 +542,187 @@
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+}
+
+/* 新しい時間入力フィールドスタイル */
+.zisseki-demo .time-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: all 0.2s ease-in-out;
+}
+
+.zisseki-demo .time-input-container:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.zisseki-demo .time-input-container:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+}
+
+.zisseki-demo .time-input-field-modern {
+  width: 32px;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #374151;
+}
+
+.zisseki-demo .time-input-field-modern:focus {
+  background: #f8fafc;
+  border-radius: 4px;
+}
+
+.zisseki-demo .time-separator {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin: 0 4px;
+}
+
+/* 時間設定コンポーネント全体のスタイル */
+.zisseki-demo .time-setting-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.zisseki-demo .time-setting-icon {
+  width: 24px;
+  height: 24px;
+  background: #dbeafe;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  color: #2563eb;
+}
+
+.zisseki-demo .time-setting-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-left: 8px;
+}
+
+.zisseki-demo .time-setting-apply-btn {
+  padding: 6px 12px;
+  background: #2563eb;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.zisseki-demo .time-setting-apply-btn:hover {
+  background: #1d4ed8;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.zisseki-demo .time-setting-container {
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.zisseki-demo .time-input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.zisseki-demo .time-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.zisseki-demo .time-input-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.zisseki-demo .time-input-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.zisseki-demo .time-input-dot.start {
+  background: #10b981;
+}
+
+.zisseki-demo .time-input-dot.end {
+  background: #ef4444;
+}
+
+.zisseki-demo .time-display {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.zisseki-demo .time-display-time {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-weight: 500;
+}
+
+.zisseki-demo .time-display-arrow {
+  color: #d1d5db;
+}
+
+.zisseki-demo .time-unsaved-indicator {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #d97706;
+}
+
+.zisseki-demo .time-unsaved-dot {
+  width: 4px;
+  height: 4px;
+  background: #f59e0b;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* DetailClassifications */
@@ -534,7 +739,7 @@
 }
 
 .zisseki-demo .classification-label {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--text-primary);
 }
@@ -581,6 +786,12 @@
     width: 100%;
     margin-left: 0;
     margin-top: 1rem;
+    height: auto; /* モバイルでは自動高さ */
+  }
+  
+  .zisseki-demo .main-content-area {
+    width: 100%;
+    height: auto; /* モバイルでは自動高さ */
   }
   
   .zisseki-demo .tab-group,

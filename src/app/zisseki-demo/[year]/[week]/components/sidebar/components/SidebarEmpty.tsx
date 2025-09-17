@@ -5,7 +5,7 @@ interface SidebarEmptyProps {
 export const SidebarEmpty = ({ message }: SidebarEmptyProps) => {
   return (
     <div className="text-center text-gray-500 p-8">
-      <p className="text-sm">{message}</p>
+      <p className="text-xs">{message}</p>
     </div>
   );
 };

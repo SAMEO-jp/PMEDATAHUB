@@ -35,7 +35,7 @@ export const TimeGrid = ({
       >
         <div className="grid" style={{ gridTemplateColumns: 'auto repeat(7, 1fr)' }}>
           {/* ヘッダー部分 */}
-          <TimeGridHeader weekDays={weekDays} year={year} week={week} />
+          <TimeGridHeader weekDays={weekDays} />
 
           {/* 勤務時間セクション */}
           <WorkTimeSection 

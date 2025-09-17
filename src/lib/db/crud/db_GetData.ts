@@ -72,10 +72,25 @@ export async function GetConditionData<T=unknown>(
     db = await initializeDatabase();
     console.log('GetConditionData: データベース接続成功');
 
-    const query = `
-      SELECT * 
+    const selectClause = config.select || '*';
+    let query = `
+      SELECT ${selectClause}
       FROM ${config.tableName} 
       WHERE ${conditionExpr}`;
+    
+    // GROUP BYを追加
+    if (config.groupBy) {
+      query += ` GROUP BY ${config.groupBy}`;
+    }
+    
+    // LIMITとOFFSETを追加
+    if (config.limit) {
+      query += ` LIMIT ${config.limit}`;
+    }
+    if (config.offset) {
+      query += ` OFFSET ${config.offset}`;
+    }
+    
     console.log('GetConditionData: 実行クエリ:', query);
     console.log('GetConditionData: パラメータ:', conditionValues);
 

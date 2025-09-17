@@ -50,10 +50,8 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
     user_id: params.user_id
   });
 
-  // TODO: プロジェクトリスト取得の実装が必要
-  // const { data: projectList, isLoading: projectLoading } = trpc.project.getAll.useQuery();
-  const projectList = { data: [] };
-  const projectLoading = false;
+  // プロジェクト一覧取得
+  const { data: projectList, isLoading: projectLoading } = trpc.project.getAll.useQuery();
 
   const { data: projectSetsubiList, isLoading: projectSetsubiLoading } = trpc.setsubi.getAllByProject.useQuery(
     { project_id: selectedProject },
@@ -73,7 +71,7 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
 
   const utils = trpc.useUtils();
 
-  const { mutate: createSetsubi } = trpc.setsubi.createMaster.useMutation({
+  const { mutate: createSetsubi } = trpc.setsubi.createMasterWithProject.useMutation({
     onSuccess: (data) => {
       // 新規作成した設備を自動選択
       setSelectedSetsubi(data.data?.id?.toString() || '');
@@ -140,7 +138,13 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
       return;
     }
 
+    if (!selectedProject) {
+      setErrors({ general: 'プロジェクトを選択してください' });
+      return;
+    }
+
     createSetsubi({
+      project_id: selectedProject,
       seiban: newSetsubiData.seiban,
       shohin_category: newSetsubiData.shohin_category,
       setsubi_name: newSetsubiData.setsubi_name,

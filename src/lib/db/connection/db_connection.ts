@@ -42,6 +42,10 @@ export { initializeDatabase };
 export interface TableConfig {
     tableName: string;
     idColumn: string;
+    limit?: number;
+    offset?: number;
+    select?: string;
+    groupBy?: string;
 }
   
 export interface TableReadConfig {

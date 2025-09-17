@@ -92,10 +92,48 @@ export const useProjectAssignments = (userInfo: UserInfo | null) => {
     };
   };
 
+  // プロジェクト-担当装置の組み合わせ一覧を取得（プロジェクト未選択時用）
+  const getProjectSetsubiCombinations = () => {
+    if (!userInfo?.projects || !userInfo?.setsubi_assignments) return [];
+    
+    return userInfo.setsubi_assignments.map(assignment => {
+      const project = userInfo.projects.find(p => p.project_id === assignment.project_id);
+      return {
+        projectId: assignment.project_id,
+        projectName: project?.project_name || '不明なプロジェクト',
+        setsubiId: assignment.setsubi_id,
+        setsubiCode: assignment.seiban,
+        setsubiName: assignment.setsubi_name,
+        assignmentId: assignment.id,
+        displayText: `${project?.project_name || '不明なプロジェクト'} - ${assignment.setsubi_name} (${assignment.seiban})`
+      };
+    });
+  };
+
+  // プロジェクト-購入品の組み合わせ一覧を取得（プロジェクト未選択時用）
+  const getProjectKounyuCombinations = () => {
+    if (!userInfo?.projects || !userInfo?.kounyu_assignments) return [];
+    
+    return userInfo.kounyu_assignments.map(assignment => {
+      const project = userInfo.projects.find(p => p.project_id === assignment.project_id);
+      return {
+        projectId: assignment.project_id,
+        projectName: project?.project_name || '不明なプロジェクト',
+        kounyuId: assignment.kounyu_id,
+        kounyuCode: assignment.management_number,
+        kounyuName: assignment.item_name,
+        assignmentId: assignment.id,
+        displayText: `${project?.project_name || '不明なプロジェクト'} - ${assignment.item_name} (${assignment.management_number})`
+      };
+    });
+  };
+
   return {
     userProjects,
     getSetsubiByProject,
     getKounyuByProject,
-    getProjectAssignments
+    getProjectAssignments,
+    getProjectSetsubiCombinations,
+    getProjectKounyuCombinations
   };
 };

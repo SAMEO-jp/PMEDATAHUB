@@ -28,12 +28,18 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
   // stateやactionsがundefinedの場合は早期リターン
   if (!state || !actions) {
     return (
-      <div>
-        <label className="field-label">
-          ⏰ 時間設定
-        </label>
-        <div className="activity-code-field">
-          データを読み込み中...
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center">
+            <span className="text-gray-400 text-xs">⏰</span>
+          </div>
+          <span className="text-xs font-medium text-gray-700">時間設定</span>
+        </div>
+        <div className="bg-gray-50 border border-gray-200 rounded p-2.5">
+          <div className="flex items-center justify-center text-xs text-gray-500">
+            <div className="animate-spin w-3 h-3 border-2 border-gray-300 border-t-blue-600 rounded-full mr-1.5"></div>
+            読み込み中...
+          </div>
         </div>
       </div>
     );
@@ -125,47 +131,66 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
 
   if (!selectedEvent) {
     return (
-      <div>
-        <label className="field-label">
-          ⏰ {label}
-        </label>
-        <div className="activity-code-field">
-          イベントを選択してください
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center">
+            <span className="text-gray-400 text-xs">⏰</span>
+          </div>
+          <span className="text-xs font-medium text-gray-700">{label}</span>
+        </div>
+        <div className="bg-gray-50 border border-gray-200 rounded p-2.5">
+          <div className="flex items-center justify-center text-xs text-gray-500">
+            <span className="mr-1.5">📅</span>
+            イベントを選択してください
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <label className="field-label">
-        ⏰ {label}
+    <div className="space-y-2">
+      {/* ヘッダー部分 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center">
+            <span className="text-blue-600 text-xs">⏰</span>
+          </div>
+          <span className="text-xs font-medium text-gray-700">{label}</span>
+          {hasUnsavedChanges && (
+            <span className="text-xs text-amber-600 font-medium">未保存</span>
+          )}
+        </div>
         {hasUnsavedChanges && (
           <button
             onClick={applyTimeChanges}
-            className="btn btn-sm btn-primary ml-2"
+            className="px-2 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors duration-200"
           >
             適用
           </button>
         )}
-      </label>
+      </div>
       
-      <div className="sidebar-section bg-white border rounded">
+      {/* 時間入力コンテナ */}
+      <div className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded p-2.5">
         {/* 時間入力行 */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-2">
           {/* 開始時間 */}
-          <div>
-            <div className="text-xs text-gray-600 mb-2">開始</div>
-            <div className="flex items-center justify-center">
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
+              <div className="w-1 h-1 bg-green-500 rounded-full"></div>
+              <span className="text-xs font-medium text-gray-600">開始</span>
+            </div>
+            <div className="flex items-center bg-white border border-gray-200 rounded p-1">
               <input
                 type="number"
                 min="0"
                 max="23"
                 value={startTime.hours}
                 onChange={(e) => handleTimeChange('start', 'hours', e.target.value)}
-                className="time-input-field w-12 text-center"
+                className="w-8 text-center text-xs font-medium border-none outline-none bg-transparent"
               />
-              <span className="mx-2 text-sm">:</span>
+              <span className="mx-0.5 text-gray-400 text-xs">:</span>
               <input
                 type="number"
                 min="0"
@@ -173,24 +198,27 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
                 step="10"
                 value={startTime.minutes}
                 onChange={(e) => handleTimeChange('start', 'minutes', e.target.value)}
-                className="time-input-field w-12 text-center"
+                className="w-8 text-center text-xs font-medium border-none outline-none bg-transparent"
               />
             </div>
           </div>
 
           {/* 終了時間 */}
-          <div>
-            <div className="text-xs text-gray-600 mb-2">終了</div>
-            <div className="flex items-center justify-center">
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
+              <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+              <span className="text-xs font-medium text-gray-600">終了</span>
+            </div>
+            <div className="flex items-center bg-white border border-gray-200 rounded p-1">
               <input
                 type="number"
                 min="0"
                 max="23"
                 value={endTime.hours}
                 onChange={(e) => handleTimeChange('end', 'hours', e.target.value)}
-                className="time-input-field w-12 text-center"
+                className="w-8 text-center text-xs font-medium border-none outline-none bg-transparent"
               />
-              <span className="mx-2 text-sm">:</span>
+              <span className="mx-0.5 text-gray-400 text-xs">:</span>
               <input
                 type="number"
                 min="0"
@@ -198,15 +226,11 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
                 step="10"
                 value={endTime.minutes}
                 onChange={(e) => handleTimeChange('end', 'minutes', e.target.value)}
-                className="time-input-field w-12 text-center"
+                className="w-8 text-center text-xs font-medium border-none outline-none bg-transparent"
               />
             </div>
           </div>
         </div>
-
-        {hasUnsavedChanges && (
-          <div className="text-xs text-amber-600 mt-2">⚠ 未保存</div>
-        )}
       </div>
     </div>
   );

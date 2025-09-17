@@ -43,6 +43,26 @@ export const useUserById = (userId: string) => {
 };
 
 /**
+ * ユーザーの詳細情報を取得するフック（参加プロジェクト、担当設備・購入品含む）
+ */
+export const useUserDetail = (userId: string) => {
+  return trpc.user.getDetail.useQuery(
+    { user_id: userId },
+    { enabled: !!userId }
+  );
+};
+
+/**
+ * ユーザーのタイムラインを取得するフック
+ */
+export const useUserTimeline = (userId: string) => {
+  return trpc.user.getTimeline.useQuery(
+    { user_id: userId },
+    { enabled: !!userId }
+  );
+};
+
+/**
  * ユーザーを検索するフック
  */
 export const useUserSearch = (filters: UserSearchFilters) => {

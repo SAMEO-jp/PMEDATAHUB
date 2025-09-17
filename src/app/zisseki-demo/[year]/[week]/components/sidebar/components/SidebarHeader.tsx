@@ -12,7 +12,7 @@ export const SidebarHeader = ({ title, eventId, activeTab, onTabChange }: Sideba
   return (
     <div className="p-3 border-b">
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-bold">{title}</h2>
+        <h2 className="text-sm font-bold">{title}</h2>
         <TabSelector 
           eventId={eventId}
           activeTab={activeTab} 
