@@ -34,11 +34,11 @@ export default function ProjectListPage() {
   });
 
   // プロジェクト一覧用のヘッダー設定
-  useProjectListHeader(projectData?.data?.length || 0, searchTerm);
+  useProjectListHeader((projectData as any)?.data?.length || 0, searchTerm);
 
   // tRPCからのデータをソートして使用
-  const projects = projectData?.data || [];
-  const totalPages = projectData?.totalPages || 1;
+  const projects = (projectData as any)?.data || [];
+  const totalPages = (projectData as any)?.totalPages || 1;
   const error = queryError ? 'プロジェクトの取得に失敗しました' : null;
 
   // ソート済みのプロジェクトデータ

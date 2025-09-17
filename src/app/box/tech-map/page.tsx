@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@src/
 import { Button } from '@src/components/ui/button';
 import { Input } from '@src/components/ui/input';
 import { Label } from '@src/components/ui/label';
-import { TextArea as Textarea } from '@src/components/ui/textarea';
+import { TextArea as Textarea } from '@src/components/ui/TextArea';
 import { Badge } from '@src/components/ui/badge';
 import { 
   MapPin,
@@ -49,7 +49,7 @@ export default function TechMapPage() {
     description: '',
     x: 0,
     y: 0,
-    status: 'draft' as const
+    status: 'draft' as 'active' | 'inactive' | 'draft'
   });
 
   // カテゴリ一覧

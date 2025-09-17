@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useZissekiMonthData } from '@src/hooks/useZissekiData'
+import { useAuthState } from '@src/contexts/AuthContext'
 import type { TimeGridEvent } from '@src/app/zisseki-demo/[year]/[week]/types'
 
 interface ZissekiDataViewProps {
@@ -34,7 +35,8 @@ interface ZissekiDataRow {
 }
 
 export default function ZissekiDataView({ year, month }: ZissekiDataViewProps) {
-  const { data, isLoading, error } = useZissekiMonthData(year, month)
+  const { user } = useAuthState()
+  const { data, isLoading, error } = useZissekiMonthData(year, month, user?.user_id || '')
   const [sortField, setSortField] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const [filters, setFilters] = useState<Record<string, string>>({})

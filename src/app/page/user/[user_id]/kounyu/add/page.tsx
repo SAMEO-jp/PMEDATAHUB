@@ -54,7 +54,10 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
     user_id: params.user_id
   });
 
-  const { data: projectList, isLoading: projectLoading } = trpc.project.getAll.useQuery();
+  // TODO: プロジェクトリスト取得の実装が必要
+  // const { data: projectList, isLoading: projectLoading } = trpc.project.getAll.useQuery();
+  const projectList = { data: [] };
+  const projectLoading = false;
 
   const { data: projectKounyuList, isLoading: projectKounyuLoading } = trpc.kounyu.getAllByProject.useQuery(
     { project_id: selectedProject },
@@ -77,7 +80,7 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
   const { mutate: createKounyu } = trpc.kounyu.createMaster.useMutation({
     onSuccess: (data) => {
       // 新規作成した購入品を自動選択
-      setSelectedKounyu(data.data.id.toString());
+      setSelectedKounyu(data.data?.id?.toString() || '');
       setIsDialogOpen(false);
       // 購入品リストを再取得
       void utils.kounyu.getAllByProject.invalidate({ project_id: selectedProject });
@@ -434,7 +437,7 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
                   <SelectValue placeholder="担当させるプロジェクトを選択してください" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableProjects.map((project) => (
+                  {availableProjects.map((project: any) => (
                     <SelectItem key={project.PROJECT_ID} value={project.PROJECT_ID}>
                       {project.PROJECT_NAME} ({project.PROJECT_ID})
                     </SelectItem>

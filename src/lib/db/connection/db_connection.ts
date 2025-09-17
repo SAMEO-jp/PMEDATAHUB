@@ -21,10 +21,12 @@ async function initializeDatabase() {
         }
 
         // データベース接続を試行
+        console.log('DB: データベース接続を試行中...', dbPath);
         const db = await open({
             filename: dbPath,
             driver: sqlite3.Database
         });
+        console.log('DB: データベース接続成功');
 
         return db;
     } catch (error) {

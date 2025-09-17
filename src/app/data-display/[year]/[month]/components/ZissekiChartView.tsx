@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { useZissekiMonthData } from '@src/hooks/useZissekiData'
+import { useAuthState } from '@src/contexts/AuthContext'
 import type { TimeGridEvent } from '@src/app/zisseki-demo/[year]/[week]/types'
 import {
   Chart as ChartJS,
@@ -36,7 +37,8 @@ interface ZissekiChartViewProps {
 }
 
 export default function ZissekiChartView({ year, month }: ZissekiChartViewProps) {
-  const { data, isLoading, error } = useZissekiMonthData(year, month)
+  const { user } = useAuthState()
+  const { data, isLoading, error } = useZissekiMonthData(year, month, user?.user_id || '')
 
   if (isLoading) {
     return (

@@ -49,7 +49,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     );
   }
 
-  if (!userDetail?.data) {
+  if (!(userDetail as any)?.data) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-12 text-gray-500">
@@ -66,7 +66,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
     );
   }
 
-  const user = userDetail.data;
+  const user = (userDetail as any).data;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -267,7 +267,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {user.projects.map((project) => (
+                    {user.projects.map((project: any) => (
                       <TableRow key={project.project_id}>
                         <TableCell className="font-medium">{project.project_name}</TableCell>
                         <TableCell>{project.project_id}</TableCell>
@@ -339,7 +339,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {user.setsubi_assignments.map((assignment) => (
+                    {user.setsubi_assignments.map((assignment: any) => (
                       <TableRow key={assignment.id}>
                         <TableCell className="font-medium">{assignment.project_id}</TableCell>
                         <TableCell>{assignment.seiban}</TableCell>
@@ -401,7 +401,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {user.kounyu_assignments.map((assignment) => (
+                    {user.kounyu_assignments.map((assignment: any) => (
                       <TableRow key={assignment.id}>
                         <TableCell className="font-medium">{assignment.project_id}</TableCell>
                         <TableCell>{assignment.management_number}</TableCell>
@@ -445,9 +445,9 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                 <div className="flex justify-center items-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
                 </div>
-              ) : timeline?.data && timeline.data.length > 0 ? (
+              ) : (timeline as any)?.data && (timeline as any).data.length > 0 ? (
                 <div className="space-y-4">
-                  {timeline.data.map((item) => (
+                  {(timeline as any).data.map((item: any) => (
                     <div key={item.id} className="flex items-start space-x-4 p-4 border rounded-lg">
                       <div className="flex-shrink-0">
                         {item.type === 'project_join' && <CheckCircle className="h-5 w-5 text-green-500" />}

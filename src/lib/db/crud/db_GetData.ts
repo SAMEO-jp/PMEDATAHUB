@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { initializeDatabase,DataResult,TableConfig ,TableReadConfig} from '../connection/db_connection';
+import { initializeDatabase, DataResult, TableConfig, TableReadConfig } from '../connection/db_connection';
+import type { Database } from 'sqlite';
 
 /*********************************************************
 /*** IDに基づいてデータを取得する ***/ 
@@ -12,7 +13,7 @@ import { initializeDatabase,DataResult,TableConfig ,TableReadConfig} from '../co
  **********************************************************/
 
 export async function GetRecode<T=unknown>(id: string | number, config: TableConfig): Promise<DataResult<T>> {
-  let db: any = null;
+  let db: Database | null = null;
     try {
         // データベース接続
         db           =  await initializeDatabase();
@@ -65,7 +66,7 @@ export async function GetConditionData<T=unknown>(
   conditionValues: (string | number)[],
   config: TableConfig
 ): Promise<DataResult<T>> {
-  let db: any = null;
+  let db: Database | null = null;
   try {
     console.log('GetConditionData: データベース接続開始');
     db = await initializeDatabase();
@@ -115,7 +116,7 @@ export async function GetConditionData<T=unknown>(
 **********************************************************/
 
 export async function GetAllData<T=unknown>(config: TableReadConfig): Promise<DataResult<T>> {
-  let db: any = null;
+  let db: Database | null = null;
   try {
     db = await initializeDatabase();
     const query = `SELECT * FROM ${config.tableName}`;

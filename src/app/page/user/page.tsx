@@ -23,13 +23,13 @@ export default function UserListPage() {
 
   // 検索フィルター
   const filteredUsers = useMemo(() => {
-    return userList?.data?.filter(user =>
+    return (userList as any)?.data?.filter((user: any) =>
       user.name_japanese.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.user_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user.bumon && user.bumon.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (user.Kengen && user.Kengen.toLowerCase().includes(searchTerm.toLowerCase()))
     ) || [];
-  }, [userList?.data, searchTerm]);
+  }, [userList, searchTerm]);
 
   // ページネーション計算
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
@@ -119,7 +119,7 @@ export default function UserListPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedUsers.map((user) => (
+                {paginatedUsers.map((user: any) => (
                   <TableRow
                     key={user.user_id}
                     className="hover:bg-gray-50 cursor-pointer"

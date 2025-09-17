@@ -87,13 +87,13 @@ export default function UserCreatePage() {
     const submitData = {
       user_id: formData.user_id,
       name_japanese: formData.name_japanese,
-      TEL: formData.TEL || null,
-      mail: formData.mail || null,
-      bumon: formData.bumon || null,
-      sitsu: formData.sitsu || null,
-      ka: formData.ka || null,
-      in_year: formData.in_year || null,
-      Kengen: formData.Kengen || null
+      TEL: formData.TEL || undefined,
+      mail: formData.mail || undefined,
+      bumon: formData.bumon || undefined,
+      sitsu: formData.sitsu || undefined,
+      ka: formData.ka || undefined,
+      in_year: formData.in_year || undefined,
+      Kengen: formData.Kengen || undefined
     };
 
     createUser(submitData);

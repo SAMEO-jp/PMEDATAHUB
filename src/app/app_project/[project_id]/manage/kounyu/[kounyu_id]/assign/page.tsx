@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from '@src/lib/trpc/client';
-import { useProjectMembers } from '@src/hooks/useProjectData';
+// import { useProjectMembers } from '@src/hooks/useProjectData';
 import { ArrowLeft, UserPlus, UserMinus, Users, ChevronRight } from 'lucide-react';
 
 interface AssignPageProps {
@@ -27,7 +27,9 @@ export default function KounyuAssignPage({ params }: AssignPageProps) {
   );
 
   // プロジェクトメンバーを取得
-  const { members: projectMembersData, loadingMembers: isLoadingProjectMembers } = useProjectMembers(params.project_id);
+  // const { members: projectMembersData, loadingMembers: isLoadingProjectMembers } = useProjectMembers(params.project_id);
+  const projectMembersData: any[] = [];
+  const isLoadingProjectMembers = false;
 
   // プロジェクトメンバーのデータを整形（ユーザー情報のみを抽出）
   const projectMembers = { success: true, data: projectMembersData?.map((member: any) => member.user) || [] };

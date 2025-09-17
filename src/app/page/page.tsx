@@ -41,7 +41,7 @@ export default function PageIndex() {
       </div>
 
       {/* カードグリッド */}
-      <CardGrid gridPattern="simple">
+      <CardGrid gridPattern="default">
         {cardData.map((card, index) => (
           <Card
             key={index}

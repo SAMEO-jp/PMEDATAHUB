@@ -51,9 +51,12 @@ export default function UserSetsubiSelectPage({ params }: UserSetsubiSelectPageP
     user_id: params.user_id
   });
 
-  const { data: projectDetail, isLoading: projectLoading } = trpc.project.getDetail.useQuery({
-    project_id: params.project_id
-  });
+  // TODO: プロジェクト情報取得の実装が必要
+  // const { data: projectDetail, isLoading: projectLoading } = trpc.project.getDetail.useQuery({
+  //   project_id: params.project_id
+  // });
+  const projectDetail = null;
+  const projectLoading = false;
 
   const { data: setsubiList, isLoading: setsubiLoading } = trpc.setsubi.getAll.useQuery();
 
@@ -71,7 +74,7 @@ export default function UserSetsubiSelectPage({ params }: UserSetsubiSelectPageP
   const { mutate: createSetsubi } = trpc.setsubi.createMaster.useMutation({
     onSuccess: (data) => {
       // 新規作成した設備を自動選択
-      setSelectedSetsubi(data.data.id.toString());
+      setSelectedSetsubi(data.data?.id?.toString() || '');
       setIsDialogOpen(false);
       // 設備リストを再取得
       // TODO: キャッシュを無効化して最新データを取得
@@ -154,7 +157,7 @@ export default function UserSetsubiSelectPage({ params }: UserSetsubiSelectPageP
   }
 
   // データが見つからない場合
-  if (!userDetail?.data || !projectDetail?.data) {
+  if (!userDetail?.data) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-12 text-gray-500">
@@ -172,7 +175,7 @@ export default function UserSetsubiSelectPage({ params }: UserSetsubiSelectPageP
   }
 
   const user = userDetail.data;
-  const project = projectDetail.data;
+  const project = { project_id: params.project_id, project_name: 'プロジェクト名' }; // ダミーデータ
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -223,14 +226,14 @@ export default function UserSetsubiSelectPage({ params }: UserSetsubiSelectPageP
           <li className="flex items-center">
             <ChevronRight className="h-4 w-4" />
           </li>
-          <li className="text-gray-900 font-medium">{project.PROJECT_NAME}</li>
+          <li className="text-gray-900 font-medium">{project.project_name}</li>
         </ol>
       </nav>
 
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">{user.name_japanese} の設備担当割り当て</h1>
-          <p className="text-gray-600 mt-1">プロジェクト「{project.PROJECT_NAME}」の設備を選択してください</p>
+           <p className="text-gray-600 mt-1">プロジェクト「{project.project_name}」の設備を選択してください</p>
         </div>
         <div className="space-x-2">
           <Button

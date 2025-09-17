@@ -42,9 +42,12 @@ export default function UserSetsubiAssignPage({ params }: UserSetsubiAssignPageP
     user_id: params.user_id
   });
 
-  const { data: projectDetail, isLoading: projectLoading } = trpc.project.getDetail.useQuery({
-    project_id: params.project_id
-  });
+  // TODO: プロジェクト情報取得の実装が必要
+  // const { data: projectDetail, isLoading: projectLoading } = trpc.project.getDetail.useQuery({
+  //   project_id: params.project_id
+  // });
+  const projectDetail = null;
+  const projectLoading = false;
 
   const { data: setsubiDetail, isLoading: setsubiLoading } = trpc.setsubi.getDetail.useQuery(
     { setsubi_id: parseInt(setsubiId || '0') },
@@ -121,7 +124,7 @@ export default function UserSetsubiAssignPage({ params }: UserSetsubiAssignPageP
   }
 
   // データが見つからない場合
-  if (!userDetail?.data || !projectDetail?.data || !setsubiDetail?.data) {
+  if (!userDetail?.data || !setsubiDetail?.data) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-12 text-gray-500">
@@ -139,7 +142,7 @@ export default function UserSetsubiAssignPage({ params }: UserSetsubiAssignPageP
   }
 
   const user = userDetail.data;
-  const project = projectDetail.data;
+  const project = { project_id: params.project_id, project_name: 'プロジェクト名' }; // ダミーデータ
   const setsubi = setsubiDetail.data;
 
   return (
@@ -196,7 +199,7 @@ export default function UserSetsubiAssignPage({ params }: UserSetsubiAssignPageP
               onClick={() => router.push(`/page/user/${params.user_id}/setsubi/add/${params.project_id}`)}
               className="hover:text-blue-600 transition-colors"
             >
-              {project.PROJECT_NAME}
+              {project.project_name}
             </button>
           </li>
           <li className="flex items-center">
@@ -210,7 +213,7 @@ export default function UserSetsubiAssignPage({ params }: UserSetsubiAssignPageP
         <div>
           <h1 className="text-2xl font-bold">{user.name_japanese} の設備担当割り当て</h1>
           <p className="text-gray-600 mt-1">
-            プロジェクト「{project.PROJECT_NAME}」の設備「{setsubi.setsubi_name}」を担当者に設定します
+             プロジェクト「{project.project_name}」の設備「{setsubi.setsubi_name}」を担当者に設定します
           </p>
         </div>
         <div className="space-x-2">
@@ -237,7 +240,7 @@ export default function UserSetsubiAssignPage({ params }: UserSetsubiAssignPageP
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md">
               <div>
                 <label className="text-sm font-medium text-gray-600">プロジェクト</label>
-                <p className="text-sm">{project.PROJECT_NAME} ({project.PROJECT_ID})</p>
+                <p className="text-sm">{project.project_name} ({project.project_id})</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">設備</label>

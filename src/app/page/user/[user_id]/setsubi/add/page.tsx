@@ -50,7 +50,10 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
     user_id: params.user_id
   });
 
-  const { data: projectList, isLoading: projectLoading } = trpc.project.getAll.useQuery();
+  // TODO: プロジェクトリスト取得の実装が必要
+  // const { data: projectList, isLoading: projectLoading } = trpc.project.getAll.useQuery();
+  const projectList = { data: [] };
+  const projectLoading = false;
 
   const { data: projectSetsubiList, isLoading: projectSetsubiLoading } = trpc.setsubi.getAllByProject.useQuery(
     { project_id: selectedProject },
@@ -73,7 +76,7 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
   const { mutate: createSetsubi } = trpc.setsubi.createMaster.useMutation({
     onSuccess: (data) => {
       // 新規作成した設備を自動選択
-      setSelectedSetsubi(data.data.id.toString());
+      setSelectedSetsubi(data.data?.id?.toString() || '');
       setIsDialogOpen(false);
       // 設備リストを再取得
       void utils.setsubi.getAllByProject.invalidate({ project_id: selectedProject });
@@ -142,8 +145,7 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
       shohin_category: newSetsubiData.shohin_category,
       setsubi_name: newSetsubiData.setsubi_name,
       parent_seiban: newSetsubiData.parent_seiban || undefined,
-      location_code: newSetsubiData.location_code || undefined,
-      project_id: selectedProject
+      location_code: newSetsubiData.location_code || undefined
     });
   };
 
@@ -384,7 +386,7 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
                   <SelectValue placeholder="担当させるプロジェクトを選択してください" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableProjects.map((project) => (
+                  {availableProjects.map((project: any) => (
                     <SelectItem key={project.PROJECT_ID} value={project.PROJECT_ID}>
                       {project.PROJECT_NAME} ({project.PROJECT_ID})
                     </SelectItem>

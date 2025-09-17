@@ -185,7 +185,7 @@ export function LoginModal() {
                     </div>
                   ) : searchResults?.data && Array.isArray(searchResults.data) && searchResults.data.length > 0 ? (
                     <div className="space-y-1 p-2">
-                      {searchResults.data.map((user: UserSearchResult) => (
+                      {searchResults.data.map((user: any) => (
                         <button
                           key={user.user_id}
                           onClick={() => handleUserSelect(user)}

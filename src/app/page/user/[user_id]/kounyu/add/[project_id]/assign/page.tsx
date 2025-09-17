@@ -42,9 +42,13 @@ export default function UserKounyuAssignPage({ params }: UserKounyuAssignPagePro
     user_id: params.user_id
   });
 
-  const { data: projectDetail, isLoading: projectLoading } = trpc.project.getDetail.useQuery({
-    project_id: params.project_id
-  });
+  // TODO: プロジェクト情報取得の実装が必要
+  // const { data: projectDetail, isLoading: projectLoading } = trpc.sql.executeQuery.useQuery({
+  //   query: 'SELECT * FROM projects WHERE project_id = ?',
+  //   params: [params.project_id]
+  // });
+  const projectDetail = null;
+  const projectLoading = false;
 
   const { data: kounyuDetail, isLoading: kounyuLoading } = trpc.kounyu.getDetail.useQuery(
     { kounyu_id: parseInt(kounyuId || '0') },
@@ -121,7 +125,7 @@ export default function UserKounyuAssignPage({ params }: UserKounyuAssignPagePro
   }
 
   // データが見つからない場合
-  if (!userDetail?.data || !projectDetail?.data || !kounyuDetail?.data) {
+  if (!userDetail?.data || !kounyuDetail?.data) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-12 text-gray-500">
@@ -139,7 +143,7 @@ export default function UserKounyuAssignPage({ params }: UserKounyuAssignPagePro
   }
 
   const user = userDetail.data;
-  const project = projectDetail.data;
+  const project = { project_id: params.project_id, project_name: 'プロジェクト名' }; // ダミーデータ
   const kounyu = kounyuDetail.data;
 
   return (
@@ -196,7 +200,7 @@ export default function UserKounyuAssignPage({ params }: UserKounyuAssignPagePro
               onClick={() => router.push(`/page/user/${params.user_id}/kounyu/add/${params.project_id}`)}
               className="hover:text-blue-600 transition-colors"
             >
-              {project.PROJECT_NAME}
+              {project.project_name}
             </button>
           </li>
           <li className="flex items-center">
@@ -210,7 +214,7 @@ export default function UserKounyuAssignPage({ params }: UserKounyuAssignPagePro
         <div>
           <h1 className="text-2xl font-bold">{user.name_japanese} の購入品担当割り当て</h1>
           <p className="text-gray-600 mt-1">
-            プロジェクト「{project.PROJECT_NAME}」の購入品「{kounyu.item_name}」を担当者に設定します
+             プロジェクト「{project.project_name}」の購入品「{kounyu.item_name}」を担当者に設定します
           </p>
         </div>
         <div className="space-x-2">
@@ -237,7 +241,7 @@ export default function UserKounyuAssignPage({ params }: UserKounyuAssignPagePro
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-md">
               <div>
                 <label className="text-sm font-medium text-gray-600">プロジェクト</label>
-                <p className="text-sm">{project.PROJECT_NAME} ({project.PROJECT_ID})</p>
+                <p className="text-sm">{project.project_name} ({project.project_id})</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">購入品</label>

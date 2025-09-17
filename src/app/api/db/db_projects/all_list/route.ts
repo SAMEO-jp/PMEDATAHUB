@@ -5,6 +5,7 @@ import { Project } from '@src/types/db_project';
 // プロジェクト一覧を取得するAPI
 export async function GET(request: Request) {
   console.log('API: list projects start');
+  console.log('API: request URL:', request.url);
   try {
     const { searchParams } = new URL(request.url || '', 'http://localhost');
     const search = searchParams.get('search') || '';
@@ -24,7 +25,9 @@ export async function GET(request: Request) {
       );
     } else {
       console.log('API: fetch all');
+      console.log('API: calling GetAllData...');
       result = await GetAllData<Project[]>({ tableName: 'PROJECT' });
+      console.log('API: GetAllData result:', result);
     }
 
     if (!result.success) {
@@ -55,6 +58,14 @@ export async function GET(request: Request) {
     return NextResponse.json(response);
   } catch (error) {
     console.error('API: error', error);
-    return NextResponse.json({ error: 'プロジェクトの取得に失敗しました' }, { status: 500 });
+    console.error('API: error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    });
+    return NextResponse.json({ 
+      error: 'プロジェクトの取得に失敗しました',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }

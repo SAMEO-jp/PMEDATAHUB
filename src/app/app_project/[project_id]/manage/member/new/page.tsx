@@ -74,7 +74,7 @@ export default function NewMemberPage({ params }: NewMemberPageProps) {
 
   // 部署データが変更されたらツリーを再生成
   useEffect(() => {
-    if (departments.length > 0) {
+    if (departments && departments.length > 0) {
       // 部→室→課のツリー生成
       const buList = departments.filter((d: any) => d.department_kind === "部");
       const sitsuList = departments.filter((d: any) => d.department_kind === "室");
@@ -105,19 +105,19 @@ export default function NewMemberPage({ params }: NewMemberPageProps) {
   let memberList: User[] = [];
   if (selectedBu && !selectedSitsu && !selectedKa) {
     // 部だけ選択時: 部に所属し、sectionもteamも空の人のみ
-    memberList = users.filter((u: any) =>
+    memberList = (users || []).filter((u: any) =>
       u.bumon === selectedBu && !u.sitsu && !u.ka
     );
   } else if (selectedBu && selectedSitsu && !selectedKa) {
     // 室選択時: 室に所属し、teamが空
-    memberList = users.filter((u: any) =>
+    memberList = (users || []).filter((u: any) =>
       u.bumon === selectedBu &&
       u.sitsu === selectedSitsu &&
       (!u.ka)
     );
   } else if (selectedBu && selectedSitsu && selectedKa) {
     // 課選択時: 課に所属
-    memberList = users.filter((u: any) =>
+    memberList = (users || []).filter((u: any) =>
       u.bumon === selectedBu &&
       u.sitsu === selectedSitsu &&
       u.ka === selectedKa

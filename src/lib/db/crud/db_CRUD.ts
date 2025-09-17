@@ -16,7 +16,7 @@ export async function insertData<T extends Record<string, unknown>>(table: strin
     const values = Object.values(data);
 
     const query = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
-    const result = await db!.run(query, values);
+    const result = await db.run(query, values);
 
     return {
       success: true,
