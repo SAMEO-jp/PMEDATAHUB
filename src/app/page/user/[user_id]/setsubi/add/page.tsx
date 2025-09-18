@@ -50,8 +50,11 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
     user_id: params.user_id
   });
 
-  // プロジェクト一覧取得
-  const { data: projectList, isLoading: projectLoading } = trpc.project.getAll.useQuery();
+  // ユーザーの参加プロジェクト一覧を取得（ユーザー詳細から）
+  const availableProjects = userDetail?.data?.projects || [];
+
+  // 全設備一覧取得（担当割り当て用）
+  const { data: allSetsubiList, isLoading: allSetsubiLoading } = trpc.setsubi.getAll.useQuery();
 
   const { data: projectSetsubiList, isLoading: projectSetsubiLoading } = trpc.setsubi.getAllByProject.useQuery(
     { project_id: selectedProject },
@@ -60,6 +63,8 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
 
   const { mutate: addSetsubiAssignment } = trpc.setsubiAssignment.add.useMutation({
     onSuccess: () => {
+      // プロジェクトの設備一覧を再取得
+      void utils.setsubi.getAllByProject.invalidate({ project_id: selectedProject });
       router.push(`/page/user/${params.user_id}`);
     },
     onError: (error) => {
@@ -77,6 +82,7 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
       setSelectedSetsubi(data.data?.id?.toString() || '');
       setIsDialogOpen(false);
       // 設備リストを再取得
+      void utils.setsubi.getAll.invalidate();
       void utils.setsubi.getAllByProject.invalidate({ project_id: selectedProject });
       // フォームをリセット
       setNewSetsubiData({
@@ -95,10 +101,13 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
     }
   });
 
-  // プロジェクトの設備一覧から選択可能な設備をフィルタリング（未担当のもののみ）
-  const availableSetsubi = projectSetsubiList?.data?.filter(setsubi =>
-    !userDetail?.data?.setsubi_assignments?.some(assignment => assignment.setsubi_id === setsubi.id)
-  ) || [];
+  // プロジェクトの設備一覧から選択可能な設備をフィルタリング
+  const availableSetsubi = projectSetsubiList?.data?.map(setsubi => ({
+    ...setsubi,
+    isAssigned: userDetail?.data?.setsubi_assignments?.some(assignment => 
+      assignment.setsubi_id === setsubi.id && assignment.project_id === selectedProject
+    ) || false
+  })) || [];
 
   const handleProjectSelect = (projectId: string) => {
     setSelectedProject(projectId);
@@ -163,6 +172,7 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
 
     setIsSubmitting(true);
 
+    // 設備担当を割り当て（プルダウンに表示される設備は既にプロジェクトに登録済み）
     addSetsubiAssignment({
       project_id: selectedProject,
       setsubi_id: parseInt(selectedSetsubi),
@@ -176,7 +186,7 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
   };
 
   // ローディング中
-  if (userLoading || projectLoading || (selectedProject && projectSetsubiLoading)) {
+  if (userLoading || (selectedProject && projectSetsubiLoading)) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-center items-center min-h-[200px]">
@@ -205,7 +215,6 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
   }
 
   const user = userDetail.data;
-  const availableProjects = projectList?.data || [];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -391,8 +400,8 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
                 </SelectTrigger>
                 <SelectContent>
                   {availableProjects.map((project: any) => (
-                    <SelectItem key={project.PROJECT_ID} value={project.PROJECT_ID}>
-                      {project.PROJECT_NAME} ({project.PROJECT_ID})
+                    <SelectItem key={project.project_id} value={project.project_id}>
+                      {project.project_name} ({project.project_id})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -417,8 +426,14 @@ export default function UserSetsubiProjectSelectPage({ params }: UserSetsubiProj
                   </SelectTrigger>
                   <SelectContent>
                     {availableSetsubi.map((setsubi) => (
-                      <SelectItem key={setsubi.id} value={setsubi.id.toString()}>
+                      <SelectItem 
+                        key={setsubi.id} 
+                        value={setsubi.id.toString()}
+                        disabled={setsubi.isAssigned}
+                        className={setsubi.isAssigned ? 'opacity-50 cursor-not-allowed' : ''}
+                      >
                         {setsubi.setsubi_name} (製番: {setsubi.seiban})
+                        {setsubi.isAssigned && ' - 割り振り済み'}
                       </SelectItem>
                     ))}
                   </SelectContent>

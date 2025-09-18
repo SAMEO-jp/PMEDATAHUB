@@ -71,7 +71,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         {/* カラー表示ボタン */}
         <button
           type="button"
-          className="flex items-center gap-2 w-full p-2 border border-gray-300 rounded-md hover:border-gray-400 transition-colors"
+          className="flex items-center gap-1 w-full p-1 border border-gray-300 rounded-md hover:border-gray-400 transition-colors"
           onClick={() => setIsOpen(!isOpen)}
         >
           <div
@@ -93,11 +93,11 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
         {/* カラーピッカーポップアップ */}
         {isOpen && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 p-3 min-w-[280px]">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 p-2 min-w-[280px]">
             {/* プリセットカラー */}
-            <div className="mb-3">
-              <div className="text-xs font-medium text-gray-700 mb-2">プリセットカラー</div>
-              <div className="grid grid-cols-5 gap-2">
+            <div className="mb-2">
+              <div className="text-xs font-medium text-gray-700 mb-1">プリセットカラー</div>
+              <div className="grid grid-cols-5 gap-1">
                 {PRESET_COLORS.map((color) => (
                   <button
                     key={color}
@@ -115,8 +115,8 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
             {/* カスタムカラー */}
             <div>
-              <div className="text-xs font-medium text-gray-700 mb-2">カスタムカラー</div>
-              <div className="flex items-center gap-2">
+              <div className="text-xs font-medium text-gray-700 mb-1">カスタムカラー</div>
+              <div className="flex items-center gap-1">
                 <input
                   type="color"
                   value={customColor}

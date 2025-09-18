@@ -55,7 +55,7 @@ export const useAuthMutations = () => {
       console.log('Login success:', response);
       if (response.success && response.data) {
         // Zustandストアにユーザー情報を保存
-        setUser(response.data);
+        setUser(response.data as any);
         
         // localStorageにも保存（永続化）
         try {

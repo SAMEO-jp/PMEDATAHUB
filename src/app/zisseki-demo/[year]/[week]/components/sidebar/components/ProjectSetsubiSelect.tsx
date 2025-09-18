@@ -1,4 +1,5 @@
 import { OnLocalChange, OnCommit } from '../ui/types';
+import { CustomDropdown } from './CustomDropdown';
 
 interface ProjectSetsubiOption {
   projectId: string;
@@ -29,27 +30,28 @@ export const ProjectSetsubiSelect = ({
   placeholder = "プロジェクト-担当装置を選択してください",
   disabled = false
 }: ProjectSetsubiSelectProps) => {
+  // カスタムドロップダウン用のオプションに変換
+  const dropdownOptions = combinations.map((combination) => ({
+    value: `${combination.projectId}|${combination.setsubiCode}`,
+    label: combination.projectName,
+    subLabel: `装置: ${combination.setsubiName}`,
+    description: `プロジェクトID: ${combination.projectId} | 製番: ${combination.setsubiCode}`
+  }));
+
   return (
-    <div className="flex-1">
-      {label && (
-        <label className="block text-xs font-medium text-gray-700 mb-1">
-          {label}
-        </label>
-      )}
-      <select
-        value={value}
-        onChange={(e) => onLocalChange(e.target.value)}
-        onBlur={(e) => onCommit?.(e.target.value)}
-        disabled={disabled}
-        className="w-full p-1.5 border border-gray-300 rounded text-xs disabled:bg-gray-100 disabled:cursor-not-allowed"
-      >
-        <option value="">{placeholder}</option>
-        {combinations.map((combination) => (
-          <option key={`${combination.projectId}-${combination.setsubiId}`} value={`${combination.projectId}|${combination.setsubiCode}`}>
-            {combination.displayText}
-          </option>
-        ))}
-      </select>
-    </div>
+    <select
+      value={value}
+      onChange={(e) => onLocalChange(e.target.value)}
+      onBlur={(e) => onCommit?.(e.target.value)}
+      disabled={disabled}
+      className="w-full p-1 border border-gray-300 rounded text-xs disabled:bg-gray-100 disabled:cursor-not-allowed"
+    >
+      <option value="">{placeholder}</option>
+      {combinations.map((combination) => (
+        <option key={`${combination.projectId}-${combination.setsubiId}`} value={`${combination.projectId}|${combination.setsubiCode}`}>
+          {combination.projectName} - {combination.setsubiName}
+        </option>
+      ))}
+    </select>
   );
 };

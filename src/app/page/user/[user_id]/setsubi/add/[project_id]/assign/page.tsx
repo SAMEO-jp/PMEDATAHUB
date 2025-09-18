@@ -52,8 +52,12 @@ export default function UserSetsubiAssignPage({ params }: UserSetsubiAssignPageP
     { enabled: !!setsubiId }
   );
 
+  const utils = trpc.useUtils();
+
   const { mutate: addSetsubiAssignment } = trpc.setsubiAssignment.add.useMutation({
     onSuccess: () => {
+      // プロジェクトの設備一覧を再取得
+      void utils.setsubi.getAllByProject.invalidate({ project_id: params.project_id });
       router.push(`/page/user/${params.user_id}`);
     },
     onError: (error) => {
@@ -91,6 +95,7 @@ export default function UserSetsubiAssignPage({ params }: UserSetsubiAssignPageP
 
     setIsSubmitting(true);
 
+    // 設備担当を割り当て（プルダウンに表示される設備は既にプロジェクトに登録済み）
     addSetsubiAssignment({
       project_id: params.project_id,
       setsubi_id: parseInt(setsubiId),

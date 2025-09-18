@@ -8,7 +8,7 @@ interface SidebarBasicProps {
 
 export const SidebarBasic = ({ form }: SidebarBasicProps) => {
   return (
-    <div className="space-y-2 p-2">
+    <div className="space-y-1 px-1 pt-1 pb-0">
       <TitleField
         value={form.title}
         onChange={(value) => form.onLocalChange('title', value)}

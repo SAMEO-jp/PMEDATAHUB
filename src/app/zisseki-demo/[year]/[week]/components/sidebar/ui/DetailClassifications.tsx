@@ -91,7 +91,7 @@ const IndirectDetailClassifications = ({
     <div className="zisseki-demo detail-classifications">
       {/* 3段階目（詳細タブ）の表示 */}
       <div className="zisseki-demo classification-label">詳細分類（{currentDetailSubTab}）</div>
-      <div className="zisseki-demo flex flex-wrap gap-2">
+      <div className="zisseki-demo flex flex-wrap gap-1">
         {classifications.map((classification: BusinessCodeInfo) => {
           const newCode = generateCode(currentMainSubTab, currentDetailSubTab, classification);
           const isSelected = currentCode === newCode;
@@ -140,7 +140,7 @@ const UnifiedDetailClassifications = ({
   return (
     <div className="zisseki-demo detail-classifications">
       <div className="zisseki-demo classification-label">詳細分類</div>
-      <div className="zisseki-demo flex flex-wrap gap-2">
+      <div className="zisseki-demo flex flex-wrap gap-1">
         {classifications.map((classification: BusinessCodeInfo) => {
           const newCode = generateCode(currentMainSubTab, currentDetailSubTab, classification);
           const isSelected = currentCode === newCode;

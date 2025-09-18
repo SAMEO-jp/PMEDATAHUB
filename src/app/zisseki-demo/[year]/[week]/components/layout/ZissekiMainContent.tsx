@@ -168,30 +168,29 @@ export function ZissekiMainContent({ year, week, onSave, saveFunctionRef }: Ziss
   // ========================================
   
   return (
-    <div className="zisseki-demo flex h-screen bg-gray-50">
-      {/* メインコンテンツ */}
-      <div className="main-content-area overflow-hidden flex flex-col">
-        
-        {/* タイムグリッド */}
-        <div className="flex-1 overflow-hidden">
-          <Suspense fallback={<LoadingSpinner />}>
-            <TimeGrid 
-              year={year}
-              week={week}
-              events={eventState.events || []}
-              workTimes={workTimeState.workTimes}
-              selectedEvent={eventState.selectedEvent}
-              onEventClick={eventState.handleEventClick}
-              onTimeSlotClick={handleTimeSlotClick}
-              onWorkTimeChange={workTimeState.updateWorkTime}
-            />
-          </Suspense>
-        </div>
+    <div className="zisseki-demo zisseki-grid-layout h-screen bg-gray-50">
+      {/* タイムグリッドエリア */}
+      <div className="time-grid-area overflow-hidden">
+        <Suspense fallback={<LoadingSpinner />}>
+          <TimeGrid 
+            year={year}
+            week={week}
+            events={eventState.events || []}
+            workTimes={workTimeState.workTimes}
+            selectedEvent={eventState.selectedEvent}
+            onEventClick={eventState.handleEventClick}
+            onTimeSlotClick={handleTimeSlotClick}
+            onWorkTimeChange={workTimeState.updateWorkTime}
+          />
+        </Suspense>
       </div>
-      {/* サイドバー */}
-      <Suspense fallback={<LoadingSpinner />}>
-        <ZissekiSidebar />
-      </Suspense>
+      
+      {/* サイドバーエリア */}
+      <div className="sidebar-area overflow-hidden">
+        <Suspense fallback={<LoadingSpinner />}>
+          <ZissekiSidebar />
+        </Suspense>
+      </div>
       
       {/* フッタースペーサー（画面下部固定） */}
       <div className="footer-spacer"></div>

@@ -135,8 +135,8 @@ export const useAuthOperations = () => {
   const logoutMutation = trpc.auth.logout.useMutation();
   const validateUserQuery = trpc.auth.validateUser.useQuery;
 
-  const handleLogin = (userId: string, password: string) => {
-    return loginMutation.mutateAsync({ userId, password });
+  const handleLogin = (userId: string) => {
+    return loginMutation.mutateAsync({ userId });
   };
 
   const handleLogout = () => {

@@ -8,4 +8,4 @@ export * from './ui';
 export { TimeGrid } from './weekgrid/TimeGrid';
 export { ZissekiSidebar } from './sidebar/ZissekiSidebar';
 export { createEventCreationHandler } from './EventCreationHandler';
-export { TimeGridHeader } from './TimeGridHeader';
+export { TimeGridHeader } from './weekgrid/components/TimeGridHeader';

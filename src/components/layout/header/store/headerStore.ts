@@ -126,7 +126,8 @@ interface HeaderActions {
   updateProjectInfo: (updates: Partial<ProjectInfo>) => void;      // プロジェクト情報を部分更新
   
   // === コンポーネント設定管理 ===
-  setComponentConfig: (type: HeaderDisplayType, config: Partial<HeaderComponentConfig>) => void;  // コンポーネント設定を更新
+  setComponentConfig: (config: Partial<HeaderComponentConfig>) => void;  // 現在の表示タイプのコンポーネント設定を更新
+  setComponentConfigByType: (type: HeaderDisplayType, config: Partial<HeaderComponentConfig>) => void;  // 特定の表示タイプのコンポーネント設定を更新
   resetComponentConfig: (type: HeaderDisplayType) => void;                                         // コンポーネント設定をリセット
   
   // === UI状態管理 ===
@@ -285,11 +286,24 @@ export const useHeaderStore = create<HeaderState & HeaderActions>()(
 
       // === コンポーネント設定管理 ===
       /**
+       * 現在の表示タイプのコンポーネント設定を更新
+       * @param config 更新する設定項目
+       */
+      setComponentConfig: (config: Partial<HeaderComponentConfig>) => {
+        set((state) => ({
+          componentConfigs: {
+            ...state.componentConfigs,
+            [state.displayType]: { ...state.componentConfigs[state.displayType], ...config }
+          }
+        }));
+      },
+
+      /**
        * 特定の表示タイプのコンポーネント設定を更新
        * @param type 対象の表示タイプ
        * @param config 更新する設定項目
        */
-      setComponentConfig: (type: HeaderDisplayType, config: Partial<HeaderComponentConfig>) => {
+      setComponentConfigByType: (type: HeaderDisplayType, config: Partial<HeaderComponentConfig>) => {
         set((state) => ({
           componentConfigs: {
             ...state.componentConfigs,
@@ -490,7 +504,8 @@ export const useHeader = () => {
     resetDisplayConfig: store.resetDisplayConfig,             // 表示設定リセット
     setCurrentProject: store.setCurrentProject,               // プロジェクト設定
     updateProjectInfo: store.updateProjectInfo,               // プロジェクト情報更新
-    setComponentConfig: store.setComponentConfig,             // コンポーネント設定更新
+    setComponentConfig: store.setComponentConfig,             // 現在の表示タイプのコンポーネント設定更新
+    setComponentConfigByType: store.setComponentConfigByType, // 特定の表示タイプのコンポーネント設定更新
     resetComponentConfig: store.resetComponentConfig,         // コンポーネント設定リセット
     toggleSearch: store.toggleSearch,                         // 検索フィールド開閉
     setSearchQuery: store.setSearchQuery,                     // 検索クエリ設定

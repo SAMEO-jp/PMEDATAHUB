@@ -1,13 +1,13 @@
 "use client"
 
-import React, { useState } from 'react'
-import { useZissekiMonthData } from '@src/hooks/useZissekiData'
-import { useAuthState } from '@src/contexts/AuthContext'
+import React, { useState, useContext, useEffect } from 'react'
+import { ViewModeContext } from '../../../ViewModeContext'
 import type { TimeGridEvent } from '@src/app/zisseki-demo/[year]/[week]/types'
 
 interface ZissekiDataViewProps {
   year: number
   month: number
+  events: TimeGridEvent[]
 }
 
 
@@ -30,41 +30,93 @@ interface ZissekiDataRow {
   selectedTab: string
   selectedProjectSubTab: string
   selectedIndirectSubTab: string
+  equipmentOrPurchase: string
   createdAt: string
   updatedAt: string
 }
 
-export default function ZissekiDataView({ year, month }: ZissekiDataViewProps) {
-  const { user } = useAuthState()
-  const { data, isLoading, error } = useZissekiMonthData(year, month, user?.user_id || '')
+export default function ZissekiDataView({ year, month, events }: ZissekiDataViewProps) {
+  const { showFilters } = useContext(ViewModeContext)
   const [sortField, setSortField] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const [filters, setFilters] = useState<Record<string, string>>({})
-  const [showFilters, setShowFilters] = useState(false) // フィルター表示状態
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
+  // 日時フォーマット関数
+  const formatDateTime = (dateTimeString: string) => {
+    const date = new Date(dateTimeString)
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+    return {
+      date: `${month}/${day}`,
+      time: `${hours}:${minutes}`
+    }
+  }
+
+  // タイトル省略関数
+  const truncateTitle = (title: string, maxLength: number = 13) => {
+    return title.length > maxLength ? title.substring(0, maxLength) + '…' : title
+  }
+
+  // 説明省略関数
+  const truncateDescription = (description: string, maxLength: number = 30) => {
+    return description.length > maxLength ? description.substring(0, maxLength) + '…' : description
+  }
+
+  // 装置OR購入品の表示用データを生成する関数
+  const getEquipmentOrPurchase = (event: TimeGridEvent & { createdAt: string; updatedAt: string }) => {
+    // 設備番号と設備名がある場合
+    if (event.equipmentNumber && event.equipmentName) {
+      return `${event.equipmentNumber} - ${event.equipmentName}`
+    }
+    // 設備番号のみの場合
+    if (event.equipmentNumber) {
+      return event.equipmentNumber
+    }
+    // 設備名のみの場合
+    if (event.equipmentName) {
+      return event.equipmentName
+    }
+    // アイテム名がある場合（購入品の可能性）
+    if (event.itemName) {
+      return event.itemName
+    }
+    // 何もない場合は空文字
+    return ''
+  }
 
   // zissekiデータを表示用の形式に変換
-  const convertToDisplayData = (events: (TimeGridEvent & { createdAt: string; updatedAt: string })[]): ZissekiDataRow[] => {
-    return events.map((event) => ({
-      id: event.id,
-      title: event.title,
-      description: event.description,
-      project: event.project,
-      startDateTime: event.startDateTime,
-      endDateTime: event.endDateTime,
-      activityCode: event.activityCode || '',
-      employeeNumber: event.employeeNumber || '',
-      equipmentNumber: event.equipmentNumber || '',
-      equipmentName: event.equipmentName || '',
-      purposeProject: event.purposeProject || '',
-      departmentCode: event.departmentCode || '',
-      status: event.status || '',
-      category: event.category || '',
-      selectedTab: event.selectedTab || '',
-      selectedProjectSubTab: event.selectedProjectSubTab || '',
-      selectedIndirectSubTab: event.selectedIndirectSubTab || '',
-      createdAt: event.createdAt || '',
-      updatedAt: event.updatedAt || '',
-    }))
+  const convertToDisplayData = (eventsData: (TimeGridEvent & { createdAt: string; updatedAt: string })[]): ZissekiDataRow[] => {
+    return eventsData.map((event) => {
+      const startFormatted = formatDateTime(event.startDateTime)
+      const endFormatted = formatDateTime(event.endDateTime)
+      
+      return {
+        id: event.id,
+        title: truncateTitle(event.title),
+        description: truncateDescription(event.description || ''),
+        project: event.project,
+        startDateTime: startFormatted.date,
+        endDateTime: `${startFormatted.time} ~ ${endFormatted.time}`,
+        activityCode: event.activityCode || '',
+        employeeNumber: event.employeeNumber || '',
+        equipmentNumber: event.equipmentNumber || '',
+        equipmentName: event.equipmentName || '',
+        purposeProject: event.purposeProject || '',
+        departmentCode: event.departmentCode || '',
+        status: event.status || '',
+        category: event.category || '',
+        selectedTab: event.selectedTab || '',
+        selectedProjectSubTab: event.selectedProjectSubTab || '',
+        selectedIndirectSubTab: event.selectedIndirectSubTab || '',
+        equipmentOrPurchase: getEquipmentOrPurchase(event),
+        createdAt: event.createdAt || '',
+        updatedAt: event.updatedAt || '',
+      }
+    })
   }
 
   // ソート関数
@@ -101,35 +153,36 @@ export default function ZissekiDataView({ year, month }: ZissekiDataViewProps) {
 
   // CSVダウンロード
   const downloadCSV = () => {
-    const events = (data?.data?.events || []) as (TimeGridEvent & { createdAt: string; updatedAt: string })[]
-    const displayData = convertToDisplayData(events)
+    const eventsData = events as (TimeGridEvent & { createdAt: string; updatedAt: string })[]
+    const displayData = convertToDisplayData(eventsData)
     const processedData = filterData(sortData(displayData))
     
-    const columns = [
-      { id: 'id', name: 'ID' },
+    const csvColumns = [
+      { id: 'startDateTime', name: '日付' },
+      { id: 'endDateTime', name: '時刻' },
       { id: 'title', name: 'タイトル' },
-      { id: 'description', name: '説明' },
-      { id: 'project', name: 'プロジェクト' },
-      { id: 'startDateTime', name: '開始日時' },
-      { id: 'endDateTime', name: '終了日時' },
+      { id: 'project', name: 'プロジェクト番号' },
       { id: 'activityCode', name: '業務コード' },
+      { id: 'equipmentOrPurchase', name: '装置OR購入品' },
+      { id: 'status', name: '状態' },
+      { id: 'description', name: '説明' },
       { id: 'employeeNumber', name: '社員番号' },
       { id: 'equipmentNumber', name: '設備番号' },
       { id: 'equipmentName', name: '設備名' },
       { id: 'purposeProject', name: '目的プロジェクト' },
       { id: 'departmentCode', name: '部署コード' },
-      { id: 'status', name: '状態' },
       { id: 'category', name: 'カテゴリ' },
       { id: 'selectedTab', name: '選択タブ' },
       { id: 'selectedProjectSubTab', name: 'プロジェクトサブタブ' },
       { id: 'selectedIndirectSubTab', name: '間接業務サブタブ' },
+      { id: 'id', name: 'ID' },
       { id: 'createdAt', name: '作成日時' },
       { id: 'updatedAt', name: '更新日時' },
     ]
 
-    const headers = columns.map((col) => col.name).join(",")
+    const headers = csvColumns.map((col) => col.name).join(",")
     const rows = processedData.map((row) => {
-      return columns
+      return csvColumns
         .map((col) => {
           const value = row[col.id as keyof ZissekiDataRow] !== undefined && row[col.id as keyof ZissekiDataRow] !== null ? row[col.id as keyof ZissekiDataRow] : ""
           return typeof value === "string" && value.includes(",") ? `"${value}"` : value
@@ -149,73 +202,61 @@ export default function ZissekiDataView({ year, month }: ZissekiDataViewProps) {
     URL.revokeObjectURL(url)
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    )
-  }
+  // CSVダウンロード関数をHeaderContentに登録
+  useEffect(() => {
+    const event = new CustomEvent('updateHeaderData', {
+      detail: { downloadCSV }
+    })
+    document.dispatchEvent(event)
+  }, [downloadCSV])
 
-  if (error) {
-    return (
-      <div className="text-center py-8 text-red-500">
-        エラーが発生しました: {error.message}
-      </div>
-    )
-  }
 
-  const events = (data?.data?.events || []) as (TimeGridEvent & { createdAt: string; updatedAt: string })[]
-  const displayData = convertToDisplayData(events)
+  const eventsData = events as (TimeGridEvent & { createdAt: string; updatedAt: string })[]
+  const displayData = convertToDisplayData(eventsData)
   const processedData = filterData(sortData(displayData))
+  
+  // ページネーション計算
+  const totalItems = processedData.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedData = processedData.slice(startIndex, endIndex)
+  
+  // ページ変更ハンドラー
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+  
+  // フィルターやソートが変更されたらページを1に戻す
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filters, sortField, sortDirection])
 
   const columns = [
-    { id: 'id', name: 'ID', checked: true },
+    { id: 'startDateTime', name: '日付', checked: true },
+    { id: 'endDateTime', name: '時刻', checked: true },
     { id: 'title', name: 'タイトル', checked: true },
-    { id: 'description', name: '説明', checked: false },
-    { id: 'project', name: 'プロジェクト', checked: true },
-    { id: 'startDateTime', name: '開始日時', checked: true },
-    { id: 'endDateTime', name: '終了日時', checked: true },
+    { id: 'project', name: 'プロジェクト番号', checked: true },
     { id: 'activityCode', name: '業務コード', checked: true },
-    { id: 'employeeNumber', name: '社員番号', checked: true },
+    { id: 'equipmentOrPurchase', name: '装置OR購入品', checked: true },
+    { id: 'status', name: '状態', checked: true },
+    { id: 'description', name: '説明', checked: true },
+    { id: 'employeeNumber', name: '社員番号', checked: false },
     { id: 'equipmentNumber', name: '設備番号', checked: false },
     { id: 'equipmentName', name: '設備名', checked: false },
     { id: 'purposeProject', name: '目的プロジェクト', checked: false },
     { id: 'departmentCode', name: '部署コード', checked: false },
-    { id: 'status', name: '状態', checked: true },
     { id: 'category', name: 'カテゴリ', checked: false },
     { id: 'selectedTab', name: '選択タブ', checked: false },
     { id: 'selectedProjectSubTab', name: 'プロジェクトサブタブ', checked: false },
     { id: 'selectedIndirectSubTab', name: '間接業務サブタブ', checked: false },
+    { id: 'id', name: 'ID', checked: false },
     { id: 'createdAt', name: '作成日時', checked: false },
     { id: 'updatedAt', name: '更新日時', checked: false },
   ]
 
   return (
     <div className="space-y-4">
-      {/* ヘッダー */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white rounded-lg shadow-sm">
-        <h2 className="text-xl font-semibold">実績データ ({year}年{month}月)</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`px-4 py-2 rounded text-sm font-medium ${
-              showFilters
-                ? "bg-gray-500 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            {showFilters ? "フィルター非表示" : "フィルター表示"}
-          </button>
-          <button
-            onClick={downloadCSV}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            CSVダウンロード
-          </button>
-        </div>
-      </div>
-
       {/* フィルター（条件付き表示） */}
       {showFilters && (
         <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -246,10 +287,10 @@ export default function ZissekiDataView({ year, month }: ZissekiDataViewProps) {
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
-                {columns.map((column) => (
+                {columns.filter(column => column.checked).map((column) => (
                   <th
                     key={column.id}
-                    className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 cursor-pointer hover:bg-gray-100"
+                    className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 border-r border-gray-200 cursor-pointer hover:bg-gray-100"
                     onClick={() => {
                       if (sortField === column.id) {
                         setSortDirection(sortDirection === "asc" ? "desc" : "asc")
@@ -272,16 +313,16 @@ export default function ZissekiDataView({ year, month }: ZissekiDataViewProps) {
               </tr>
             </thead>
             <tbody>
-              {processedData.length > 0 ? (
-                processedData.map((row, index) => (
+              {paginatedData.length > 0 ? (
+                paginatedData.map((row, index) => (
                   <tr
                     key={row.id}
                     className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                   >
-                    {columns.map((column) => (
+                    {columns.filter(column => column.checked).map((column) => (
                       <td
                         key={column.id}
-                        className="px-4 py-2 text-sm text-gray-900 border-b border-gray-200"
+                        className="px-4 py-2 text-sm text-gray-900 border-b border-gray-200 border-r border-gray-200"
                       >
                         {row[column.id as keyof ZissekiDataRow] || ""}
                       </td>
@@ -291,7 +332,7 @@ export default function ZissekiDataView({ year, month }: ZissekiDataViewProps) {
               ) : (
                 <tr>
                   <td
-                    colSpan={columns.length}
+                    colSpan={columns.filter(column => column.checked).length}
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     データがありません
@@ -303,10 +344,52 @@ export default function ZissekiDataView({ year, month }: ZissekiDataViewProps) {
         </div>
       </div>
 
-      {/* 統計情報 */}
+      {/* 統計情報とページネーション */}
       <div className="bg-white rounded-lg shadow-sm p-4">
-        <div className="text-sm text-gray-600">
-          総件数: {processedData.length}件
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-600">
+            総件数: {totalItems}件 (ページ {currentPage}/{totalPages})
+          </div>
+          
+          {/* ページネーション */}
+          {totalPages > 1 && (
+            <div className="flex items-center space-x-2">
+              {/* 前のページボタン */}
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                前へ
+              </button>
+              
+              {/* ページ番号 */}
+              <div className="flex space-x-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-3 py-1 text-sm border rounded-md ${
+                      currentPage === page
+                        ? 'bg-blue-500 text-white border-blue-500'
+                        : 'border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              
+              {/* 次のページボタン */}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                次へ
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

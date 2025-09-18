@@ -22,7 +22,7 @@ export default function MemberManagePage({ params }: ManagePageProps) {
   // tRPCを使用してメンバー管理
   const {
     members,
-    loadingMembers,
+    isLoading: loadingMembers,
     handleRemoveMember,
     isRemovingMember
   } = useProjectMembers(params.project_id);

@@ -23,7 +23,7 @@ export const TimeGridHeader = ({ weekDays }: TimeGridHeaderProps) => {
     <>
       {/* 時間ラベルのヘッダー（左上の空白セル） */}
       {/* タイムグリッドの左上角に配置される空白エリア - 時間ラベル列のヘッダー部分 */}
-      <div className="sticky top-0 left-0 z-20 p-1 border-r border-b bg-gray-50 w-10"></div>
+      <div className="sticky top-0 left-0 z-20 p-1 border-r border-b bg-gray-50 w-8"></div>
       
       {/* 日付ヘッダー - stickyで上部に固定 */}
       {weekDays.map((day, index) => {
@@ -41,15 +41,15 @@ export const TimeGridHeader = ({ weekDays }: TimeGridHeaderProps) => {
         return (
         <div
           key={index}
-          className={`sticky top-0 z-10 p-1 text-center border-r border-b ${bgColorClass}`}
-          style={{ height: "42px" }}  // ヘッダーの高さを42pxに固定
+          className={`sticky top-0 z-10 p-0.5 text-center border-r border-b ${bgColorClass}`}
+          style={{ height: "42px", minWidth: "60px" }}  // ヘッダーの高さを42px、最小幅を60pxに固定
         >
           {/* 日付表示エリア */}
           <div className="font-medium text-xs flex flex-col justify-center">
             {/* 曜日表示（日、月、火...） */}
-            <span className="font-bold">{WEEKDAY_JP[dayOfWeek]}</span>
+            <span className="font-bold text-xs">{WEEKDAY_JP[dayOfWeek]}</span>
             {/* 日付表示（フォーマット済み） */}
-            <span>{formatDayWithWeekday(day)}</span>
+            <span className="text-xs">{formatDayWithWeekday(day)}</span>
           </div>
         </div>
         );

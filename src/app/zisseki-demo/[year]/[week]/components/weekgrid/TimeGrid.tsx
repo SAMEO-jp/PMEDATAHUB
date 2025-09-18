@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useLayoutEffect, useRef } from "react"
 import { TimeGridProps } from "../../types"
 import { useTimeGridData } from "./hooks/useTimeGridData"
 import { useWorkTimeHandlers } from "./hooks/useWorkTimeHandlers"
@@ -26,12 +26,56 @@ export const TimeGrid = ({
   const { createTimeChangeHandler } = useWorkTimeHandlers(workTimes);
   const handleTimeChange = createTimeChangeHandler(onWorkTimeChange);
 
+  // スクロールコンテナの参照
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // 8時の位置にスクロールする（ちらつきを防ぐためuseLayoutEffectを使用）
+  useLayoutEffect(() => {
+    if (scrollContainerRef.current) {
+      // 即座にスクロール位置を設定（ちらつきを防ぐ）
+      const headerHeight = 42;
+      const workTimeSectionHeight = 64;
+      const timeSlotHeight = 32; // 各30分スロットの高さ（h-8 = 32px）
+      const scrollToPosition = headerHeight + workTimeSectionHeight + (8 * timeSlotHeight);
+      
+      // 即座にスクロール位置を設定
+      scrollContainerRef.current.scrollTop = scrollToPosition;
+    }
+  }, [year, week]);
+
+  // より正確な位置に調整するため、少し遅延して再計算
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      setTimeout(() => {
+        if (scrollContainerRef.current) {
+          // 実際のDOM要素の高さを測定
+          const timeSlotElements = scrollContainerRef.current.querySelectorAll('[class*="h-8"]');
+          const actualTimeSlotHeight = timeSlotElements.length > 0 ? timeSlotElements[0].getBoundingClientRect().height : 32;
+          
+          // より正確な位置を計算
+          const headerHeight = 42;
+          const workTimeSectionHeight = 64;
+          const accurateScrollPosition = headerHeight + workTimeSectionHeight + (8 * actualTimeSlotHeight);
+          
+          // 位置が大きく異なる場合のみ調整
+          if (Math.abs(scrollContainerRef.current.scrollTop - accurateScrollPosition) > 10) {
+            scrollContainerRef.current.scrollTop = accurateScrollPosition;
+          }
+        }
+      }, 50);
+    }
+  }, [year, week]);
+
   return (
-    <div className="flex-1 bg-white rounded-lg shadow overflow-hidden">
+    <div className="h-full bg-gray-50 rounded-lg shadow overflow-hidden">
       {/* 全体を一つのスクロールコンテナにまとめる */}
       <div 
-        className="overflow-auto"
-        style={{ height: "calc(100vh - 8rem)", scrollPaddingTop: "9rem" }}
+        ref={scrollContainerRef}
+        className="overflow-auto h-full"
+        style={{ 
+          scrollPaddingTop: "9rem",
+          scrollBehavior: "auto" // ちらつきを防ぐため即座にスクロール
+        }}
       >
         <div className="grid" style={{ gridTemplateColumns: 'auto repeat(7, 1fr)' }}>
           {/* ヘッダー部分 */}

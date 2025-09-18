@@ -148,3 +148,105 @@ export const useProjectOperations = () => {
     refreshData,
   };
 };
+
+/**
+ * プロジェクトメンバー管理のフック
+ */
+export const useProjectMembers = (projectId: string) => {
+  const utils = trpc.useUtils();
+  
+  const { data: members = [], isLoading } = trpc.project.getMembers.useQuery(
+    { project_id: projectId },
+    { enabled: !!projectId }
+  );
+
+  const addMemberMutation = trpc.project.addMember.useMutation({
+    onSuccess: () => {
+      void utils.project.getMembers.invalidate({ project_id: projectId });
+    },
+  });
+
+  const removeMemberMutation = trpc.project.removeMember.useMutation({
+    onSuccess: () => {
+      void utils.project.getMembers.invalidate({ project_id: projectId });
+    },
+  });
+
+  const handleAddMember = async (userId: string, role: string) => {
+    return addMemberMutation.mutateAsync({
+      project_id: projectId,
+      user_id: userId,
+      role: role,
+    });
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    return removeMemberMutation.mutateAsync({
+      project_id: projectId,
+      user_id: userId,
+    });
+  };
+
+  return {
+    members: (members as any)?.data || [],
+    isLoading,
+    isAddingMember: addMemberMutation.isPending,
+    isRemovingMember: removeMemberMutation.isPending,
+    handleAddMember,
+    handleRemoveMember,
+  };
+};
+
+/**
+ * 部署データを取得するフック
+ */
+export const useDepartments = () => {
+  const query = trpc.department.getAll.useQuery(undefined, {
+    staleTime: 10 * 60 * 1000, // 10分間キャッシュ
+    gcTime: 20 * 60 * 1000, // 20分間キャッシュ保持
+  });
+  
+  return {
+    ...query,
+    data: query.data?.data || [],
+  };
+};
+
+/**
+ * 全ユーザーデータを取得するフック
+ */
+export const useAllUsers = () => {
+  const query = trpc.user.getAll.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000, // 5分間キャッシュ
+    gcTime: 10 * 60 * 1000, // 10分間キャッシュ保持
+  });
+  
+  return {
+    ...query,
+    data: query.data?.data || [],
+  };
+};
+
+/**
+ * プロジェクト作成のフック
+ */
+export const useProjectCreate = () => {
+  const utils = trpc.useUtils();
+  
+  const createMutation = trpc.project.create.useMutation({
+    onSuccess: () => {
+      void utils.project.getAll.invalidate();
+      void utils.project.getStats.invalidate();
+    },
+  });
+
+  const handleCreate = (formData: any) => {
+    return createMutation.mutateAsync(formData);
+  };
+
+  return {
+    ...createMutation,
+    handleCreate,
+    isLoading: createMutation.isPending,
+  };
+};

@@ -4,7 +4,15 @@ import React from "react"
 import { TimeGridEvent } from "../../../types"
 import { useState, useCallback, useRef } from "react"
 import { useEventContext } from "../../../context/EventContext"
+import { useDatabase } from "../../../context/DatabaseContext"
 import { calculateEventDateTime } from "../../../utils/eventPositionCalculator"
+
+interface OverlapLayout {
+  width: number;
+  left: number;
+  zIndex: number;
+  canMove: boolean;
+}
 
 interface EventDisplayProps {
   event: TimeGridEvent
@@ -14,6 +22,7 @@ interface EventDisplayProps {
   // 日付変更のために週の日付情報を受け取る
   weekDays?: Date[]
   dayIndex?: number // 現在のイベントがどの日付カラムにあるか
+  overlapLayout?: OverlapLayout // 重複レイアウト情報
 }
 
 // 時間計算用のユーティリティ関数
@@ -71,8 +80,9 @@ const calculateDayIndexFromMouseX = (mouseX: number, weekDays: Date[]): number =
   return clampedIndex;
 };
 
-export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, weekDays, dayIndex }: EventDisplayProps) => {
+export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, weekDays, dayIndex, overlapLayout }: EventDisplayProps) => {
   const { handleUpdateEvent } = useEventContext();
+  const { userInfo } = useDatabase();
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState<'top' | 'bottom' | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -91,6 +101,16 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
   };
   
   const activityCode = getDefaultActivityCode();
+
+  // プロジェクト名称を取得する関数
+  const getProjectName = (projectId: string): string => {
+    if (!userInfo?.projects || !projectId) return '';
+    
+    const project = userInfo.projects.find(p => p.project_id === projectId);
+    return project?.project_name || '';
+  };
+
+  const projectName = getProjectName(event.project);
 
   // イベントの位置が変更された時に一時位置も更新
   React.useEffect(() => {
@@ -295,18 +315,21 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
       style={{
         top: `${isDragging || isResizing ? tempPosition.top : event.top}px`,
         height: `${Math.max(isDragging || isResizing ? tempPosition.height : event.height, minutesToPixels(10))}px`, // 最小高さ10分を確保
-        left: "4px",
-        right: "4px",
+        left: overlapLayout ? `${overlapLayout.left}%` : "4px",
+        right: overlapLayout ? "auto" : "4px",
+        width: overlapLayout ? `${overlapLayout.width}%` : "auto",
         backgroundColor: event.color,
         color: "white",
         cursor: isDragging ? 'move' : isResizing ? 'ns-resize' : 'pointer',
         opacity: isDragging || isResizing ? 0.8 : 1,
         transform: isDragging || isResizing ? 'scale(1.02)' : 'scale(1)',
         transition: isDragging || isResizing ? 'none' : 'transform 0.1s ease',
+        zIndex: overlapLayout ? overlapLayout.zIndex : 1,
         // 日付変更時の視覚効果
         boxShadow: isDragging && tempDayIndex !== (dayIndex || 0) 
           ? '0 8px 25px rgba(59, 130, 246, 0.6), 0 0 0 2px rgba(59, 130, 246, 0.3)' 
-          : isDragging || isResizing ? '0 4px 12px rgba(0, 0, 0, 0.3)' : ''
+          : isDragging || isResizing ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '',
+        borderStyle: 'solid'
       }}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
@@ -344,8 +367,9 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
           {event.title}
         </div>
         
+        
         {/* イベント説明 - 高さが十分な時のみ表示 */}
-        {event.description && Math.max(isDragging || isResizing ? tempPosition.height : event.height, minutesToPixels(10)) >= 30 && (
+        {event.description && Math.max(isDragging || isResizing ? tempPosition.height : event.height, minutesToPixels(10)) >= 45 && (
           <div className="text-xs opacity-90 truncate leading-tight">{event.description}</div>
         )}
         

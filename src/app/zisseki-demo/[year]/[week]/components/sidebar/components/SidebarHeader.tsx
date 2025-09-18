@@ -10,9 +10,9 @@ interface SidebarHeaderProps {
 
 export const SidebarHeader = ({ title, eventId, activeTab, onTabChange }: SidebarHeaderProps) => {
   return (
-    <div className="p-3 border-b">
+    <div className="px-3 pt-3 pb-4 border-b border-gray-200">
       <div className="flex justify-between items-center">
-        <h2 className="text-sm font-bold">{title}</h2>
+        <h2 className="text-base font-bold">{title}</h2>
         <TabSelector 
           eventId={eventId}
           activeTab={activeTab} 

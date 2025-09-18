@@ -14,7 +14,7 @@ export const TimeLabels = ({ timeSlots }: TimeLabelsProps) => {
       {timeSlots.map((hour) => (
         <div
           key={hour}
-          className="h-16 border-b border-r p-1 text-xs text-right pr-2 bg-gray-50 flex flex-col justify-center w-10"
+          className="h-16 border-b border-r p-1 text-xs text-right pr-1 bg-gray-50 flex flex-col justify-center w-8"
         >
           {/* 時間表示（例：9時、10時など） */}
           <div>{hour}時</div>

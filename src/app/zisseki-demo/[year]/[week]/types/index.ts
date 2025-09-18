@@ -36,11 +36,11 @@ export interface Event {
   setsubi?: string; // 選択された装備（製番）
   kounyu?: string; // 選択された購入品（管理番号）
   user_id?: string; // ユーザーID（個人実績データのため追加）
-  equipmentNumber?: string;
-  equipmentName?: string;
-  equipment_id?: string;
-  equipment_Name?: string;
-  itemName?: string;
+  equipmentNumber?: string; // 装置番号（製番）
+  equipmentName?: string; // 装置名
+  equipment_id?: string; // 装置ID
+  equipment_Name?: string; // 装置名（別名）
+  itemName?: string; // 購入品名
   startDateTime: string;
   endDateTime: string;
   activityCode?: BusinessCode; // 業務分類コード（型安全性を向上）

@@ -20,6 +20,7 @@ import { projectRouter } from './db/project';
 import { projectMemberRouter } from './db/projectMember';
 import { setsubiAssignmentRouter } from './db/setsubiAssignment';
 import { kounyuAssignmentRouter } from './db/kounyuAssignment';
+import { departmentRouter } from './db/department';
 
 // Box item用ルーター
 import { boxRouter } from './box';
@@ -51,6 +52,7 @@ export const appRouter = createTRPCRouter({
   projectMember: projectMemberRouter,
   setsubiAssignment: setsubiAssignmentRouter,
   kounyuAssignment: kounyuAssignmentRouter,
+  department: departmentRouter,
 
   // Box item用ルーター
   box: boxRouter,

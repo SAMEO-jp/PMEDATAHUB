@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { HeaderConfig, HeaderAction } from './header/types';
 import { useHeader } from './header/store/headerStore';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -9,11 +10,15 @@ import { HeaderActions } from './header/components/HeaderActions';
 import { HeaderSearch } from './header/components/HeaderSearch';
 import { HeaderUserMenu } from './header/components/HeaderUserMenu';
 import { HeaderNotifications } from './header/components/HeaderNotifications';
+import { getHeaderConfigByPath, customizeHeaderConfig } from './header/config/headerConfigs';
 
 interface HeaderContentProps extends HeaderConfig {
   // 追加のプロパティ
   onProfile?: () => void;
   onSettings?: () => void;
+  // ページ固有の保存関数など
+  onSave?: () => Promise<void>;
+  onCustomAction?: (actionId: string) => void;
 }
 
 /**
@@ -39,7 +44,14 @@ export const HeaderContent: React.FC<HeaderContentProps> = ({
   // ユーザー情報
   onProfile,
   onSettings,
+  
+  // ページ固有の関数
+  onSave,
+  onCustomAction,
 }) => {
+  // 現在のパスを取得
+  const pathname = usePathname();
+
   // Zustandストアを使用したヘッダーの状態管理
   const {
     displayConfig,
@@ -53,7 +65,31 @@ export const HeaderContent: React.FC<HeaderContentProps> = ({
     setSearchQuery,
     toggleUserMenu,
     toggleNotifications,
+    setDisplayConfig,
+    setComponentConfig,
   } = useHeader();
+
+  // パスに基づいてヘッダー設定を自動的に適用
+  useEffect(() => {
+    const baseConfig = getHeaderConfigByPath(pathname);
+    const customizedConfig = customizeHeaderConfig(pathname, baseConfig);
+    
+    // ヘッダー設定をストアに適用
+    setDisplayConfig({
+      title: customizedConfig.title,
+      subtitle: customizedConfig.subtitle,
+      actions: customizedConfig.actions,
+      breadcrumbItems: customizedConfig.breadcrumbItems,
+    });
+    
+    setComponentConfig({
+      showActions: customizedConfig.showActions,
+      showSearch: customizedConfig.showSearch,
+      showBreadcrumb: customizedConfig.showBreadcrumb,
+      showUserInfo: customizedConfig.showUserInfo,
+      showNotifications: customizedConfig.showNotifications,
+    });
+  }, [pathname, setDisplayConfig, setComponentConfig]);
 
   // 認証コンテキストからユーザー情報とログイン機能を取得
   const {
@@ -64,8 +100,21 @@ export const HeaderContent: React.FC<HeaderContentProps> = ({
   } = useAuthContext();
 
   // アクションボタンのクリックハンドラー
-  const handleActionClick = (action: HeaderAction) => {
+  const handleActionClick = async (action: HeaderAction) => {
     try {
+      // 保存ボタンの場合は特別処理
+      if (action.id === 'save' && onSave) {
+        await onSave();
+        return;
+      }
+      
+      // カスタムアクションの場合は特別処理
+      if (onCustomAction) {
+        onCustomAction(action.id);
+        return;
+      }
+      
+      // 通常のアクション
       action.onClick();
     } catch (error) {
       console.error('Header action error:', error);

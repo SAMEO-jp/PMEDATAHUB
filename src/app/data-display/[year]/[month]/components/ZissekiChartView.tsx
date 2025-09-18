@@ -1,330 +1,118 @@
 "use client"
 
-import React from 'react'
-import { useZissekiMonthData } from '@src/hooks/useZissekiData'
-import { useAuthState } from '@src/contexts/AuthContext'
+import React, { useState, useContext } from 'react'
+import type { Project } from '@src/types/db_project'
 import type { TimeGridEvent } from '@src/app/zisseki-demo/[year]/[week]/types'
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-  PointElement,
-  LineElement,
-} from 'chart.js'
-import { Bar, Pie, Line } from 'react-chartjs-2'
-
-// Chart.jsのコンポーネントを登録
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
-  PointElement,
-  LineElement
-)
+import { ViewModeContext } from '../../../ViewModeContext'
+import ChartSidebar from './ChartSidebar'
+import AllProjectsChart from './AllProjectsChart'
+import ProjectChart from './ProjectChart'
 
 interface ZissekiChartViewProps {
   year: number
   month: number
+  projects: Project[]
+  events: TimeGridEvent[]
+  projectsLoading: boolean
+  projectsError: any
+  zissekiLoading: boolean
+  zissekiError: any
 }
 
-export default function ZissekiChartView({ year, month }: ZissekiChartViewProps) {
-  const { user } = useAuthState()
-  const { data, isLoading, error } = useZissekiMonthData(year, month, user?.user_id || '')
+export default function ZissekiChartView({ 
+  year, 
+  month, 
+  projects, 
+  events, 
+  projectsLoading, 
+  projectsError, 
+  zissekiLoading, 
+  zissekiError 
+}: ZissekiChartViewProps) {
+  const [selectedProject, setSelectedProject] = useState<string | null>(null)
+  const { setSelectedProjectName } = useContext(ViewModeContext)
+  
+  // 実績データから直接プロジェクト一覧を作成（プロジェクトテーブルとの照合を避ける）
+  const uniqueProjectNames = [...new Set(events.map(e => e.project).filter(Boolean))];
+  
+  // 実績データのプロジェクト名をベースにしたプロジェクト一覧を作成
+  const projectsFromEvents = uniqueProjectNames.map((projectName, index) => ({
+    PROJECT_ID: `event-project-${index}`, // 仮のID
+    PROJECT_NAME: projectName,
+    PROJECT_CLIENT_NAME: null,
+  }));
+  
+  // プロジェクトテーブルからも取得して、可能な限りマッチング
+  const projectsWithEvents = projectsFromEvents.map(eventProject => {
+    // プロジェクトテーブルから一致するものを探す（PROJECT_IDと照合）
+    const matchedProject = projects.find(project => {
+      // 実績データのprojectフィールド（プロジェクトナンバー）とPROJECT_IDを照合
+      if (project.PROJECT_ID === eventProject.PROJECT_NAME) return true;
+      if (project.PROJECT_ID?.toLowerCase() === eventProject.PROJECT_NAME?.toLowerCase()) return true;
+      if (project.PROJECT_ID?.includes(eventProject.PROJECT_NAME)) return true;
+      if (eventProject.PROJECT_NAME?.includes(project.PROJECT_ID)) return true;
+      return false;
+    });
+    
+    // マッチした場合はプロジェクトテーブルの情報を使用、そうでなければ実績データの情報を使用
+    return matchedProject || eventProject;
+  });
+  
+  // 選択されたプロジェクトの情報を取得
+  const selectedProjectInfo = selectedProject 
+    ? projectsWithEvents.find((p: Project) => p.PROJECT_ID === selectedProject)
+    : null;
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-8 text-red-500">
-        エラーが発生しました: {error.message}
-      </div>
-    )
-  }
-
-  const events = data?.data?.events || []
-
-  // プロジェクト別の集計
-  const projectStats = events.reduce((acc, event) => {
-    const project = event.project || '未分類'
-    if (!acc[project]) {
-      acc[project] = { count: 0, totalHours: 0 }
+  const handleProjectSelect = (projectId: string | null) => {
+    setSelectedProject(projectId);
+    
+    // 選択されたプロジェクト名をContextに設定
+    if (projectId) {
+      const selectedProjectInfo = projectsWithEvents.find(p => p.PROJECT_ID === projectId);
+      setSelectedProjectName(selectedProjectInfo?.PROJECT_NAME || null);
+    } else {
+      setSelectedProjectName(null);
     }
-    acc[project].count++
-    
-    // 時間計算
-    const start = new Date(event.startDateTime)
-    const end = new Date(event.endDateTime)
-    const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60)
-    acc[project].totalHours += hours
-    
-    return acc
-  }, {} as Record<string, { count: number; totalHours: number }>)
-
-  // 業務コード別の集計
-  const activityCodeStats = events.reduce((acc, event) => {
-    const code = event.activityCode || '未分類'
-    if (!acc[code]) {
-      acc[code] = { count: 0, totalHours: 0 }
-    }
-    acc[code].count++
-    
-    const start = new Date(event.startDateTime)
-    const end = new Date(event.endDateTime)
-    const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60)
-    acc[code].totalHours += hours
-    
-    return acc
-  }, {} as Record<string, { count: number; totalHours: number }>)
-
-  // 日別の集計
-  const dailyStats = events.reduce((acc, event) => {
-    const date = new Date(event.startDateTime).toLocaleDateString('ja-JP')
-    if (!acc[date]) {
-      acc[date] = { count: 0, totalHours: 0 }
-    }
-    acc[date].count++
-    
-    const start = new Date(event.startDateTime)
-    const end = new Date(event.endDateTime)
-    const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60)
-    acc[date].totalHours += hours
-    
-    return acc
-  }, {} as Record<string, { count: number; totalHours: number }>)
-
-  // プロジェクト別時間のグラフデータ
-  const projectChartData = {
-    labels: Object.keys(projectStats),
-    datasets: [
-      {
-        label: '作業時間（時間）',
-        data: Object.values(projectStats).map(stats => stats.totalHours),
-        backgroundColor: 'rgba(54, 162, 235, 0.8)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1,
-      },
-    ],
-  }
-
-  // 業務コード別時間のグラフデータ
-  const activityChartData = {
-    labels: Object.keys(activityCodeStats),
-    datasets: [
-      {
-        label: '作業時間（時間）',
-        data: Object.values(activityCodeStats).map(stats => stats.totalHours),
-        backgroundColor: 'rgba(75, 192, 192, 0.8)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 1,
-      },
-    ],
-  }
-
-  // 日別時間のグラフデータ
-  const dailyChartData = {
-    labels: Object.keys(dailyStats).sort((a, b) => new Date(a).getTime() - new Date(b).getTime()),
-    datasets: [
-      {
-        label: '作業時間（時間）',
-        data: Object.keys(dailyStats)
-          .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
-          .map(date => dailyStats[date].totalHours),
-        borderColor: 'rgba(255, 99, 132, 1)',
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        tension: 0.1,
-      },
-    ],
-  }
-
-  // プロジェクト別の円グラフデータ
-  const projectPieData = {
-    labels: Object.keys(projectStats),
-    datasets: [
-      {
-        data: Object.values(projectStats).map(stats => stats.totalHours),
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.8)',
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(255, 206, 86, 0.8)',
-          'rgba(75, 192, 192, 0.8)',
-          'rgba(153, 102, 255, 0.8)',
-          'rgba(255, 159, 64, 0.8)',
-        ],
-        borderWidth: 1,
-      },
-    ],
-  }
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-      },
-    },
-  }
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-semibold">実績データ分析 ({year}年{month}月)</h2>
-      </div>
-
-      {/* 基本統計 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h3 className="text-lg font-medium text-blue-800">総イベント数</h3>
-          <p className="text-3xl font-bold text-blue-600">{events.length}</p>
-        </div>
-        <div className="bg-green-50 p-4 rounded-lg">
-          <h3 className="text-lg font-medium text-green-800">総作業時間</h3>
-          <p className="text-3xl font-bold text-green-600">
-            {events.reduce((total, event) => {
-              const start = new Date(event.startDateTime)
-              const end = new Date(event.endDateTime)
-              return total + (end.getTime() - start.getTime()) / (1000 * 60 * 60)
-            }, 0).toFixed(1)}時間
-          </p>
-        </div>
-        <div className="bg-purple-50 p-4 rounded-lg">
-          <h3 className="text-lg font-medium text-purple-800">プロジェクト数</h3>
-          <p className="text-3xl font-bold text-purple-600">
-            {Object.keys(projectStats).length}
-          </p>
-        </div>
-      </div>
-
-      {/* グラフセクション */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* プロジェクト別時間（棒グラフ） */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">プロジェクト別作業時間</h3>
-          <div className="h-64">
-            <Bar data={projectChartData} options={chartOptions} />
-          </div>
-        </div>
-
-        {/* プロジェクト別時間（円グラフ） */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">プロジェクト別時間比率</h3>
-          <div className="h-64">
-            <Pie data={projectPieData} options={chartOptions} />
-          </div>
-        </div>
-
-        {/* 業務コード別時間 */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">業務コード別作業時間</h3>
-          <div className="h-64">
-            <Bar data={activityChartData} options={chartOptions} />
-          </div>
-        </div>
-
-        {/* 日別時間推移 */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">日別作業時間推移</h3>
-          <div className="h-64">
-            <Line data={dailyChartData} options={chartOptions} />
-          </div>
-        </div>
-      </div>
-
-      {/* 詳細統計テーブル */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* プロジェクト別集計 */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">プロジェクト別集計</h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2">プロジェクト</th>
-                  <th className="text-right py-2">イベント数</th>
-                  <th className="text-right py-2">総時間（時間）</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(projectStats)
-                  .sort(([, a], [, b]) => b.totalHours - a.totalHours)
-                  .map(([project, stats]) => (
-                    <tr key={project} className="border-b">
-                      <td className="py-2">{project}</td>
-                      <td className="text-right py-2">{stats.count}</td>
-                      <td className="text-right py-2">{stats.totalHours.toFixed(1)}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* 業務コード別集計 */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">業務コード別集計</h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2">業務コード</th>
-                  <th className="text-right py-2">イベント数</th>
-                  <th className="text-right py-2">総時間（時間）</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(activityCodeStats)
-                  .sort(([, a], [, b]) => b.totalHours - a.totalHours)
-                  .map(([code, stats]) => (
-                    <tr key={code} className="border-b">
-                      <td className="py-2">{code}</td>
-                      <td className="text-right py-2">{stats.count}</td>
-                      <td className="text-right py-2">{stats.totalHours.toFixed(1)}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      {/* 日別集計 */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">日別集計</h3>
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-2">日付</th>
-                <th className="text-right py-2">イベント数</th>
-                <th className="text-right py-2">総時間（時間）</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(dailyStats)
-                .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
-                .map(([date, stats]) => (
-                  <tr key={date} className="border-b">
-                    <td className="py-2">{date}</td>
-                    <td className="text-right py-2">{stats.count}</td>
-                    <td className="text-right py-2">{stats.totalHours.toFixed(1)}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+    <div className="flex h-full">
+      {/* 左サイドバー */}
+      <ChartSidebar 
+        selectedProject={selectedProject}
+        onProjectSelect={handleProjectSelect}
+        projects={projectsWithEvents}
+        isLoading={projectsLoading}
+        error={projectsError}
+      />
+      
+      {/* メインコンテンツ */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-4">
+          {selectedProject === null ? (
+            <AllProjectsChart year={year} month={month} events={events} projects={projects} />
+          ) : selectedProjectInfo ? (
+            <ProjectChart 
+              year={year} 
+              month={month} 
+              projectId={selectedProject}
+              projectName={selectedProjectInfo.PROJECT_NAME}
+              events={events}
+            />
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <div>プロジェクト情報が見つかりません</div>
+              <div className="text-sm mt-2">
+                選択されたプロジェクトID: {selectedProject}
+              </div>
+              <div className="text-sm">
+                利用可能なプロジェクト数: {projectsWithEvents.length}
+              </div>
+              <div className="text-sm">
+                実績データのプロジェクト数: {uniqueProjectNames.length}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

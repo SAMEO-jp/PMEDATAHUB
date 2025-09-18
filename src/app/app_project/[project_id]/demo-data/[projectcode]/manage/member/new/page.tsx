@@ -8,6 +8,7 @@ import { MainTabHeader } from "../../../[tab]/[content]/components/x.TabHeader/M
 import { SubTabHeader } from "../../../[tab]/[content]/components/x.TabHeader/SubTabHeader"
 import { useRouter } from "next/navigation"
 import { useUserAll } from "@src/hooks/useUserData"
+import type { User } from '@src/types/user';
 
 // 部署型
 interface Department {
@@ -17,24 +18,6 @@ interface Department {
   end_date: string;
   department_kind: string; // "部" | "室" | "課"
   top_department: string | null;
-}
-
-// ユーザー型
-interface User {
-  id: string;
-  name: string;
-  position: string;
-  department: string;
-  section: string;
-  team: string;
-  email: string;
-  telNaisen: string;
-  telGaisen: string;
-  company: string;
-  name_english: string;
-  name_yomi: string;
-  in_year: string;
-  authority: string;
 }
 
 // 階層構造型
@@ -70,19 +53,19 @@ function normalize(str: string | null | undefined) {
 }
 
 function getPositionGroup(user: User) {
-  if (['部長', '部長代理', '課長', '室長'].includes(user.position)) return 0;
-  if (user.position === '上席主幹') return 1;
-  if (user.position === '主幹') return 2;
-  if (user.position === '主査') return 3;
+  if (['部長', '部長代理', '課長', '室長'].includes(user.Kengen || '')) return 0;
+  if (user.Kengen === '上席主幹') return 1;
+  if (user.Kengen === '主幹') return 2;
+  if (user.Kengen === '主査') return 3;
   return 4;
 }
 
 function getPositionColor(user: User) {
-  return positionColor[user.position] || positionColor['メンバー'];
+  return positionColor[user.Kengen || ''] || positionColor['メンバー'];
 }
 
 function getSortKey(user: User) {
-  return user.in_year ? user.in_year : user.id;
+  return user.in_year ? user.in_year : user.user_id;
 }
 
 export default function NewMemberPage({ params }: { params: { projectcode: string } }) {
@@ -99,7 +82,6 @@ export default function NewMemberPage({ params }: { params: { projectcode: strin
 
   useEffect(() => {
     fetchDepartments();
-    fetchAllUsers();
     fetchProjectMembers();
   }, []);
 
@@ -149,35 +131,35 @@ export default function NewMemberPage({ params }: { params: { projectcode: strin
   // メンバーリストのロジック
   let memberList: User[] = [];
   if (selectedBu && !selectedSitsu && !selectedKa) {
-    // 部だけ選択時: 部に所属し、sectionもteamも空の人のみ
+    // 部だけ選択時: 部に所属し、sitsuもkaも空の人のみ
     memberList = users.filter(u =>
-      u.department === selectedBu && !u.section && !u.team
+      u.bumon === selectedBu && !u.sitsu && !u.ka
     );
   } else if (selectedBu && selectedSitsu && !selectedKa) {
-    // 室選択時: 室に所属し、teamが空
+    // 室選択時: 室に所属し、kaが空
     memberList = users.filter(u =>
-      u.department === selectedBu &&
-      u.section === selectedSitsu &&
-      (!u.team)
+      u.bumon === selectedBu &&
+      u.sitsu === selectedSitsu &&
+      (!u.ka)
     );
   } else if (selectedBu && selectedSitsu && selectedKa) {
     // 課選択時: 課に所属
     memberList = users.filter(u =>
-      u.department === selectedBu &&
-      u.section === selectedSitsu &&
-      u.team === selectedKa
+      u.bumon === selectedBu &&
+      u.sitsu === selectedSitsu &&
+      u.ka === selectedKa
     );
   }
 
   // 役職ごとにグループ化し、各グループ内で年次順（なければ社員番号順）でソート
   const groupedMembers: User[][] = positionOrder.map(roles =>
     memberList
-      .filter(u => roles.includes(u.position) || (roles[0] === 'メンバー' && !positionOrder.flat().includes(u.position)))
+      .filter(u => roles.includes(u.Kengen || '') || (roles[0] === 'メンバー' && !positionOrder.flat().includes(u.Kengen || '')))
       .sort((a, b) => {
         // 部長→部長代理→課長→室長の順
         if (roles.length > 1) {
-          const idxA = roles.indexOf(a.position);
-          const idxB = roles.indexOf(b.position);
+          const idxA = roles.indexOf(a.Kengen || '');
+          const idxB = roles.indexOf(b.Kengen || '');
           if (idxA !== idxB) return idxA - idxB;
         }
         return getSortKey(a).localeCompare(getSortKey(b));
@@ -186,15 +168,15 @@ export default function NewMemberPage({ params }: { params: { projectcode: strin
 
   // メンバー追加処理
   const handleAddMember = async (user: User) => {
-    setAddingUserId(user.id);
+    setAddingUserId(user.user_id);
     try {
       const res = await fetch(`/api/project/${params.projectcode}/member`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, role: "メンバー" })
+        body: JSON.stringify({ userId: user.user_id, role: "メンバー" })
       });
       if (res.ok) {
-        setAddedUserIds(ids => [...ids, user.id]);
+        setAddedUserIds(ids => [...ids, user.user_id]);
         // メンバー追加成功後、メンバー管理画面に戻る
         router.push(`/project/detail/${params.projectcode}/manage`);
       }
@@ -204,7 +186,7 @@ export default function NewMemberPage({ params }: { params: { projectcode: strin
   };
 
   // すでにプロジェクトに参加しているか
-  const isAlreadyMember = (user: User) => projectMembers.some(pm => pm.id === user.id);
+  const isAlreadyMember = (user: User) => projectMembers.some(pm => pm.user_id === user.user_id);
 
   return (
     <div>
@@ -277,27 +259,27 @@ export default function NewMemberPage({ params }: { params: { projectcode: strin
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {group.map(user => (
                           <div
-                            key={user.id}
+                            key={user.user_id}
                             className={`p-2 ${getPositionColor(user)} rounded-xl shadow flex flex-col gap-1 border w-full min-h-[88px] justify-between break-words whitespace-normal`}
                           >
                             <div className="font-bold text-xs text-orange-700 flex items-center gap-1 break-words whitespace-normal">
-                              <span>{user.name}</span>
-                              <span className="text-[10px] text-gray-500 break-words whitespace-normal">({user.id})</span>
+                              <span>{user.name_japanese}</span>
+                              <span className="text-[10px] text-gray-500 break-words whitespace-normal">({user.user_id})</span>
                             </div>
-                            <div className="text-xs text-gray-700 break-words whitespace-normal">役職: {user.position || '-'}</div>
+                            <div className="text-xs text-gray-700 break-words whitespace-normal">役職: {user.Kengen || '-'}</div>
                             <div className="text-xs text-gray-500 break-words whitespace-normal">{user.in_year ? `入社: ${user.in_year}` : ''}</div>
                             <div className="flex justify-end mt-1">
                               <Button
                                 size="sm"
                                 className="rounded-full px-2 py-0.5 shadow hover:bg-orange-200 transition-all text-xs"
-                                disabled={addingUserId === user.id || addedUserIds.includes(user.id) || isAlreadyMember(user)}
+                                disabled={addingUserId === user.user_id || addedUserIds.includes(user.user_id) || isAlreadyMember(user)}
                                 onClick={() => handleAddMember(user)}
                               >
                                 {isAlreadyMember(user)
                                   ? "参加済み"
-                                  : addedUserIds.includes(user.id)
+                                  : addedUserIds.includes(user.user_id)
                                     ? "追加済み"
-                                    : addingUserId === user.id
+                                    : addingUserId === user.user_id
                                       ? "追加中..."
                                       : "追加"}
                               </Button>

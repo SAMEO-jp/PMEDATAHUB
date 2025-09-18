@@ -239,9 +239,14 @@ export const setsubiRouter = createTRPCRouter({
         return { success: true, data: result.data };
       } catch (error) {
         console.error('tRPC setsubi.createMaster error:', error);
+        console.error('Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+          input: input
+        });
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: '製番の作成に失敗しました',
+          message: `製番の作成に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`,
         });
       }
     }),
@@ -433,6 +438,35 @@ export const setsubiRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: '担当解除に失敗しました',
+        });
+      }
+    }),
+
+  /**
+   * 製番をプロジェクトに登録
+   */
+  registerToProject: publicProcedure
+    .input(z.object({
+      project_id: z.string().min(1, 'プロジェクトIDは必須です'),
+      seiban: z.string().min(1, '製番は必須です'),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const result = await registerSetsubiToProject(input.project_id, input.seiban);
+
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: result.error || '製番のプロジェクト登録に失敗しました',
+          });
+        }
+
+        return { success: true, data: result.data };
+      } catch (error) {
+        console.error('tRPC setsubi.registerToProject error:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '製番のプロジェクト登録に失敗しました',
         });
       }
     }),

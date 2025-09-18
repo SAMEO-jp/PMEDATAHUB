@@ -1,4 +1,5 @@
 import { OnLocalChange, OnCommit } from '../ui/types';
+import { CustomDropdown } from './CustomDropdown';
 
 // プロジェクト型の統一（両方の型に対応）
 interface UnifiedProject {
@@ -62,21 +63,26 @@ export const ProjectSelect = ({
   // プロジェクトデータを統一形式に変換
   const normalizedProjects = projects.map(normalizeProject);
 
+  // カスタムドロップダウン用のオプションに変換
+  const dropdownOptions = normalizedProjects.map((project) => ({
+    value: project.code,
+    label: project.name,
+    subLabel: project.code ? `プロジェクトコード: ${project.code}` : undefined,
+    description: project.description || project.status
+  }));
+
   return (
     <div>
-      {/* <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label> */}
       <select
         value={value}
         onChange={(e) => onLocalChange(e.target.value)}
         onBlur={(e) => onCommit?.(e.target.value)}
-        className="w-full p-1.5 border border-gray-300 rounded text-xs"
+        className="w-full p-1 border border-gray-300 rounded text-xs"
       >
         <option value="">{placeholder}</option>
         {normalizedProjects.map((project, index) => (
           <option key={index} value={project.code}>
-            {project.name}
+            {project.name} ({project.code})
           </option>
         ))}
       </select>

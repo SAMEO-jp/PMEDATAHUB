@@ -50,6 +50,11 @@ export async function createSetsubiMaster(setsubiData: SetsubiFormData): Promise
     }
   } catch (error) {
     console.error('製番作成に失敗しました:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      input: setsubiData
+    });
     return {
       success: false,
       error: error instanceof Error ? error.message : '製番の作成に失敗しました',

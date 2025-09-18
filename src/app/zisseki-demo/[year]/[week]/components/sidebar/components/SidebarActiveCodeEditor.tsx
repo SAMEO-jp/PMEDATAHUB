@@ -197,9 +197,9 @@ export const SidebarActiveCodeEditor = ({
   const currentCode = selectedEvent.activityCode || '';
 
   return (
-    <div className="zisseki-demo p-2">
+    <div className="zisseki-demo p-1">
       {/* 現在のコード表示 */}
-      <div className="mb-1.5">
+      <div className="mb-1">
         <ActivityCodeField 
           value={currentCode}
           label="現在の業務分類コード"
@@ -207,11 +207,8 @@ export const SidebarActiveCodeEditor = ({
         />
       </div>
 
-      {/* 区切り線 */}
-      <hr className="border-gray-200 mb-1.5" />
-
       {/* メインサブタブ選択 */}
-      <div className="mb-1.5">
+      <div className="mb-1">
         <MainSubTabs
           selectedTab={localState.mainTab}
           currentMainSubTab={localState.subTab}
@@ -221,11 +218,8 @@ export const SidebarActiveCodeEditor = ({
         />
       </div>
 
-      {/* 区切り線 */}
-      <hr className="border-gray-200 mb-1.5" />
-
       {/* 詳細サブタブ選択 */}
-      <div className="mb-1.5">
+      <div className="mb-1">
         <DetailSubTabs
           selectedTab={localState.mainTab}
           currentMainSubTab={localState.subTab}
@@ -236,11 +230,8 @@ export const SidebarActiveCodeEditor = ({
         />
       </div>
 
-      {/* 区切り線 */}
-      <hr className="border-gray-200 mb-1.5" />
-
       {/* 詳細分類タブ（動的生成） */}
-      <div className="mb-1.5">
+      <div className="mb-1">
         <DetailClassifications
           state={{
             selectedTab: localState.mainTab,
@@ -270,11 +261,8 @@ export const SidebarActiveCodeEditor = ({
         />
       </div>
 
-      {/* 区切り線 */}
-      <hr className="border-gray-200 mb-1.5" />
-
       {/* 時間入力フォーム */}
-      <div className="mb-1.5">
+      <div className="mb-1">
         <TimeInputField 
           state={{
             selectedEvent: selectedEvent,
@@ -291,8 +279,6 @@ export const SidebarActiveCodeEditor = ({
         />
       </div>
 
-      {/* 区切り線 */}
-      <hr className="border-gray-200 mb-1.5" />
     </div>
   );
 };

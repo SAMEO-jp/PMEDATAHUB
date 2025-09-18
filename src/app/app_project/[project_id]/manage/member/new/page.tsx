@@ -67,10 +67,10 @@ export default function NewMemberPage({ params }: NewMemberPageProps) {
   const { handleAddMember: addMemberToProject, isAddingMember, members } = useProjectMembers(params.project_id);
 
   // tRPCを使用して部署データ取得
-  const { data: departments = [], isLoading: isLoadingDepartments } = useDepartments();
+  const { data: departments, isLoading: isLoadingDepartments } = useDepartments();
 
   // tRPCを使用して全ユーザーデータ取得
-  const { data: users = [], isLoading: isLoadingUsers } = useAllUsers();
+  const { data: users, isLoading: isLoadingUsers } = useAllUsers();
 
   // 部署データが変更されたらツリーを再生成
   useEffect(() => {

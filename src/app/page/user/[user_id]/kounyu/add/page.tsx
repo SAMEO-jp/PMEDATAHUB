@@ -54,8 +54,8 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
     user_id: params.user_id
   });
 
-  // プロジェクト一覧取得
-  const { data: projectList, isLoading: projectLoading } = trpc.project.getAll.useQuery();
+  // ユーザーの参加プロジェクト一覧を取得（ユーザー詳細から）
+  const availableProjects = userDetail?.data?.projects || [];
 
   const { data: projectKounyuList, isLoading: projectKounyuLoading } = trpc.kounyu.getAllByProject.useQuery(
     { project_id: selectedProject },
@@ -188,7 +188,7 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
   };
 
   // ローディング中
-  if (userLoading || projectLoading || (selectedProject && projectKounyuLoading)) {
+  if (userLoading || (selectedProject && projectKounyuLoading)) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-center items-center min-h-[200px]">
@@ -441,8 +441,8 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
                 </SelectTrigger>
                 <SelectContent>
                   {availableProjects.map((project: any) => (
-                    <SelectItem key={project.PROJECT_ID} value={project.PROJECT_ID}>
-                      {project.PROJECT_NAME} ({project.PROJECT_ID})
+                    <SelectItem key={project.project_id} value={project.project_id}>
+                      {project.project_name} ({project.project_id})
                     </SelectItem>
                   ))}
                 </SelectContent>

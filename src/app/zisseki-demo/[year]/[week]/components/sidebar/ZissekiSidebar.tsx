@@ -115,7 +115,7 @@ export const ZissekiSidebar = () => {
         title: selectedEvent.title || '',
         description: selectedEvent.description || '',
         project: selectedEvent.project || '',
-        setsubi: selectedEvent.setsubi || '',
+        setsubi: selectedEvent.setsubi || selectedEvent.equipmentNumber || '',
         kounyu: selectedEvent.kounyu || '',
         activityCode: selectedEvent.activityCode || '',
         color: selectedEvent.color || '#3B82F6',
@@ -149,7 +149,15 @@ export const ZissekiSidebar = () => {
     if (!selectedEvent) return;
 
     // プロジェクトが変更された場合は、装備と購入品の選択をリセット
-    const resetFields = field === 'project' ? { setsubi: '', kounyu: '' } : {};
+    const resetFields = field === 'project' ? { 
+      setsubi: '', 
+      kounyu: '',
+      equipmentNumber: '',
+      equipmentName: '',
+      equipment_id: '',
+      equipment_Name: '',
+      itemName: ''
+    } : {};
 
     setLocalValues(prev => ({
       ...prev,
@@ -166,6 +174,76 @@ export const ZissekiSidebar = () => {
     dispatch(eventActions.setSelectedEvent(updatedEvent));
   };
 
+  // 装置選択時の処理（詳細情報も一緒に保存）
+  const handleSetsubiChange = (setsubiCode: string) => {
+    if (!selectedEvent || !setsubiCode) return;
+
+    // 選択された装置の詳細情報を取得
+    const setsubiList = getSetsubiByProject(localValues.project);
+    const selectedSetsubi = setsubiList.find(setsubi => setsubi.code === setsubiCode);
+
+    if (selectedSetsubi) {
+      setLocalValues(prev => ({
+        ...prev,
+        setsubi: setsubiCode,
+        kounyu: '', // 購入品はリセット
+        equipmentNumber: setsubiCode,
+        equipmentName: selectedSetsubi.name,
+        equipment_id: selectedSetsubi.id.toString(),
+        equipment_Name: selectedSetsubi.name,
+        itemName: '' // 購入品情報はリセット
+      }));
+
+      const updatedEvent = {
+        ...selectedEvent,
+        setsubi: setsubiCode,
+        kounyu: '',
+        equipmentNumber: setsubiCode,
+        equipmentName: selectedSetsubi.name,
+        equipment_id: selectedSetsubi.id.toString(),
+        equipment_Name: selectedSetsubi.name,
+        itemName: ''
+      };
+      updateEvent(updatedEvent);
+      dispatch(eventActions.setSelectedEvent(updatedEvent));
+    }
+  };
+
+  // 購入品選択時の処理（詳細情報も一緒に保存）
+  const handleKounyuChange = (kounyuCode: string) => {
+    if (!selectedEvent || !kounyuCode) return;
+
+    // 選択された購入品の詳細情報を取得
+    const kounyuList = getKounyuByProject(localValues.project);
+    const selectedKounyu = kounyuList.find(kounyu => kounyu.code === kounyuCode);
+
+    if (selectedKounyu) {
+      setLocalValues(prev => ({
+        ...prev,
+        kounyu: kounyuCode,
+        setsubi: '', // 装置はリセット
+        itemName: selectedKounyu.name,
+        equipmentNumber: '',
+        equipmentName: '',
+        equipment_id: '',
+        equipment_Name: '' // 装置情報はリセット
+      }));
+
+      const updatedEvent = {
+        ...selectedEvent,
+        kounyu: kounyuCode,
+        setsubi: '',
+        itemName: selectedKounyu.name,
+        equipmentNumber: '',
+        equipmentName: '',
+        equipment_id: '',
+        equipment_Name: ''
+      };
+      updateEvent(updatedEvent);
+      dispatch(eventActions.setSelectedEvent(updatedEvent));
+    }
+  };
+
   // プロジェクト-担当装置の組み合わせ選択時の処理
   const handleProjectSetsubiCombinationChange = (value: string) => {
     if (!selectedEvent || !value) return;
@@ -174,21 +252,37 @@ export const ZissekiSidebar = () => {
     const [projectId, setsubiCode] = value.split('|');
     
     if (projectId && setsubiCode) {
-      setLocalValues(prev => ({
-        ...prev,
-        project: projectId,
-        setsubi: setsubiCode,
-        kounyu: '' // 購入品はリセット
-      }));
+      // 選択された装置の詳細情報を取得
+      const setsubiList = getSetsubiByProject(projectId);
+      const selectedSetsubi = setsubiList.find(setsubi => setsubi.code === setsubiCode);
 
-      const updatedEvent = {
-        ...selectedEvent,
-        project: projectId,
-        setsubi: setsubiCode,
-        kounyu: ''
-      };
-      updateEvent(updatedEvent);
-      dispatch(eventActions.setSelectedEvent(updatedEvent));
+      if (selectedSetsubi) {
+        setLocalValues(prev => ({
+          ...prev,
+          project: projectId,
+          setsubi: setsubiCode,
+          kounyu: '', // 購入品はリセット
+          equipmentNumber: setsubiCode,
+          equipmentName: selectedSetsubi.name,
+          equipment_id: selectedSetsubi.id.toString(),
+          equipment_Name: selectedSetsubi.name,
+          itemName: '' // 購入品情報はリセット
+        }));
+
+        const updatedEvent = {
+          ...selectedEvent,
+          project: projectId,
+          setsubi: setsubiCode,
+          kounyu: '',
+          equipmentNumber: setsubiCode,
+          equipmentName: selectedSetsubi.name,
+          equipment_id: selectedSetsubi.id.toString(),
+          equipment_Name: selectedSetsubi.name,
+          itemName: ''
+        };
+        updateEvent(updatedEvent);
+        dispatch(eventActions.setSelectedEvent(updatedEvent));
+      }
     }
   };
 
@@ -200,21 +294,37 @@ export const ZissekiSidebar = () => {
     const [projectId, kounyuCode] = value.split('|');
     
     if (projectId && kounyuCode) {
-      setLocalValues(prev => ({
-        ...prev,
-        project: projectId,
-        kounyu: kounyuCode,
-        setsubi: '' // 装備はリセット
-      }));
+      // 選択された購入品の詳細情報を取得
+      const kounyuList = getKounyuByProject(projectId);
+      const selectedKounyu = kounyuList.find(kounyu => kounyu.code === kounyuCode);
 
-      const updatedEvent = {
-        ...selectedEvent,
-        project: projectId,
-        kounyu: kounyuCode,
-        setsubi: ''
-      };
-      updateEvent(updatedEvent);
-      dispatch(eventActions.setSelectedEvent(updatedEvent));
+      if (selectedKounyu) {
+        setLocalValues(prev => ({
+          ...prev,
+          project: projectId,
+          kounyu: kounyuCode,
+          setsubi: '', // 装備はリセット
+          itemName: selectedKounyu.name,
+          equipmentNumber: '',
+          equipmentName: '',
+          equipment_id: '',
+          equipment_Name: '' // 装置情報はリセット
+        }));
+
+        const updatedEvent = {
+          ...selectedEvent,
+          project: projectId,
+          kounyu: kounyuCode,
+          setsubi: '',
+          itemName: selectedKounyu.name,
+          equipmentNumber: '',
+          equipmentName: '',
+          equipment_id: '',
+          equipment_Name: ''
+        };
+        updateEvent(updatedEvent);
+        dispatch(eventActions.setSelectedEvent(updatedEvent));
+      }
     }
   };
 
@@ -236,8 +346,8 @@ export const ZissekiSidebar = () => {
 
   if (!selectedEvent) {
     return (
-      <div className="sidebar-container">
-        <div className="sidebar-card">
+      <div className="sidebar-container h-full">
+        <div className="sidebar-card h-full">
           <SidebarHeader 
             title="業務詳細" 
             eventId=""
@@ -253,8 +363,8 @@ export const ZissekiSidebar = () => {
   }
 
   return (
-    <div className="sidebar-container">
-      <div className="sidebar-card">
+    <div className="sidebar-container h-full">
+      <div className="sidebar-card h-full">
         
         <SidebarHeader 
           title="業務詳細"
@@ -262,68 +372,77 @@ export const ZissekiSidebar = () => {
           activeTab={getCurrentTab()}
           onTabChange={handleTabChange}
         />
-                <div className="sidebar-section">
-          <ProjectSelect
-              value={localValues.project}
-              onLocalChange={(value) => handleSelectChange('project', value)}
-              projects={userProjects.length > 0 ? userProjects : projects}
-            />
+        {/* プロジェクト選択 */}
+        <div className="sidebar-section sidebar-section-compact-spacing mt-2">
+          <div className="flex items-center gap-1">
+            <label className="text-xs font-medium text-gray-600 w-20 flex-shrink-0">プロジェクト</label>
+            <div className="flex-1">
+              <ProjectSelect
+                value={localValues.project}
+                onLocalChange={(value) => handleSelectChange('project', value)}
+                projects={userProjects.length > 0 ? userProjects : projects}
+              />
+            </div>
+          </div>
         </div>
 
         {/* 装置/購入品選択（常に表示） */}
         {/* 装置選択（購入品タブ以外の場合） */}
         {!isPurchaseTab() && (
-          <div className="sidebar-section sidebar-section-compact">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-600 w-16 pl-1">担当装置</span>
-              {!localValues.project ? (
-                // プロジェクト未選択時はプロジェクト-担当装置の組み合わせ選択
-                <ProjectSetsubiSelect
-                  value={`${localValues.project}|${localValues.setsubi}`}
-                  onLocalChange={handleProjectSetsubiCombinationChange}
-                  combinations={getProjectSetsubiCombinations()}
-                  label=""
-                />
-              ) : (
-                // プロジェクト選択済み時は通常の担当装置選択
-                <SetsubiSelect
-                  value={localValues.setsubi}
-                  onLocalChange={(value) => handleSelectChange('setsubi', value)}
-                  setsubiList={getSetsubiByProject(localValues.project)}
-                  label=""
-                />
-              )}
+          <div className="sidebar-section sidebar-section-compact-spacing mt-2">
+            <div className="flex items-center gap-1">
+              <label className="text-xs font-medium text-gray-600 w-20 flex-shrink-0">担当装置</label>
+              <div className="flex-1">
+                {!localValues.project ? (
+                  // プロジェクト未選択時はプロジェクト-担当装置の組み合わせ選択
+                  <ProjectSetsubiSelect
+                    value={`${localValues.project}|${localValues.setsubi}`}
+                    onLocalChange={handleProjectSetsubiCombinationChange}
+                    combinations={getProjectSetsubiCombinations()}
+                    label=""
+                  />
+                ) : (
+                  // プロジェクト選択済み時は通常の担当装置選択
+                  <SetsubiSelect
+                    value={localValues.setsubi}
+                    onLocalChange={(value) => handleSetsubiChange(value)}
+                    setsubiList={getSetsubiByProject(localValues.project)}
+                    label=""
+                  />
+                )}
+              </div>
             </div>
           </div>
         )}
 
         {/* 購入品選択（購入品タブの場合） */}
         {isPurchaseTab() && (
-          <div className="sidebar-section sidebar-section-compact">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-600 w-16 pl-1">担当購入品</span>
-              {!localValues.project ? (
-                // プロジェクト未選択時はプロジェクト-購入品の組み合わせ選択
-                <ProjectKounyuSelect
-                  value={`${localValues.project}|${localValues.kounyu}`}
-                  onLocalChange={handleProjectKounyuCombinationChange}
-                  combinations={getProjectKounyuCombinations()}
-                  label=""
-                />
-              ) : (
-                // プロジェクト選択済み時は通常の購入品選択
-                <KounyuSelect
-                  value={localValues.kounyu}
-                  onLocalChange={(value) => handleSelectChange('kounyu', value)}
-                  kounyuList={getKounyuByProject(localValues.project)}
-                  label=""
-                />
-              )}
+          <div className="sidebar-section sidebar-section-compact-spacing mt-2">
+            <div className="flex items-center gap-1">
+              <label className="text-xs font-medium text-gray-600 w-20 flex-shrink-0">担当購入品</label>
+              <div className="flex-1">
+                {!localValues.project ? (
+                  // プロジェクト未選択時はプロジェクト-購入品の組み合わせ選択
+                  <ProjectKounyuSelect
+                    value={`${localValues.project}|${localValues.kounyu}`}
+                    onLocalChange={handleProjectKounyuCombinationChange}
+                    combinations={getProjectKounyuCombinations()}
+                    label=""
+                  />
+                ) : (
+                  // プロジェクト選択済み時は通常の購入品選択
+                  <KounyuSelect
+                    value={localValues.kounyu}
+                    onLocalChange={(value) => handleKounyuChange(value)}
+                    kounyuList={getKounyuByProject(localValues.project)}
+                    label=""
+                  />
+                )}
+              </div>
             </div>
           </div>
         )}
 
-        <hr className="sidebar-divider" />
         <SidebarBasic
           form={{
             title: localValues.title,
@@ -337,10 +456,10 @@ export const ZissekiSidebar = () => {
         
         {/* イベントの色と進捗状況設定 */}
         <div className="sidebar-section sidebar-section-compact mt-0">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1">
             {/* 色設定 */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-600 w-6 pl-2">色</span>
+            <div className="flex items-center gap-0.5">
+              <span className="text-xs font-medium text-gray-600 w-6 pl-1">色</span>
               <ColorPicker
                 currentColor={localValues.color}
                 onColorChange={(color) => handleSelectChange('color', color)}
@@ -348,8 +467,8 @@ export const ZissekiSidebar = () => {
               />
             </div>
             {/* 進捗設定 */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-600 w-6">進捗</span>
+            <div className="flex items-center gap-0.5">
+              <span className="text-xs font-medium text-gray-600 w-6 pl-1">進捗</span>
               <ProgressSelect
                 currentProgress={localValues.status}
                 onProgressChange={(status) => handleSelectChange('status', status)}

@@ -1,4 +1,5 @@
 import { OnLocalChange, OnCommit } from '../ui/types';
+import { CustomDropdown } from './CustomDropdown';
 
 interface SetsubiOption {
   id: number;
@@ -26,27 +27,28 @@ export const SetsubiSelect = ({
   placeholder = "装置を選択してください",
   disabled = false
 }: SetsubiSelectProps) => {
+  // カスタムドロップダウン用のオプションに変換
+  const dropdownOptions = setsubiList.map((setsubi) => ({
+    value: setsubi.code,
+    label: setsubi.name,
+    subLabel: `製番: ${setsubi.code}`,
+    description: `ID: ${setsubi.id}`
+  }));
+
   return (
-    <div className="flex-1">
-      {label && (
-        <label className="block text-xs font-medium text-gray-700 mb-1">
-          {label}
-        </label>
-      )}
-      <select
-        value={value}
-        onChange={(e) => onLocalChange(e.target.value)}
-        onBlur={(e) => onCommit?.(e.target.value)}
-        disabled={disabled}
-        className="w-full p-1.5 border border-gray-300 rounded text-xs disabled:bg-gray-100 disabled:cursor-not-allowed"
-      >
-        <option value="">{placeholder}</option>
-        {setsubiList.map((setsubi) => (
-          <option key={setsubi.id} value={setsubi.code}>
-            {setsubi.name} (製番: {setsubi.code})
-          </option>
-        ))}
-      </select>
-    </div>
+    <select
+      value={value}
+      onChange={(e) => onLocalChange(e.target.value)}
+      onBlur={(e) => onCommit?.(e.target.value)}
+      disabled={disabled}
+      className="w-full p-1 border border-gray-300 rounded text-xs disabled:bg-gray-100 disabled:cursor-not-allowed"
+    >
+      <option value="">{placeholder}</option>
+      {setsubiList.map((setsubi) => (
+        <option key={setsubi.id} value={setsubi.code}>
+          {setsubi.name} (製番: {setsubi.code})
+        </option>
+      ))}
+    </select>
   );
 };

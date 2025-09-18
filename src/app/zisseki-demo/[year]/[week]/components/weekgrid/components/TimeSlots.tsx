@@ -2,6 +2,7 @@ import React from "react"
 import { WorkTimeData, TimeGridEvent } from "../../../types"
 import { EventDisplay } from "./EventDisplay"
 import { formatDateString, timeToPosition } from "../utils"
+import { applyOverlapLayoutToDayEvents } from "../../../utils/eventOverlapUtils"
 
 // Props型定義 - TimeSlotsコンポーネントで受け取るプロパティ
 type TimeSlotsProps = {
@@ -82,30 +83,38 @@ export const TimeSlots = ({
           ))}
 
           {/* その日のイベントを表示 */}
-          {events
+          {(() => {
             // その日のイベントのみをフィルタリング
-            .filter((event: TimeGridEvent) => {
+            const dayEvents = events.filter((event: TimeGridEvent) => {
               const eventDate = new Date(event.startDateTime)
               return (
                 eventDate.getDate() === day.getDate() &&
                 eventDate.getMonth() === day.getMonth() &&
                 eventDate.getFullYear() === day.getFullYear()
               )
-            })
-            // フィルタリングされたイベントをレンダリング
-            .map((event: TimeGridEvent) => {
+            });
 
-              return (
-                <EventDisplay
-                  key={event.id}
-                  event={event}
-                  selectedEvent={selectedEvent}
-                  onClick={onEventClick}
-                  weekDays={weekDays}
-                  dayIndex={dayIndex}
-                />
-              );
-            })}
+            // 重複レイアウトを適用
+            const eventsWithLayout = applyOverlapLayoutToDayEvents(dayEvents);
+
+            // レイアウト情報を含むイベントをレンダリング
+            return eventsWithLayout.map(({ event, width, left, zIndex, canMove }) => (
+              <EventDisplay
+                key={event.id}
+                event={event}
+                selectedEvent={selectedEvent}
+                onClick={onEventClick}
+                weekDays={weekDays}
+                dayIndex={dayIndex}
+                overlapLayout={{
+                  width,
+                  left,
+                  zIndex,
+                  canMove
+                }}
+              />
+            ));
+          })()}
         </div>
         );
       })}

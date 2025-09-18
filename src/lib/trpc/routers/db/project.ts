@@ -338,4 +338,111 @@ export const projectRouter = createTRPCRouter({
         });
       }
     }),
+
+  /**
+   * プロジェクトメンバーを取得するプロシージャ。
+   */
+  getMembers: publicProcedure
+    .input(z.object({
+      project_id: z.string().min(1, 'プロジェクトIDは必須です'),
+    }))
+    .query(async ({ input }) => {
+      try {
+        const result = await GetConditionData<any[]>(
+          'PROJECT_ID = ?',
+          [input.project_id],
+          { 
+            tableName: 'PROJECT_MEMBER', 
+            idColumn: 'ID'
+          }
+        );
+        
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: result.error || 'プロジェクトメンバーの取得に失敗しました',
+          });
+        }
+        
+        return { success: true, data: result.data || [] };
+      } catch (error) {
+        console.error("tRPC project.getMembers error:", error);
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'プロジェクトメンバーの取得に失敗しました',
+        });
+      }
+    }),
+
+  /**
+   * プロジェクトにメンバーを追加するプロシージャ。
+   */
+  addMember: publicProcedure
+    .input(z.object({
+      project_id: z.string().min(1, 'プロジェクトIDは必須です'),
+      user_id: z.string().min(1, 'ユーザーIDは必須です'),
+      role: z.string().min(1, '役割は必須です'),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const result = await createRecord('PROJECT_MEMBER', {
+          PROJECT_ID: input.project_id,
+          USER_ID: input.user_id,
+          ROLE: input.role,
+        });
+        
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: result.error?.message || 'メンバーの追加に失敗しました',
+          });
+        }
+        
+        return { success: true, data: result.data };
+      } catch (error) {
+        console.error("tRPC project.addMember error:", error);
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'メンバーの追加に失敗しました',
+        });
+      }
+    }),
+
+  /**
+   * プロジェクトからメンバーを削除するプロシージャ。
+   */
+  removeMember: publicProcedure
+    .input(z.object({
+      project_id: z.string().min(1, 'プロジェクトIDは必須です'),
+      user_id: z.string().min(1, 'ユーザーIDは必須です'),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const result = await deleteRecord('PROJECT_MEMBER', input.user_id as any, 'USER_ID');
+        
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: result.error?.message || 'メンバーが見つかりません',
+          });
+        }
+        
+        return { success: true, data: null };
+      } catch (error) {
+        console.error("tRPC project.removeMember error:", error);
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'メンバーの削除に失敗しました',
+        });
+      }
+    }),
 });

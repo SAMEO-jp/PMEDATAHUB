@@ -149,11 +149,11 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       {/* ヘッダー部分 */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center">
+        <div className="flex items-center gap-1">
+          <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center">
             <span className="text-blue-600 text-xs">⏰</span>
           </div>
           <span className="text-xs font-medium text-gray-700">{label}</span>
@@ -164,7 +164,7 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
         {hasUnsavedChanges && (
           <button
             onClick={applyTimeChanges}
-            className="px-2 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors duration-200"
+            className="px-1.5 py-0.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors duration-200"
           >
             適用
           </button>
@@ -172,16 +172,16 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
       </div>
       
       {/* 時間入力コンテナ */}
-      <div className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded p-2.5">
+      <div className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded p-1.5">
         {/* 時間入力行 */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-1">
           {/* 開始時間 */}
-          <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               <div className="w-1 h-1 bg-green-500 rounded-full"></div>
               <span className="text-xs font-medium text-gray-600">開始</span>
             </div>
-            <div className="flex items-center bg-white border border-gray-200 rounded p-1">
+            <div className="flex items-center bg-white border border-gray-200 rounded p-0.5">
               <input
                 type="number"
                 min="0"
@@ -204,12 +204,12 @@ export const TimeInputField = ({ state, actions }: TimeInputProps) => {
           </div>
 
           {/* 終了時間 */}
-          <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               <div className="w-1 h-1 bg-red-500 rounded-full"></div>
               <span className="text-xs font-medium text-gray-600">終了</span>
             </div>
-            <div className="flex items-center bg-white border border-gray-200 rounded p-1">
+            <div className="flex items-center bg-white border border-gray-200 rounded p-0.5">
               <input
                 type="number"
                 min="0"
