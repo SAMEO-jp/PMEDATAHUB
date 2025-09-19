@@ -5,6 +5,9 @@
     "scripts": {
         "dev": "next dev",
         "build": "next build",
+        "build:standalone": "next build --config next.config.standalone.js",
+        "package:normal": "node create-shareable-package.js normal",
+        "package:standalone": "node create-shareable-package.js standalone",
         "start": "next start",
         "lint": "next lint",
         "typecheck": "tsc -p tsconfig.core.json --noEmit --incremental",
