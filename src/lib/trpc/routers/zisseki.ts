@@ -4,7 +4,7 @@
 
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { getAllRecords, createRecord, updateDataById } from '@src/lib/db/crud/db_CRUD';
+import { getAllRecords, createRecord, updateDataById, executeQuery } from '@src/lib/db/crud/db_CRUD';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 import type { TimeGridEvent, WorkTimeData } from '@src/app/zisseki-demo/[year]/[week]/types';
 
@@ -313,7 +313,7 @@ export const zissekiRouter = createTRPCRouter({
         `;
 
         // 削除処理を実行
-        const deleteResult = await getAllRecords('events', deleteQuery, [
+        const deleteResult = await executeQuery(deleteQuery, [
           startOfWeek.toISOString(),
           endOfWeek.toISOString(),
           userId
@@ -325,7 +325,7 @@ export const zissekiRouter = createTRPCRouter({
           console.log('既存データの削除が完了しました');
         }
 
-        // 新しいイベントデータを挿入
+        // 新しいイベントデータをUPSERT（存在する場合は更新、存在しない場合は挿入）
         const insertPromises = data.events.map(async (event) => {
           const eventData = {
             id: event.id,
@@ -370,13 +370,48 @@ export const zissekiRouter = createTRPCRouter({
             updatedAt: new Date().toISOString(),
           };
 
-          const result = await createRecord('events', eventData);
+          // UPSERTクエリを使用（SQLiteのREPLACE INTO）
+          const upsertQuery = `
+            REPLACE INTO events (
+              id, title, description, project, startDateTime, endDateTime,
+              top, height, color, unsaved, category, employeeNumber,
+              activityCode, purposeProject, departmentCode, equipmentNumber,
+              equipmentName, equipment_id, equipment_Name, itemName,
+              planningSubType, estimateSubType, designSubType, meetingType,
+              travelType, stakeholderType, documentType, documentMaterial,
+              subTabType, activityColumn, indirectType, indirectDetailType,
+              selectedTab, selectedProjectSubTab, selectedIndirectSubTab,
+              selectedIndirectDetailTab, selectedOtherSubTab, status,
+              createdAt, updatedAt
+            ) VALUES (
+              ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+              ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            )
+          `;
+
+          const values = [
+            eventData.id, eventData.title, eventData.description, eventData.project,
+            eventData.startDateTime, eventData.endDateTime, eventData.top, eventData.height,
+            eventData.color, eventData.unsaved, eventData.category, eventData.employeeNumber,
+            eventData.activityCode, eventData.purposeProject, eventData.departmentCode,
+            eventData.equipmentNumber, eventData.equipmentName, eventData.equipment_id,
+            eventData.equipment_Name, eventData.itemName, eventData.planningSubType,
+            eventData.estimateSubType, eventData.designSubType, eventData.meetingType,
+            eventData.travelType, eventData.stakeholderType, eventData.documentType,
+            eventData.documentMaterial, eventData.subTabType, eventData.activityColumn,
+            eventData.indirectType, eventData.indirectDetailType, eventData.selectedTab,
+            eventData.selectedProjectSubTab, eventData.selectedIndirectSubTab,
+            eventData.selectedIndirectDetailTab, eventData.selectedOtherSubTab,
+            eventData.status, eventData.createdAt, eventData.updatedAt
+          ];
+
+          const result = await executeQuery(upsertQuery, values);
           
           if (!result.success) {
             throw new Error(typeof result.error === 'string' ? result.error : 'イベントの保存に失敗しました');
           }
 
-          return result.data;
+          return eventData;
         });
 
         const insertedEvents = await Promise.all(insertPromises);

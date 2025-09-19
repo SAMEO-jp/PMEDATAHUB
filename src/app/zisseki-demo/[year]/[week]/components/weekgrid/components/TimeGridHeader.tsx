@@ -23,7 +23,7 @@ export const TimeGridHeader = ({ weekDays }: TimeGridHeaderProps) => {
     <>
       {/* 時間ラベルのヘッダー（左上の空白セル） */}
       {/* タイムグリッドの左上角に配置される空白エリア - 時間ラベル列のヘッダー部分 */}
-      <div className="sticky top-0 left-0 z-20 p-1 border-r border-b bg-gray-50 w-8"></div>
+      <div className="sticky top-0 left-0 z-20 p-1 border-r border-b bg-gray-50 w-10"></div>
       
       {/* 日付ヘッダー - stickyで上部に固定 */}
       {weekDays.map((day, index) => {

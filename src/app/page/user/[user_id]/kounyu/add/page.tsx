@@ -217,7 +217,6 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
   }
 
   const user = userDetail.data;
-  const availableProjects = projectList?.data || [];
 
   return (
     <div className="container mx-auto px-4 py-8">

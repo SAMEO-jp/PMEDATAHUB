@@ -443,35 +443,6 @@ export const setsubiRouter = createTRPCRouter({
     }),
 
   /**
-   * 製番をプロジェクトに登録
-   */
-  registerToProject: publicProcedure
-    .input(z.object({
-      project_id: z.string().min(1, 'プロジェクトIDは必須です'),
-      seiban: z.string().min(1, '製番は必須です'),
-    }))
-    .mutation(async ({ input }) => {
-      try {
-        const result = await registerSetsubiToProject(input.project_id, input.seiban);
-
-        if (!result.success) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: result.error || '製番のプロジェクト登録に失敗しました',
-          });
-        }
-
-        return { success: true, data: result.data };
-      } catch (error) {
-        console.error('tRPC setsubi.registerToProject error:', error);
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: '製番のプロジェクト登録に失敗しました',
-        });
-      }
-    }),
-
-  /**
    * 製番検索
    */
   search: publicProcedure

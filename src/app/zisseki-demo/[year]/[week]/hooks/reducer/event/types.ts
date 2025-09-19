@@ -41,6 +41,7 @@ export type EventAction =
   | { type: 'ADD_EVENT'; payload: TimeGridEvent }
   | { type: 'UPDATE_EVENT'; payload: { eventId: string; event: Partial<TimeGridEvent> } }
   | { type: 'DELETE_EVENT'; payload: string }
+  | { type: 'COPY_EVENT'; payload: { originalEvent: TimeGridEvent; newPosition: { top: number; height: number; dayIndex: number; targetDate?: string } } }
   | { type: 'SET_SELECTED_EVENT'; payload: TimeGridEvent | null }
   
   // UI状態関連

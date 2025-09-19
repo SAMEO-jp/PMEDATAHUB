@@ -3,10 +3,17 @@
 import React from 'react';
 import type { Project } from '@src/types/db_project';
 
+// プロジェクトの基本情報のみを持つ型
+type ProjectBasic = {
+  PROJECT_ID: string;
+  PROJECT_NAME: string;
+  PROJECT_CLIENT_NAME: string | null;
+};
+
 interface ChartSidebarProps {
   selectedProject: string | null;
   onProjectSelect: (projectId: string | null) => void;
-  projects: Project[];
+  projects: (Project | ProjectBasic)[];
   isLoading: boolean;
   error: any;
 }
@@ -62,7 +69,7 @@ export default function ChartSidebar({
 
         {/* プロジェクト一覧 */}
         <div className="space-y-1">
-          {projects.map((project: Project, index: number) => (
+          {projects.map((project, index: number) => (
             <button
               key={project.PROJECT_ID}
               onClick={() => onProjectSelect(project.PROJECT_ID)}

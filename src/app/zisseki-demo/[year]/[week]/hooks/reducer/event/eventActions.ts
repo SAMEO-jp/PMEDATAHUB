@@ -22,6 +22,11 @@ export const eventActions = {
     payload: eventId
   }),
 
+  copyEvent: (originalEvent: TimeGridEvent, newPosition: { top: number; height: number; dayIndex: number; targetDate?: string }): EventAction => ({
+    type: 'COPY_EVENT',
+    payload: { originalEvent, newPosition }
+  }),
+
   // UI状態関連
   setSelectedEvent: (event: TimeGridEvent | null): EventAction => ({
     type: 'SET_SELECTED_EVENT',

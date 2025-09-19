@@ -36,7 +36,6 @@ interface ZissekiDataRow {
 }
 
 export default function ZissekiDataView({ year, month, events }: ZissekiDataViewProps) {
-  const { showFilters } = useContext(ViewModeContext)
   const [sortField, setSortField] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const [filters, setFilters] = useState<Record<string, string>>({})
@@ -257,8 +256,8 @@ export default function ZissekiDataView({ year, month, events }: ZissekiDataView
 
   return (
     <div className="space-y-4">
-      {/* フィルター（条件付き表示） */}
-      {showFilters && (
+      {/* フィルター */}
+      {true && (
         <div className="p-4 border-b border-gray-200 bg-gray-50">
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {columns.map((column) => (

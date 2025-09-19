@@ -75,6 +75,7 @@ export type TimeGridEvent = Event & {
   selectedIndirectSubTab?: string;
   selectedIndirectDetailTab?: string;
   selectedOtherSubTab?: string;
+  dayIndex?: number; // 週内での日付インデックス（0-6）
 }
 
 export type TimeGridProps = {

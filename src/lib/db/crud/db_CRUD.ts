@@ -360,3 +360,41 @@ export async function getAllRecords<T>(
     }
   }
 }
+
+/*********************************************************
+ * カスタムクエリ実行（INSERT、UPDATE、DELETE等）
+ * @param query - 実行するSQLクエリ
+ * @param values - クエリパラメータ
+ * @returns 実行結果（成功/失敗、エラーメッセージ）
+ *********************************************************/
+export async function executeQuery(
+  query: string, 
+  values: unknown[] = []
+): Promise<{ success: boolean; error?: { code: string; message: string } }> {
+  let db: Database | null = null;
+  try {
+    db = await initializeDatabase();
+    await db!.run(query, values);
+
+    return {
+      success: true
+    };
+  } catch (error) {
+    console.error('クエリの実行に失敗しました:', error);
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: error instanceof Error ? error.message : 'Unknown database error'
+      }
+    };
+  } finally {
+    if (db) {
+      try {
+        await db.close();
+      } catch (closeErr) {
+        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+      }
+    }
+  }
+}

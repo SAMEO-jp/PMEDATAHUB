@@ -77,7 +77,7 @@ export const TimeGrid = ({
           scrollBehavior: "auto" // ちらつきを防ぐため即座にスクロール
         }}
       >
-        <div className="grid" style={{ gridTemplateColumns: 'auto repeat(7, 1fr)' }}>
+        <div className="grid" style={{ gridTemplateColumns: '40px repeat(7, 1fr)' }}>
           {/* ヘッダー部分 */}
           <TimeGridHeader weekDays={weekDays} />
 

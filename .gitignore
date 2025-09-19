@@ -32,3 +32,6 @@ next-env.d.ts
 memo.md
 *storybook.log
 storybook-static
+pme-system-share/
+pme-system-standalone/
+pme-system-standalone.zip

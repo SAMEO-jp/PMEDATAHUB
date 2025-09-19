@@ -6,6 +6,7 @@ import { useState, useCallback, useRef } from "react"
 import { useEventContext } from "../../../context/EventContext"
 import { useDatabase } from "../../../context/DatabaseContext"
 import { calculateEventDateTime } from "../../../utils/eventPositionCalculator"
+import { eventActions } from "../../../hooks/reducer/event/eventActions"
 
 interface OverlapLayout {
   width: number;
@@ -81,7 +82,7 @@ const calculateDayIndexFromMouseX = (mouseX: number, weekDays: Date[]): number =
 };
 
 export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, weekDays, dayIndex, overlapLayout }: EventDisplayProps) => {
-  const { handleUpdateEvent } = useEventContext();
+  const { handleUpdateEvent, dispatch } = useEventContext();
   const { userInfo } = useDatabase();
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState<'top' | 'bottom' | null>(null);
@@ -89,6 +90,9 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
   const [originalPosition, setOriginalPosition] = useState({ top: 0, height: 0 });
   const [tempPosition, setTempPosition] = useState({ top: event.top, height: event.height });
   const [tempDayIndex, setTempDayIndex] = useState(dayIndex || 0);
+  const [isCtrlDrag, setIsCtrlDrag] = useState(false);
+  const [showContextMenu, setShowContextMenu] = useState(false);
+  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
   const elementRef = useRef<HTMLDivElement>(null);
 
   // 選択状態を判定
@@ -157,6 +161,43 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
   }, [event, handleUpdateEvent, onEventUpdate, weekDays, dayIndex]);
 
   // ドラッグ開始ハンドラー
+  // 右クリックハンドラー
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+    setShowContextMenu(true);
+  }, []);
+
+  // コンテキストメニューを閉じる
+  const closeContextMenu = useCallback(() => {
+    setShowContextMenu(false);
+  }, []);
+
+  // コピー機能
+  const handleCopyEvent = useCallback(() => {
+    // 同じ日付の次の時間スロットにコピー
+    const targetDate = weekDays && weekDays[dayIndex || 0] ? weekDays[dayIndex || 0] : null;
+    if (targetDate) {
+      dispatch(eventActions.copyEvent(event, {
+        top: event.top + event.height + 10, // 少し下に配置
+        height: event.height,
+        dayIndex: dayIndex || 0,
+        targetDate: targetDate.toISOString()
+      }));
+    }
+    closeContextMenu();
+  }, [event, weekDays, dayIndex, dispatch, closeContextMenu]);
+
+  // 削除機能
+  const handleDeleteEvent = useCallback(() => {
+    if (confirm(`「${event.title}」を削除しますか？`)) {
+      dispatch(eventActions.deleteEvent(event.id));
+    }
+    closeContextMenu();
+  }, [event.id, event.title, dispatch, closeContextMenu]);
+
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!elementRef.current) return;
 
@@ -176,7 +217,7 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
       setIsResizing('bottom');
       setOriginalPosition({ top: event.top, height: event.height });
     } else {
-      // ドラッグ移動
+      // 通常のドラッグ移動
       setIsDragging(true);
       setDragOffset({
         x: e.clientX - rect.left,
@@ -187,7 +228,7 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
 
     e.preventDefault();
     e.stopPropagation();
-  }, [event.top, event.height]);
+  }, [event.top, event.height, dayIndex]);
 
   // マウス移動ハンドラー
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -249,7 +290,7 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
     if (isDragging || isResizing) {
       // ドラッグ・リサイズ終了時に実際の位置を更新
       if (isDragging) {
-        // ドラッグの場合は日付変更も考慮
+        // 通常のドラッグの場合は日付変更も考慮
         updateEventPosition(tempPosition.top, tempPosition.height, tempDayIndex);
       } else {
         // リサイズの場合は時間のみ変更
@@ -281,6 +322,22 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
     }
   }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
 
+  // コンテキストメニューのグローバルクリックイベント
+  React.useEffect(() => {
+    const handleGlobalClick = () => {
+      if (showContextMenu) {
+        closeContextMenu();
+      }
+    };
+
+    if (showContextMenu) {
+      document.addEventListener('click', handleGlobalClick);
+      return () => {
+        document.removeEventListener('click', handleGlobalClick);
+      };
+    }
+  }, [showContextMenu, closeContextMenu]);
+
   // クリックハンドラー（ドラッグと区別）
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (!isDragging && !isResizing) {
@@ -303,43 +360,43 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
   };
 
   return (
-    <div
-      ref={elementRef}
-      className={`absolute overflow-hidden text-xs border shadow-md rounded-md cursor-pointer group select-none ${
-        isSelected 
-          ? "border-2 border-blue-500 ring-2 ring-blue-200" // 選択時：青い枠とリング
-          : event.unsaved 
-            ? "border-yellow-400" // 未保存時：黄色い枠
+    <>
+      <div
+        ref={elementRef}
+        className={`absolute overflow-hidden text-xs border shadow-md rounded-md cursor-pointer group select-none ${
+          isSelected 
+            ? "border-2 border-blue-500 ring-2 ring-blue-200" // 選択時：青い枠とリング
             : "border-gray-300"   // 通常時：グレーの枠
-      } ${isDragging || isResizing ? 'shadow-xl z-50' : ''}`}
-      style={{
-        top: `${isDragging || isResizing ? tempPosition.top : event.top}px`,
-        height: `${Math.max(isDragging || isResizing ? tempPosition.height : event.height, minutesToPixels(10))}px`, // 最小高さ10分を確保
-        left: overlapLayout ? `${overlapLayout.left}%` : "4px",
-        right: overlapLayout ? "auto" : "4px",
-        width: overlapLayout ? `${overlapLayout.width}%` : "auto",
-        backgroundColor: event.color,
-        color: "white",
-        cursor: isDragging ? 'move' : isResizing ? 'ns-resize' : 'pointer',
-        opacity: isDragging || isResizing ? 0.8 : 1,
-        transform: isDragging || isResizing ? 'scale(1.02)' : 'scale(1)',
-        transition: isDragging || isResizing ? 'none' : 'transform 0.1s ease',
-        zIndex: overlapLayout ? overlapLayout.zIndex : 1,
-        // 日付変更時の視覚効果
-        boxShadow: isDragging && tempDayIndex !== (dayIndex || 0) 
-          ? '0 8px 25px rgba(59, 130, 246, 0.6), 0 0 0 2px rgba(59, 130, 246, 0.3)' 
-          : isDragging || isResizing ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '',
-        borderStyle: 'solid'
-      }}
-      onMouseDown={handleMouseDown}
-      onClick={handleClick}
-      onMouseMove={(e) => {
-        if (!isDragging && !isResizing) {
-          e.currentTarget.style.cursor = getCursorStyle(e);
-        }
-      }}
-      title={`${event.title} - 業務コード: ${event.activityCode || '未設定'} - ドラッグで移動・端をドラッグで時間調整`}
-    >
+        } ${isDragging || isResizing ? 'shadow-xl z-50' : ''}`}
+        style={{
+          top: `${isDragging || isResizing ? tempPosition.top : event.top}px`,
+          height: `${Math.max(isDragging || isResizing ? tempPosition.height : event.height, minutesToPixels(10))}px`, // 最小高さ10分を確保
+          left: overlapLayout ? `${overlapLayout.left}%` : "4px",
+          right: overlapLayout ? "auto" : "4px",
+          width: overlapLayout ? `${overlapLayout.width}%` : "auto",
+          backgroundColor: event.color,
+          color: "white",
+          cursor: isDragging ? 'move' : isResizing ? 'ns-resize' : 'pointer',
+          opacity: isDragging || isResizing ? 0.8 : 1,
+          transform: isDragging || isResizing ? 'scale(1.02)' : 'scale(1)',
+          transition: isDragging || isResizing ? 'none' : 'transform 0.1s ease',
+          zIndex: overlapLayout ? overlapLayout.zIndex : 1,
+          // 日付変更時の視覚効果
+          boxShadow: isDragging && tempDayIndex !== (dayIndex || 0) 
+            ? '0 8px 25px rgba(59, 130, 246, 0.6), 0 0 0 2px rgba(59, 130, 246, 0.3)' 
+            : isDragging || isResizing ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '',
+          borderStyle: 'solid'
+        }}
+        onMouseDown={handleMouseDown}
+        onClick={handleClick}
+        onContextMenu={handleContextMenu}
+        onMouseMove={(e) => {
+          if (!isDragging && !isResizing) {
+            e.currentTarget.style.cursor = getCursorStyle(e);
+          }
+        }}
+        title={`${event.title} - 業務コード: ${event.activityCode || '未設定'} - ドラッグで移動・右クリックでコピー/削除・端をドラッグで時間調整`}
+      >
       {/* リサイズハンドル（上） */}
       <div className="absolute top-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover:opacity-100 bg-white/20 transition-opacity" />
       
@@ -389,8 +446,36 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
         )}
       </div>
 
-      {/* リサイズハンドル（下） */}
-      <div className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover:opacity-100 bg-white/20 transition-opacity" />
-    </div>
-  )
-}
+        {/* リサイズハンドル（下） */}
+        <div className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover:opacity-100 bg-white/20 transition-opacity" />
+      </div>
+
+      {/* コンテキストメニュー */}
+      {showContextMenu && (
+        <div
+          className="fixed z-50 bg-white border border-gray-300 rounded-md shadow-lg py-1 min-w-[120px]"
+          style={{
+            left: contextMenuPosition.x,
+            top: contextMenuPosition.y,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
+            onClick={handleCopyEvent}
+          >
+            <span>📋</span>
+            コピー
+          </button>
+          <button
+            className="w-full px-3 py-2 text-left text-sm hover:bg-red-50 hover:text-red-600 flex items-center gap-2"
+            onClick={handleDeleteEvent}
+          >
+            <span>🗑️</span>
+            削除
+          </button>
+        </div>
+      )}
+    </>
+  );
+};

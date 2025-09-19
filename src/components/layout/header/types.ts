@@ -10,6 +10,7 @@ export interface HeaderConfig {
   
   // アクションボタン
   actions?: HeaderAction[];
+  showActions?: boolean;
   showSearch?: boolean;
   searchPlaceholder?: string;
   onSearch?: (query: string) => void;

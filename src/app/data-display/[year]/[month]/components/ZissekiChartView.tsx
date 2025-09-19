@@ -60,7 +60,7 @@ export default function ZissekiChartView({
   
   // 選択されたプロジェクトの情報を取得
   const selectedProjectInfo = selectedProject 
-    ? projectsWithEvents.find((p: Project) => p.PROJECT_ID === selectedProject)
+    ? projectsWithEvents.find((p) => p.PROJECT_ID === selectedProject)
     : null;
 
   const handleProjectSelect = (projectId: string | null) => {
