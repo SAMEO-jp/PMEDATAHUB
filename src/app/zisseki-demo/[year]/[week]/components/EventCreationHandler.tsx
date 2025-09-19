@@ -11,7 +11,7 @@ import { TimeGridEvent } from '../types';
 const generateActivityCode = (activeTab: string, activeSubTab: string): string => {
   if (activeTab === "project") {
     switch (activeSubTab) {
-      case "計画":
+      case "企画・検討":
         return "P001";
       case "設計":
         return "D001";

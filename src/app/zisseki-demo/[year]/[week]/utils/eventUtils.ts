@@ -22,7 +22,7 @@ export function createNewEvent(
   const defaultHierarchy: UIHierarchy = {
     activeTab: "project",
     activeSubTabs: {
-      project: "計画"
+      project: "企画・検討"
     }
   };
   
@@ -34,7 +34,7 @@ export function createNewEvent(
   let activityCode = "";
   if (currentTab === "project") {
     switch (currentSubTab) {
-      case "計画":
+      case "企画・検討":
         activityCode = "PP01"; // 正しい業務コードに修正
         break;
       case "設計":
@@ -50,7 +50,7 @@ export function createNewEvent(
         activityCode = "OT01"; // 正しい業務コードに修正
         break;
       default:
-        activityCode = "PP01"; // デフォルトは計画
+        activityCode = "PP01"; // デフォルトは企画・検討
     }
   } else if (currentTab === "indirect") {
     activityCode = "ZP01"; // 間接業務の正しいコード

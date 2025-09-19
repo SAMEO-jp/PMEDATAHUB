@@ -26,18 +26,6 @@ export const DetailClassifications = ({
     getPurchaseClassifications
   } = actions;
 
-  // 購入品タブの場合は特別なプルダウンコンポーネントを使用
-  if (currentMainSubTab === '購入品') {
-    return (
-      <PurchaseDropdown
-        currentCode={currentCode}
-        onClassificationSelect={onClassificationSelect}
-        generateCode={generateCode}
-        getAdditionalData={getAdditionalData}
-        purchaseClassifications={getPurchaseClassifications()}
-      />
-    );
-  }
   
   // 間接業務の場合は3段階目と4段階目の両方を表示
   if (selectedTab === 'indirect') {

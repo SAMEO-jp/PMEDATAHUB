@@ -62,7 +62,7 @@ export const eventSelectors = {
 
   getActiveSubTab: (state: EventState, tab: string): string => {
     // TODO: hierarchy property is not available, returning default
-    return tab === 'project' ? '計画' : '目的間接';
+    return tab === 'project' ? '企画・検討' : '目的間接';
   },
 
   getLoadingState: (state: EventState): boolean => {

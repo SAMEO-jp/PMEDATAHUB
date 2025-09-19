@@ -22,7 +22,7 @@ export interface ParsedActivityCode {
 export type MainTab = 'project' | 'indirect';
 
 // プロジェクト関連のサブタブ
-export type ProjectSubTab = '計画' | '設計' | '会議' | '購入品' | 'その他';
+export type ProjectSubTab = '企画・検討' | '設計' | '会議' | '購入品' | 'その他';
 
 // 間接業務関連のサブタブ
 export type IndirectSubTab = '純間接' | '目的間接' | '控除';

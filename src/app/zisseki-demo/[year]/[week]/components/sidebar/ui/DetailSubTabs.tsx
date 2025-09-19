@@ -23,8 +23,6 @@ export const DetailSubTabs = ({
   onTabSelect,
   projectSubTabConfigs
 }: DetailSubTabsProps) => {
-  // 購入品タブの場合は詳細サブタブを非表示
-  if (currentMainSubTab === '購入品') return null;
 
   // 動的に詳細タブを生成
   const detailTabs = useMemo(() => {

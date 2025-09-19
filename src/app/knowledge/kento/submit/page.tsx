@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
+import React, { useState } from 'react';
 import Link from 'next/link';
 
 interface FormData {
@@ -35,40 +34,33 @@ export default function SubmitPage() {
     otherMemo: ''
   });
 
-  // ドロップゾーンの設定
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    setUploadedFiles(prev => [...prev, ...acceptedFiles]);
-    
-    // ファイルがアップロードされたら自動でフォームに情報を設定
-    if (acceptedFiles.length > 0) {
-      const firstFile = acceptedFiles[0];
-      const fileName = firstFile.name;
+  // ファイル選択の処理
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const fileArray = Array.from(files);
+      setUploadedFiles(prev => [...prev, ...fileArray]);
       
-      // ファイル名から情報を自動抽出（サンプル）
-      const extractedInfo = extractInfoFromFileName(fileName);
-      
-      setFormData(prev => ({
-        ...prev,
-        fileName: fileName,
-        projectName: extractedInfo.projectName || '君津２高炉BP水素吹き込み対応',
-        equipmentName: extractedInfo.equipmentName || '1B31 上部流調ゲート弁',
-        documentType: extractedInfo.documentType || '軸強度検討書',
-        creator: extractedInfo.creator || '担当者 太郎',
-        uploader: '担当者 太郎'
-      }));
+      // ファイルがアップロードされたら自動でフォームに情報を設定
+      if (fileArray.length > 0) {
+        const firstFile = fileArray[0];
+        const fileName = firstFile.name;
+        
+        // ファイル名から情報を自動抽出（サンプル）
+        const extractedInfo = extractInfoFromFileName(fileName);
+        
+        setFormData(prev => ({
+          ...prev,
+          fileName: fileName,
+          projectName: extractedInfo.projectName || '君津２高炉BP水素吹き込み対応',
+          equipmentName: extractedInfo.equipmentName || '1B31 上部流調ゲート弁',
+          documentType: extractedInfo.documentType || '軸強度検討書',
+          creator: extractedInfo.creator || '担当者 太郎',
+          uploader: '担当者 太郎'
+        }));
+      }
     }
-  }, []);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'application/pdf': ['.pdf'],
-      'application/msword': ['.doc'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-      'image/*': ['.png', '.jpg', '.jpeg']
-    },
-    multiple: true
-  });
+  };
 
   // ファイル名から情報を抽出する関数（サンプル実装）
   const extractInfoFromFileName = (fileName: string) => {
@@ -182,27 +174,32 @@ export default function SubmitPage() {
 
                 {/* ファイルアップロードエリア */}
                 <div className="mb-8">
-                  <div
-                    {...getRootProps()}
-                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                      isDragActive
-                        ? 'border-blue-400 bg-blue-50'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                  >
-                    <input {...getInputProps()} />
-                    <div className="mb-4">
-                      <span className="text-4xl">📁</span>
-                    </div>
-                    <p className="text-lg font-medium text-gray-900 mb-2">
-                      {isDragActive ? 'ファイルをドロップしてください' : 'ファイルをドラッグ＆ドロップ'}
-                    </p>
-                    <p className="text-gray-600 mb-4">
-                      または、クリックしてファイルを選択
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      対応形式: PDF, DOC, DOCX, PNG, JPG, JPEG
-                    </p>
+                  <div className="border-2 border-dashed rounded-lg p-8 text-center border-gray-300 hover:border-gray-400">
+                    <input
+                      type="file"
+                      onChange={handleFileChange}
+                      accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                      multiple
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <label
+                      htmlFor="file-upload"
+                      className="cursor-pointer block"
+                    >
+                      <div className="mb-4">
+                        <span className="text-4xl">📁</span>
+                      </div>
+                      <p className="text-lg font-medium text-gray-900 mb-2">
+                        ファイルを選択
+                      </p>
+                      <p className="text-gray-600 mb-4">
+                        クリックしてファイルを選択
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        対応形式: PDF, DOC, DOCX, PNG, JPG, JPEG
+                      </p>
+                    </label>
                   </div>
                 </div>
 

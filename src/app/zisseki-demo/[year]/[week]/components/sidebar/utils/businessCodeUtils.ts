@@ -187,7 +187,7 @@ export function getBusinessCodeStats(): BusinessCodeStats {
 export function getDefaultBusinessCodeState(): ParsedActivityCode {
   return {
     mainTab: 'project',
-    subTab: '計画',
+    subTab: '企画・検討',
     detailTab: '計画図',
     classification: '作図及び作図準備'
   };

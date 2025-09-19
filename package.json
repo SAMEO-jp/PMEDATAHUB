@@ -10,31 +10,15 @@
         "package:standalone": "node create-shareable-package.js standalone",
         "start": "next start",
         "lint": "next lint",
-        "typecheck": "tsc -p tsconfig.core.json --noEmit --incremental",
+        "typecheck": "tsc --noEmit --incremental",
         "lint:cache": "eslint . --cache --cache-location node_modules/.cache/eslint/ --max-warnings=0",
         "check": "npm run typecheck && npm run lint:cache",
         "starts": "node server.js",
-        "build-react": "react-scripts build",
-        "pkg": "pkg . --targets node16-win-x64 --output dist/react-app.exe",
         "storybook": "storybook dev -p 6006",
-        "build-storybook": "storybook build",
-        "prepare": "husky"
-    },
-    "pkg": {
-        "scripts": "build/**/*",
-        "assets": "build/**/*",
-        "targets": [
-            "node16-win-x64"
-        ],
-        "outputPath": "dist"
+        "build-storybook": "storybook build"
     },
     "dependencies": {
-        "@dnd-kit/core": "^6.3.1",
-        "@dnd-kit/modifiers": "^9.0.0",
-        "@fontsource/material-symbols-outlined": "^5.2.16",
         "@heroicons/react": "^2.2.0",
-        "@hookform/resolvers": "^3.9.1",
-        "@prisma/client": "^6.8.2",
         "@radix-ui/react-accordion": "^1.2.2",
         "@radix-ui/react-alert-dialog": "^1.1.14",
         "@radix-ui/react-aspect-ratio": "^1.1.1",
@@ -69,47 +53,24 @@
         "@trpc/react-query": "^11.4.3",
         "@trpc/server": "^11.4.3",
         "axios": "^1.10.0",
-        "better-sqlite3": "^11.10.0",
-        "box-node-sdk": "^3.8.1",
         "chart.js": "^4.4.9",
         "class-variance-authority": "^0.7.1",
-        "claude": "^0.1.1",
         "clsx": "^2.1.1",
-        "cmdk": "1.0.4",
-        "date-fns": "^2.30.0",
-        "embla-carousel-react": "8.5.1",
-        "express": "^4.18.2",
-        "input-otp": "1.4.1",
-        "kysely": "^0.28.2",
         "lucide-react": "^0.454.0",
         "next": "^14.2.32",
-        "next-themes": "^0.4.4",
-        "node-fetch": "^3.3.2",
-        "prisma": "^6.8.2",
         "react": "^18.2.0",
         "react-chartjs-2": "^5.3.0",
-        "react-day-picker": "8.10.1",
-        "react-dnd": "^16.0.1",
-        "react-dnd-html5-backend": "^16.0.1",
         "react-dom": "^18.2.22",
-        "react-dropzone": "^14.3.8",
-        "react-hook-form": "^7.54.1",
-        "react-material-symbols": "^4.4.0",
-        "react-resizable-panels": "^2.1.7",
-        "recharts": "2.15.0",
         "sonner": "^1.7.1",
         "sqlite": "^5.1.1",
         "sqlite3": "^5.1.7",
         "superjson": "^2.2.2",
         "tailwind-merge": "^2.6.0",
-        "tailwindcss-animate": "^1.0.7",
-        "vaul": "^0.9.6",
         "xlsx": "^0.18.5",
         "zod": "^3.25.67",
         "zustand": "^5.0.6"
     },
     "devDependencies": {
-        "@chromatic-com/storybook": "^4.1.0",
         "@eslint/js": "^9.28.0",
         "@next/eslint-plugin-next": "^15.3.4",
         "@storybook/addon-docs": "^9.1.1",
@@ -129,22 +90,11 @@
         "eslint-plugin-storybook": "^9.1.1",
         "eslint-plugin-unused-imports": "^4.1.4",
         "globals": "^16.2.0",
-        "husky": "^9.1.7",
-        "lint-staged": "^16.1.5",
         "postcss": "^8.4.35",
         "storybook": "^9.1.1",
         "tailwindcss": "^3.4.1",
         "ts-node": "^10.9.2",
         "typescript": "^5.4.2",
         "typescript-eslint": "^8.34.0"
-    },
-    "bin": {
-        "pme-system": "./sever.ts"
-    },
-    "lint-staged": {
-        "*.{js,jsx,ts,tsx}": [
-            "eslint --fix",
-            "git add"
-        ]
     }
 }
