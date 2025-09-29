@@ -38,7 +38,6 @@ interface ZissekiDataRow {
 export default function ZissekiDataView({ year, month, events }: ZissekiDataViewProps) {
   const [sortField, setSortField] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
-  const [filters, setFilters] = useState<Record<string, string>>({})
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
 
@@ -139,22 +138,12 @@ export default function ZissekiDataView({ year, month, events }: ZissekiDataView
     })
   }
 
-  // フィルタリング関数
-  const filterData = (data: ZissekiDataRow[]) => {
-    return data.filter((row) => {
-      return Object.entries(filters).every(([key, value]) => {
-        if (!value) return true
-        const cellValue = String(row[key as keyof ZissekiDataRow] || "").toLowerCase()
-        return cellValue.includes(value.toLowerCase())
-      })
-    })
-  }
 
   // CSVダウンロード
   const downloadCSV = () => {
     const eventsData = events as (TimeGridEvent & { createdAt: string; updatedAt: string })[]
     const displayData = convertToDisplayData(eventsData)
-    const processedData = filterData(sortData(displayData))
+    const processedData = sortData(displayData)
     
     const csvColumns = [
       { id: 'startDateTime', name: '日付' },
@@ -212,7 +201,7 @@ export default function ZissekiDataView({ year, month, events }: ZissekiDataView
 
   const eventsData = events as (TimeGridEvent & { createdAt: string; updatedAt: string })[]
   const displayData = convertToDisplayData(eventsData)
-  const processedData = filterData(sortData(displayData))
+  const processedData = sortData(displayData)
   
   // ページネーション計算
   const totalItems = processedData.length
@@ -226,10 +215,10 @@ export default function ZissekiDataView({ year, month, events }: ZissekiDataView
     setCurrentPage(page)
   }
   
-  // フィルターやソートが変更されたらページを1に戻す
+  // ソートが変更されたらページを1に戻す
   useEffect(() => {
     setCurrentPage(1)
-  }, [filters, sortField, sortDirection])
+  }, [sortField, sortDirection])
 
   const columns = [
     { id: 'startDateTime', name: '日付', checked: true },
@@ -256,29 +245,6 @@ export default function ZissekiDataView({ year, month, events }: ZissekiDataView
 
   return (
     <div className="space-y-4">
-      {/* フィルター */}
-      {true && (
-        <div className="p-4 border-b border-gray-200 bg-gray-50">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {columns.map((column) => (
-              <div key={column.id} className="space-y-1">
-                <label className="text-sm font-medium text-gray-700">
-                  {column.name}
-                </label>
-                <input
-                  type="text"
-                  value={filters[column.id] || ""}
-                  onChange={(e) =>
-                    setFilters({ ...filters, [column.id]: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={`${column.name}でフィルター`}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* データテーブル */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
