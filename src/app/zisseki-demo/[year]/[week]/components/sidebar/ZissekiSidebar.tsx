@@ -43,8 +43,6 @@ export const ZissekiSidebar = () => {
   // DatabaseContextからユーザー情報を取得
   const { userInfo } = useDatabase();
 
-  console.log('ZissekiSidebar: userInfo from DatabaseContext:', userInfo);
-
   // プロジェクト参加情報と担当装備・購入品情報を取得
   const { 
     userProjects, 
@@ -53,8 +51,6 @@ export const ZissekiSidebar = () => {
     getProjectSetsubiCombinations,
     getProjectKounyuCombinations
   } = useProjectAssignments(userInfo);
-
-  console.log('ZissekiSidebar: userProjects from hook:', userProjects);
 
   // ZissekiStoreからプロジェクト一覧を取得（フォールバック）
   const { projects } = useZissekiStore();

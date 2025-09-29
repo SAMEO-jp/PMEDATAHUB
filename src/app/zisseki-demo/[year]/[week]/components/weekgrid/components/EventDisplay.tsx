@@ -192,11 +192,18 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
 
   // 削除機能
   const handleDeleteEvent = useCallback(() => {
-    if (confirm(`「${event.title}」を削除しますか？`)) {
+    dispatch(eventActions.deleteEvent(event.id));
+    closeContextMenu();
+  }, [event.id, dispatch, closeContextMenu]);
+
+  // DELキーでの削除機能
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Delete' && isSelected) {
+      e.preventDefault();
+      e.stopPropagation();
       dispatch(eventActions.deleteEvent(event.id));
     }
-    closeContextMenu();
-  }, [event.id, event.title, dispatch, closeContextMenu]);
+  }, [isSelected, event.id, dispatch]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!elementRef.current) return;
@@ -250,14 +257,7 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
       setTempPosition(prev => ({ ...prev, top: snappedTop }));
       setTempDayIndex(newDayIndex);
       
-      // デバッグ情報
-      if (newDayIndex !== (dayIndex || 0)) {
-        console.log('Date change detected:', {
-          from: dayIndex,
-          to: newDayIndex,
-          weekDays: weekDays?.map(d => `${d.getMonth() + 1}/${d.getDate()}`)
-        });
-      }
+      // 日付変更の検出（デバッグログは削除）
     } else if (isResizing) {
       // リサイズ - 一時的なサイズを更新
       const parentRect = elementRef.current.parentElement?.getBoundingClientRect();
@@ -368,6 +368,7 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
             ? "border-2 border-blue-500 ring-2 ring-blue-200" // 選択時：青い枠とリング
             : "border-gray-300"   // 通常時：グレーの枠
         } ${isDragging || isResizing ? 'shadow-xl z-50' : ''}`}
+        tabIndex={isSelected ? 0 : -1}
         style={{
           top: `${isDragging || isResizing ? tempPosition.top : event.top}px`,
           height: `${Math.max(isDragging || isResizing ? tempPosition.height : event.height, minutesToPixels(10))}px`, // 最小高さ10分を確保
@@ -390,12 +391,13 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
         onMouseDown={handleMouseDown}
         onClick={handleClick}
         onContextMenu={handleContextMenu}
+        onKeyDown={handleKeyDown}
         onMouseMove={(e) => {
           if (!isDragging && !isResizing) {
             e.currentTarget.style.cursor = getCursorStyle(e);
           }
         }}
-        title={`${event.title} - 業務コード: ${event.activityCode || '未設定'} - ドラッグで移動・右クリックでコピー/削除・端をドラッグで時間調整`}
+        title={`${event.title} - 業務コード: ${event.activityCode || '未設定'} - ドラッグで移動・右クリックでコピー/削除・DELキーで削除・端をドラッグで時間調整`}
       >
       {/* リサイズハンドル（上） */}
       <div className="absolute top-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover:opacity-100 bg-white/20 transition-opacity" />

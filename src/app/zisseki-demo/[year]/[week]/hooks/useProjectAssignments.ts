@@ -37,16 +37,11 @@ interface UserInfo {
  * ユーザーのプロジェクト参加情報と担当装備・購入品情報を管理するフック
  */
 export const useProjectAssignments = (userInfo: UserInfo | null) => {
-  console.log('useProjectAssignments: Received userInfo:', userInfo);
-
   // 参加プロジェクト一覧を取得
   const userProjects = useMemo(() => {
     if (!userInfo?.projects) {
-      console.log('useProjectAssignments: No projects found in userInfo');
       return [];
     }
-
-    console.log('useProjectAssignments: Processing projects:', userInfo.projects);
 
     const result = userInfo.projects.map(project => ({
       code: project.project_id,
@@ -55,7 +50,6 @@ export const useProjectAssignments = (userInfo: UserInfo | null) => {
       status: 'active'
     }));
 
-    console.log('useProjectAssignments: Processed userProjects:', result);
     return result;
   }, [userInfo?.projects]);
 

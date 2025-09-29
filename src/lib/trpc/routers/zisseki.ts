@@ -137,8 +137,15 @@ export const zissekiRouter = createTRPCRouter({
         // サーバーサイドログ出力
         console.log(`🔍 [API] getWeekData: year=${input.year}, week=${input.week}, userId=${input.userId}`);
 
-        // eventsテーブルから該当週のデータを取得
-        const startOfWeek = new Date(input.year, 0, 1 + (input.week - 1) * 7);
+        // eventsテーブルから該当週のデータを取得（月曜日始まりの週）
+        const firstDayOfYear = new Date(input.year, 0, 1);
+        const dayOfWeek = firstDayOfYear.getDay();
+        const firstMonday = new Date(firstDayOfYear);
+        firstMonday.setDate(firstDayOfYear.getDate() - dayOfWeek + 1);
+        
+        const startOfWeek = new Date(firstMonday);
+        startOfWeek.setDate(firstMonday.getDate() + (input.week - 1) * 7);
+        
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(endOfWeek.getDate() + 6);
         endOfWeek.setHours(23, 59, 59, 999);
@@ -298,8 +305,15 @@ export const zissekiRouter = createTRPCRouter({
         // サーバーサイドログ出力
         console.log(`🔍 [API] saveWeekData: year=${year}, week=${week}, userId=${userId}, events=${data.events.length}`);
 
-        // 既存データを削除（週単位で該当ユーザーのデータのみ削除）
-        const startOfWeek = new Date(year, 0, 1 + (week - 1) * 7);
+        // 既存データを削除（週単位で該当ユーザーのデータのみ削除）（月曜日始まりの週）
+        const firstDayOfYear = new Date(year, 0, 1);
+        const dayOfWeek = firstDayOfYear.getDay();
+        const firstMonday = new Date(firstDayOfYear);
+        firstMonday.setDate(firstDayOfYear.getDate() - dayOfWeek + 1);
+        
+        const startOfWeek = new Date(firstMonday);
+        startOfWeek.setDate(firstMonday.getDate() + (week - 1) * 7);
+        
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(endOfWeek.getDate() + 6);
         endOfWeek.setHours(23, 59, 59, 999);

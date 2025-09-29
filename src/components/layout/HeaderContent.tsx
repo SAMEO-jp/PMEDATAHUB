@@ -101,23 +101,29 @@ export const HeaderContent: React.FC<HeaderContentProps> = ({
 
   // アクションボタンのクリックハンドラー
   const handleActionClick = async (action: HeaderAction) => {
+    console.log('🎯 Header action clicked:', action.id, action.label);
+    
     try {
       // 保存ボタンの場合は特別処理
       if (action.id === 'save' && onSave) {
+        console.log('💾 Save action triggered');
         await onSave();
         return;
       }
       
       // カスタムアクションの場合は特別処理
       if (onCustomAction) {
+        console.log('🔧 Custom action triggered:', action.id);
         onCustomAction(action.id);
         return;
       }
       
       // 通常のアクション
+      console.log('⚡ Executing action onClick:', action.id);
       action.onClick();
+      console.log('✅ Action onClick executed');
     } catch (error) {
-      console.error('Header action error:', error);
+      console.error('💥 Header action error:', error);
     }
   };
 

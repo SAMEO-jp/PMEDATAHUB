@@ -23,6 +23,12 @@ export const HEADER_CONFIGS: HeaderConfigMap = {
     subtitle: '', // 動的に設定される
     actions: [
       {
+        id: 'outlook-sync',
+        label: 'OUTLOOK連携',
+        onClick: () => {}, // 動的に設定される
+        variant: 'secondary'
+      },
+      {
         id: 'prev-week',
         label: '← 前週',
         onClick: () => {}, // 動的に設定される

@@ -56,12 +56,20 @@ export function eventReducer(state: EventState, action: EventAction): EventState
       };
     }
     
-    case 'DELETE_EVENT':
+    case 'DELETE_EVENT': {
+      const deletedEventId = action.payload;
+      const updatedEvents = state.events.filter(event => event.id !== deletedEventId);
+      const updatedSelectedEvent = state.selectedEvent && state.selectedEvent.id === deletedEventId
+        ? null
+        : state.selectedEvent;
+      
       return {
         ...state,
-        events: state.events.filter(event => event.id !== action.payload),
+        events: updatedEvents,
+        selectedEvent: updatedSelectedEvent,
         error: null
       };
+    }
     
     case 'COPY_EVENT': {
       const { originalEvent, newPosition } = action.payload;

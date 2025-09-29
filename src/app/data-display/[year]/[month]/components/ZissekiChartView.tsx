@@ -57,10 +57,36 @@ export default function ZissekiChartView({
     // マッチした場合はプロジェクトテーブルの情報を使用、そうでなければ実績データの情報を使用
     return matchedProject || eventProject;
   });
+
+  // 実績データがあるプロジェクトのみを表示（目的間接プロジェクトも含む）
+  const allProjects = [...projectsWithEvents];
+  
+  // プロジェクトテーブルから実績データに含まれていないプロジェクトを追加
+  // ただし、実績データがあるプロジェクトのみを対象とする
+  projects.forEach(project => {
+    const isAlreadyIncluded = allProjects.some(p => 
+      p.PROJECT_ID === project.PROJECT_ID || 
+      p.PROJECT_NAME === project.PROJECT_NAME
+    );
+    
+    // 実績データに該当するプロジェクトがあるかチェック
+    const hasEventData = events.some(event => {
+      // プロジェクトIDまたはプロジェクト名でマッチング
+      return event.project === project.PROJECT_ID || 
+             event.project === project.PROJECT_NAME ||
+             project.PROJECT_ID === event.project ||
+             project.PROJECT_NAME === event.project;
+    });
+    
+    // 実績データがあるプロジェクトのみを追加
+    if (!isAlreadyIncluded && hasEventData) {
+      allProjects.push(project);
+    }
+  });
   
   // 選択されたプロジェクトの情報を取得
   const selectedProjectInfo = selectedProject 
-    ? projectsWithEvents.find((p) => p.PROJECT_ID === selectedProject)
+    ? allProjects.find((p) => p.PROJECT_ID === selectedProject)
     : null;
 
   const handleProjectSelect = (projectId: string | null) => {
@@ -68,7 +94,7 @@ export default function ZissekiChartView({
     
     // 選択されたプロジェクト名をContextに設定
     if (projectId) {
-      const selectedProjectInfo = projectsWithEvents.find(p => p.PROJECT_ID === projectId);
+      const selectedProjectInfo = allProjects.find(p => p.PROJECT_ID === projectId);
       setSelectedProjectName(selectedProjectInfo?.PROJECT_NAME || null);
     } else {
       setSelectedProjectName(null);
@@ -81,7 +107,7 @@ export default function ZissekiChartView({
       <ChartSidebar 
         selectedProject={selectedProject}
         onProjectSelect={handleProjectSelect}
-        projects={projectsWithEvents}
+        projects={allProjects}
         isLoading={projectsLoading}
         error={projectsError}
       />
@@ -106,7 +132,7 @@ export default function ZissekiChartView({
                 選択されたプロジェクトID: {selectedProject}
               </div>
               <div className="text-sm">
-                利用可能なプロジェクト数: {projectsWithEvents.length}
+                利用可能なプロジェクト数: {allProjects.length}
               </div>
               <div className="text-sm">
                 実績データのプロジェクト数: {uniqueProjectNames.length}

@@ -172,16 +172,20 @@ export function ZissekiMainContent({ year, week, onSave, saveFunctionRef }: Ziss
       {/* タイムグリッドエリア */}
       <div className="time-grid-area overflow-hidden">
         <Suspense fallback={<LoadingSpinner />}>
-          <TimeGrid 
-            year={year}
-            week={week}
-            events={eventState.events || []}
-            workTimes={workTimeState.workTimes}
-            selectedEvent={eventState.selectedEvent}
-            onEventClick={eventState.handleEventClick}
-            onTimeSlotClick={handleTimeSlotClick}
-            onWorkTimeChange={workTimeState.updateWorkTime}
-          />
+          {(() => {
+            return (
+              <TimeGrid 
+                year={year}
+                week={week}
+                events={eventState.events || []}
+                workTimes={workTimeState.workTimes}
+                selectedEvent={eventState.selectedEvent}
+                onEventClick={eventState.handleEventClick}
+                onTimeSlotClick={handleTimeSlotClick}
+                onWorkTimeChange={workTimeState.updateWorkTime}
+              />
+            );
+          })()}
         </Suspense>
       </div>
       

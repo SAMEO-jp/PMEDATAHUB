@@ -98,22 +98,24 @@ export const TimeSlots = ({
             const eventsWithLayout = applyOverlapLayoutToDayEvents(dayEvents);
 
             // レイアウト情報を含むイベントをレンダリング
-            return eventsWithLayout.map(({ event, width, left, zIndex, canMove }) => (
-              <EventDisplay
-                key={event.id}
-                event={event}
-                selectedEvent={selectedEvent}
-                onClick={onEventClick}
-                weekDays={weekDays}
-                dayIndex={dayIndex}
-                overlapLayout={{
-                  width,
-                  left,
-                  zIndex,
-                  canMove
-                }}
-              />
-            ));
+            return eventsWithLayout.map(({ event, width, left, zIndex, canMove }) => {
+              return (
+                <EventDisplay
+                  key={event.id}
+                  event={event}
+                  selectedEvent={selectedEvent}
+                  onClick={onEventClick}
+                  weekDays={weekDays}
+                  dayIndex={dayIndex}
+                  overlapLayout={{
+                    width,
+                    left,
+                    zIndex,
+                    canMove
+                  }}
+                />
+              );
+            });
           })()}
         </div>
         );

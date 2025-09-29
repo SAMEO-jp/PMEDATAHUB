@@ -70,12 +70,20 @@ export type TimeGridEvent = Event & {
   unsaved?: boolean;
   category?: string;
   employeeNumber?: string;
+  activityCode?: string; // 業務コードを追加
   selectedTab?: string;
   selectedProjectSubTab?: string;
   selectedIndirectSubTab?: string;
   selectedIndirectDetailTab?: string;
   selectedOtherSubTab?: string;
   dayIndex?: number; // 週内での日付インデックス（0-6）
+  source?: string; // イベントのソース（outlook, manual等）
+  hierarchy?: { // 階層情報
+    activeTab: string;
+    activeSubTabs: {
+      [key: string]: string;
+    };
+  };
 }
 
 export type TimeGridProps = {
