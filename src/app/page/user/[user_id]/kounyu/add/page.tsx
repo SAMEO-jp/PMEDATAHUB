@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { trpc } from '@src/lib/trpc/client';
+import { generateManagementNumber } from '@src/utils/managementNumberGenerator';
 import {
   ArrowLeft,
   Package,
@@ -16,7 +17,8 @@ import {
   ChevronRight,
   Loader2,
   FolderPlus,
-  Save
+  Save,
+  RefreshCw
 } from 'lucide-react';
 
 interface UserKounyuProjectSelectPageProps {
@@ -29,6 +31,7 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
   const router = useRouter();
   const [selectedProject, setSelectedProject] = useState('');
   const [selectedKounyu, setSelectedKounyu] = useState('');
+  const [selectedSetsubi, setSelectedSetsubi] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [assignedAt, setAssignedAt] = useState(new Date().toISOString().split('T')[0]);
@@ -61,6 +64,15 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
     { project_id: selectedProject },
     { enabled: !!selectedProject }
   );
+
+  // プロジェクトの設備一覧を取得
+  const { data: projectSetsubiList, isLoading: projectSetsubiLoading } = trpc.setsubi.getAllByProject.useQuery(
+    { project_id: selectedProject },
+    { enabled: !!selectedProject }
+  );
+
+  // 既存の管理番号一覧を取得（重複チェック用）
+  const { data: existingManagementNumbers } = trpc.kounyu.getManagementNumbers.useQuery();
 
   const { mutate: addKounyuAssignment } = trpc.kounyuAssignment.add.useMutation({
     onSuccess: () => {
@@ -111,10 +123,26 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
   const handleProjectSelect = (projectId: string) => {
     setSelectedProject(projectId);
     setSelectedKounyu(''); // プロジェクト変更時は選択をリセット
+    setSelectedSetsubi(''); // 設備選択もリセット
   };
 
   const handleKounyuSelect = (kounyuId: string) => {
     setSelectedKounyu(kounyuId);
+  };
+
+  const handleSetsubiSelect = (setsubiId: string) => {
+    setSelectedSetsubi(setsubiId);
+    
+    // 設備整番が選択された場合、新規購入品作成フォームの設備製番フィールドに自動入力
+    if (setsubiId && setsubiId !== 'none' && projectSetsubiList?.data) {
+      const selectedSetsubiData = projectSetsubiList.data.find((s: any) => s.id.toString() === setsubiId);
+      if (selectedSetsubiData) {
+        setNewKounyuData(prev => ({ ...prev, setsubi_seiban: selectedSetsubiData.seiban }));
+      }
+    } else {
+      // 選択を解除した場合は空にする
+      setNewKounyuData(prev => ({ ...prev, setsubi_seiban: '' }));
+    }
   };
 
   const handleNewKounyuInputChange = (field: keyof typeof newKounyuData, value: string | number) => {
@@ -122,6 +150,13 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
+  };
+
+  // 管理番号自動生成
+  const handleGenerateManagementNumber = () => {
+    const existingNumbers = existingManagementNumbers?.data || [];
+    const newNumber = generateManagementNumber(existingNumbers);
+    setNewKounyuData(prev => ({ ...prev, management_number: newNumber }));
   };
 
   const validateNewKounyuForm = () => {
@@ -188,7 +223,7 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
   };
 
   // ローディング中
-  if (userLoading || (selectedProject && projectKounyuLoading)) {
+  if (userLoading || (selectedProject && projectKounyuLoading) || (selectedProject && projectSetsubiLoading)) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-center items-center min-h-[200px]">
@@ -299,16 +334,29 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="management_number">管理番号 <span className="text-red-500">*</span></Label>
-                        <Input
-                          id="management_number"
-                          value={newKounyuData.management_number}
-                          onChange={(e) => handleNewKounyuInputChange('management_number', e.target.value)}
-                          className={errors.management_number ? 'border-red-500' : ''}
-                          placeholder="管理番号を入力してください"
-                        />
+                        <div className="flex space-x-2">
+                          <Input
+                            id="management_number"
+                            value={newKounyuData.management_number}
+                            onChange={(e) => handleNewKounyuInputChange('management_number', e.target.value)}
+                            className={errors.management_number ? 'border-red-500' : ''}
+                            placeholder="管理番号を入力してください"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleGenerateManagementNumber}
+                            className="flex-shrink-0"
+                          >
+                            <RefreshCw className="mr-1 h-3 w-3" />
+                            自動生成
+                          </Button>
+                        </div>
                         {errors.management_number && (
                           <p className="text-sm text-red-500">{errors.management_number}</p>
                         )}
+                        <p className="text-xs text-gray-500">5桁の英数字で自動生成されます</p>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="item_name">購入品名 <span className="text-red-500">*</span></Label>
@@ -361,6 +409,11 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
                           onChange={(e) => handleNewKounyuInputChange('setsubi_seiban', e.target.value)}
                           placeholder="設備製番を入力してください"
                         />
+                        {selectedSetsubi && (
+                          <p className="text-sm text-blue-600">
+                            選択中の設備整番: {projectSetsubiList?.data?.find((s: any) => s.id.toString() === selectedSetsubi)?.seiban}
+                          </p>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="responsible_department">担当部署</Label>
@@ -450,6 +503,34 @@ export default function UserKounyuProjectSelectPage({ params }: UserKounyuProjec
                 <p className="text-sm text-orange-600">利用可能なプロジェクトがありません</p>
               )}
             </div>
+
+            {/* 設備整番選択（プロジェクトが選択されている場合のみ表示） */}
+            {selectedProject && (
+              <div className="space-y-2">
+                <Label htmlFor="setsubi" className="text-sm font-medium">
+                  設備整番
+                </Label>
+                <Select
+                  value={selectedSetsubi}
+                  onValueChange={handleSetsubiSelect}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="関連する設備整番を選択してください（任意）" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">選択しない</SelectItem>
+                    {projectSetsubiList?.data?.map((setsubi: any) => (
+                      <SelectItem key={setsubi.id} value={setsubi.id.toString()}>
+                        {setsubi.seiban} - {setsubi.setsubi_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {projectSetsubiList?.data?.length === 0 && (
+                  <p className="text-sm text-gray-500">このプロジェクトには設備が登録されていません</p>
+                )}
+              </div>
+            )}
 
             {/* 購入品選択（プロジェクトが選択されている場合のみ表示） */}
             {selectedProject && (

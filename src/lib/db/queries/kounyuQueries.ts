@@ -313,3 +313,44 @@ export async function updateKounyuAssignment(
     }
   }
 }
+
+/**
+ * 既存の管理番号一覧を取得（重複チェック用）
+ * @returns 管理番号一覧
+ */
+export async function getKounyuManagementNumbers(): Promise<DataResult<string[]>> {
+  let db: Database | null = null;
+  try {
+    db = await initializeDatabase();
+
+    const query = `
+      SELECT DISTINCT management_number 
+      FROM kounyu_master 
+      ORDER BY management_number
+    `;
+
+    const rows = await db.all(query);
+    const managementNumbers = rows.map((row: any) => row.management_number);
+
+    return {
+      success: true,
+      data: managementNumbers,
+      error: null
+    };
+  } catch (error) {
+    console.error('getKounyuManagementNumbers error:', error);
+    return {
+      success: false,
+      data: null,
+      error: error instanceof Error ? error.message : '管理番号一覧の取得に失敗しました'
+    };
+  } finally {
+    if (db) {
+      try {
+        await db.close();
+      } catch (closeErr) {
+        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+      }
+    }
+  }
+}

@@ -137,7 +137,6 @@ export const SidebarContent: React.FC = () => {
   // 全体メニューの項目
   const globalMenuItems: MenuItem[] = [
     { id: 'home', name: 'ホーム', icon: 'home', href: '/' },
-    { id: 'bom', name: 'BOM管理', icon: 'view_in_ar', href: '/app_project' },
     { id: 'project', name: 'プロジェクト管理', icon: 'assignment', href: '/app_project' },
     { id: 'table', name: 'テーブル管理', icon: 'grid_view', href: '/test' },
     { id: 'report', name: '日報管理', icon: 'edit_calendar', href: '/nippou' },

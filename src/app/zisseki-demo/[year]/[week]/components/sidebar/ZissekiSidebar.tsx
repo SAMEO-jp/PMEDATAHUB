@@ -79,6 +79,45 @@ export const ZissekiSidebar = () => {
     return parsed?.mainTab === 'indirect' ? TAB.INDIRECT : TAB.PROJECT;
   };
 
+  // 現在のタブに応じてプロジェクトをフィルタリング
+  const getFilteredProjects = () => {
+    const currentTab = getCurrentTab();
+    const allProjects = userProjects.length > 0 ? userProjects : projects;
+    
+    if (currentTab === TAB.PROJECT) {
+      // プロジェクトタブ: IS_PROJECT = '1' のプロジェクトのみ
+      return allProjects.filter((project: any) => {
+        // userProjectsの場合は、元のデータからIS_PROJECTを確認
+        if (userProjects.length > 0) {
+          // userInfoから元のプロジェクトデータを取得してIS_PROJECTを確認
+          const originalProject = userInfo?.projects?.find(p => p.project_id === project.code);
+          // IS_PROJECTが'1'または未設定の場合はプロジェクトとして扱う
+          return originalProject ? (originalProject.IS_PROJECT === '1' || originalProject.IS_PROJECT === undefined || originalProject.IS_PROJECT === null) : false;
+        }
+        // ZissekiStoreのprojectsの場合は、IS_PROJECTフィールドを直接確認
+        return project.IS_PROJECT === '1' || project.IS_PROJECT === undefined || project.IS_PROJECT === null;
+      });
+    } else if (currentTab === TAB.INDIRECT) {
+      // 間接業務タブ: IS_PROJECT = '0' のプロジェクトのみ
+      return allProjects.filter((project: any) => {
+        // userProjectsの場合は、元のデータからIS_PROJECTを確認
+        if (userProjects.length > 0) {
+          // userInfoから元のプロジェクトデータを取得してIS_PROJECTを確認
+          const originalProject = userInfo?.projects?.find(p => p.project_id === project.code);
+          // IS_PROJECTが明示的に'0'のもののみ
+          return originalProject ? (originalProject.IS_PROJECT === '0') : false;
+        }
+        // ZissekiStoreのprojectsの場合は、IS_PROJECTフィールドを直接確認
+        return project.IS_PROJECT === '0';
+      });
+    }
+    
+    return allProjects;
+  };
+
+  // フィルタリングされたプロジェクト一覧を取得
+  const filteredProjects = getFilteredProjects();
+
   // 購入品タブかどうかを判定
   const isPurchaseTab = (): boolean => {
     if (!selectedEvent?.activityCode) return false;
@@ -380,7 +419,7 @@ export const ZissekiSidebar = () => {
               <ProjectSelect
                 value={localValues.project}
                 onLocalChange={(value) => handleSelectChange('project', value)}
-                projects={userProjects.length > 0 ? userProjects : projects}
+                projects={filteredProjects}
               />
             </div>
           </div>

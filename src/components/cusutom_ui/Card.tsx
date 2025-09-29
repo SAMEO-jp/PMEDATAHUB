@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 
 // スタイルパターンの型定義
-export type StylePattern = 'default' | 'project' | 'table' | 'test' | 'demo' | 'data' | 'custom';
+export type StylePattern = 'default' | 'project' | 'table' | 'test' | 'demo' | 'data' | 'admin' | 'custom';
 
 // Cardコンポーネントの型定義
 export interface CardProps {
@@ -133,6 +133,14 @@ export const Card: React.FC<CardProps> = ({
       titleSize: 'lg' as const,
       descriptionSize: 'md' as const,
       linkSize: 'md' as const,
+      hoverEffect: true
+    },
+    admin: {
+      backgroundColor: 'bg-red-50',
+      textColor: 'text-red-900',
+      titleSize: 'xl' as const,
+      descriptionSize: 'md' as const,
+      linkSize: 'lg' as const,
       hoverEffect: true
     }
   };

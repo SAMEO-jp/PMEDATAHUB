@@ -300,7 +300,8 @@ export async function getUserDetail(userId: string): Promise<DataResult<UserWith
         p.PROJECT_NAME as project_name,
         pm.role,
         pm.joined_at,
-        p.PROJECT_STATUS as status
+        p.PROJECT_STATUS as status,
+        p.IS_PROJECT
       FROM PROJECT_MEMBERS pm
       JOIN PROJECT p ON pm.project_id = p.PROJECT_ID
       WHERE pm.user_id = ? AND pm.left_at IS NULL
@@ -313,7 +314,8 @@ export async function getUserDetail(userId: string): Promise<DataResult<UserWith
       project_name: row.project_name,
       role: row.role,
       joined_at: row.joined_at,
-      status: row.status
+      status: row.status,
+      IS_PROJECT: row.IS_PROJECT
     }));
 
     // 担当設備取得

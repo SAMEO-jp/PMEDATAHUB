@@ -6,6 +6,7 @@ interface ProjectAssignment {
   project_id: string;
   project_name: string;
   role: string;
+  IS_PROJECT: string;
 }
 
 interface SetsubiAssignment {

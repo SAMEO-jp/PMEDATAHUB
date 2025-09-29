@@ -4,6 +4,7 @@
 export interface Project {
   rowid: number;
   PROJECT_ID: string;
+  PROJECT_ID_SUB?: string;
   PROJECT_NAME: string;
   PROJECT_DESCRIPTION: string;
   PROJECT_START_DATE: string;

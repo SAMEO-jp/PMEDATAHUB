@@ -311,8 +311,8 @@ export const HEADER_CONFIGS: HeaderConfigMap = {
   // ユーザー管理関連
   // ========================================
   '/page/user/[user_id]/kounyu/add': {
-    title: '購入実績追加',
-    subtitle: '購入実績の新規登録',
+    title: '',
+    subtitle: '',
     actions: [
       {
         id: 'save-kounyu',
@@ -335,8 +335,8 @@ export const HEADER_CONFIGS: HeaderConfigMap = {
   },
 
   '/page/user/[user_id]/setsubi/add/[project_id]/assign': {
-    title: '設備割当',
-    subtitle: '設備の割当設定',
+    title: '',
+    subtitle: '',
     actions: [
       {
         id: 'assign-setsubi',
@@ -353,8 +353,8 @@ export const HEADER_CONFIGS: HeaderConfigMap = {
   },
 
   '/page/user/[user_id]/setsubi/add/[project_id]': {
-    title: '設備追加',
-    subtitle: 'プロジェクトへの設備追加',
+    title: '',
+    subtitle: '',
     actions: [
       {
         id: 'add-setsubi',
@@ -371,8 +371,8 @@ export const HEADER_CONFIGS: HeaderConfigMap = {
   },
 
   '/page/user/[user_id]/setsubi/add': {
-    title: '設備追加',
-    subtitle: '設備の新規登録',
+    title: '',
+    subtitle: '',
     actions: [
       {
         id: 'add-setsubi',
@@ -388,9 +388,44 @@ export const HEADER_CONFIGS: HeaderConfigMap = {
     showNotifications: false
   },
 
+  '/page/user/[user_id]/edit': {
+    title: '',
+    subtitle: '',
+    breadcrumbItems: [
+      { label: 'ホーム', href: '/' },
+      { label: 'ユーザー一覧', href: '/page/user' },
+      { label: '詳細', href: '/page/user/[user_id]' },
+      { label: '編集' }
+    ],
+    actions: [
+      {
+        id: 'save-user',
+        label: '保存',
+        onClick: () => {},
+        variant: 'primary'
+      },
+      {
+        id: 'cancel-edit',
+        label: 'キャンセル',
+        onClick: () => {},
+        variant: 'outline'
+      }
+    ],
+    showActions: true,
+    showSearch: false,
+    showBreadcrumb: true,
+    showUserInfo: true,
+    showNotifications: false
+  },
+
   '/page/user/[user_id]': {
-    title: 'ユーザー詳細',
-    subtitle: 'ユーザー情報の表示・編集',
+    title: '',
+    subtitle: '',
+    breadcrumbItems: [
+      { label: 'ホーム', href: '/' },
+      { label: 'ユーザー一覧', href: '/page/user' },
+      { label: '詳細' }
+    ],
     actions: [
       {
         id: 'edit-user',
@@ -407,8 +442,12 @@ export const HEADER_CONFIGS: HeaderConfigMap = {
   },
 
   '/page/user': {
-    title: 'ユーザー管理',
-    subtitle: 'ユーザー一覧',
+    title: '',
+    subtitle: '',
+    breadcrumbItems: [
+      { label: 'ホーム', href: '/' },
+      { label: 'ユーザー一覧' }
+    ],
     actions: [
       {
         id: 'new-user',
@@ -518,8 +557,6 @@ export const HEADER_CONFIGS: HeaderConfigMap = {
   // デフォルト設定
   // ========================================
   default: {
-    title: '業務システム',
-    subtitle: 'BOM管理とテーブル管理のための業務システム',
     actions: [],
     showActions: false,
     showSearch: false,

@@ -30,47 +30,12 @@ export default function HomePage() {
   };
 
   const cardData = [
-    { 
-      title: "プロジェクト管理", 
-      description: "プロジェクトの作成、編集、管理、BOM管理を行います。", 
-      linkText: "プロジェクト管理を開く",
-      href: "/app_project",
-      stylePattern: 'project' as const
-    },
-    { 
-      title: "プロジェクト管理アプリ仕様書", 
-      description: "プロジェクト管理アプリの仕様書とデモページです。設計内容と機能を確認できます。", 
-      linkText: "仕様書・デモを見る",
-      href: "/specifications/doc1-project-management/project",
-      stylePattern: 'project' as const
-    },
     {
-      title: "検討書管理システム仕様書",
-      description: "検討書管理システムの仕様書です。プロジェクト実績としての検討書管理の設計と実装仕様を確認できます。",
-      linkText: "仕様書を見る",
-      href: "/specifications/doc2-kentosho-management",
-      stylePattern: 'project' as const
-    },
-    {
-      title: "ユーザー管理",
-      description: "全ユーザーの一覧表示と個別詳細情報の確認ができます。プロジェクト参加状況や担当業務も確認できます。",
-      linkText: "ユーザー管理を開く",
-      href: "/page/user",
-      stylePattern: 'project' as const
-    },
-    { 
-      title: "ナレッジ管理", 
-      description: "技術文書、図面、検討書、要素技術MAPなどを一元管理し、効率的にナレッジを活用できます。", 
-      linkText: "ナレッジ管理を開く",
-      href: "/knowledge",
-      stylePattern: 'default' as const
-    },
-    { 
-      title: "部署管理", 
-      description: "製銑・精錬部署と連鋳・圧延プラント設計部署の情報を管理し、組織構造を把握できます。", 
-      linkText: "部署管理を開く",
-      href: "/busho",
-      stylePattern: 'data' as const
+      title: "実績入力",
+      description: "週単位でのイベント管理と実績入力を行います。プロジェクトの進捗状況や作業内容を記録できます。",
+      linkText: "実績入力を開く",
+      href: getZissekiDemoUrl(),
+      stylePattern: 'demo' as const
     },
     { 
       title: "データ表示", 
@@ -79,28 +44,13 @@ export default function HomePage() {
       href: `/data-display/${currentYear}/${currentMonth}`,
       stylePattern: 'data' as const
     },
-    { 
-      title: "テーブル管理", 
-      description: "テーブルの作成、編集、管理を行います。", 
-      linkText: "テーブル管理を開く",
-      href: "/test",
-      stylePattern: 'table' as const
-    },
     {
-      title: "実績デモ",
-      description: "実績入力システムのデモページです。週単位でのイベント管理機能を提供します。",
-      linkText: "実績デモを開く",
-      href: getZissekiDemoUrl(),
-      stylePattern: 'demo' as const
-    },
-    {
-      title: "ページ管理",
-      description: "各種ページの一覧と管理機能を提供します。ユーザー情報やシステム設定などにアクセスできます。",
-      linkText: "ページ管理を開く",
-      href: "/page",
-      stylePattern: 'default' as const
+      title: "管理",
+      description: "システム全体の管理機能を提供します。プロジェクト管理、ユーザー管理、データ管理などの統合管理画面です。",
+      linkText: "管理画面を開く",
+      href: "/manage",
+      stylePattern: 'admin' as const
     }
-
   ];
 
   return (

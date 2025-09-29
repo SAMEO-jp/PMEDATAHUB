@@ -70,34 +70,6 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* パンくずリスト */}
-      <nav className="mb-4">
-        <ol className="flex items-center space-x-2 text-sm text-gray-500">
-          <li>
-            <button
-              onClick={() => router.push('/')}
-              className="hover:text-blue-600 transition-colors"
-            >
-              ホーム
-            </button>
-          </li>
-          <li className="flex items-center">
-            <ChevronRight className="h-4 w-4" />
-          </li>
-          <li>
-            <button
-              onClick={() => router.push('/page/user')}
-              className="hover:text-blue-600 transition-colors"
-            >
-              ユーザー一覧
-            </button>
-          </li>
-          <li className="flex items-center">
-            <ChevronRight className="h-4 w-4" />
-          </li>
-          <li className="text-gray-900 font-medium">{user.name_japanese}</li>
-        </ol>
-      </nav>
 
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -287,7 +259,7 @@ export default function UserDetailPage({ params }: UserDetailPageProps) {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => router.push(`/page/user/${user.user_id}/projects/${project.project_id}/edit`)}
+                            onClick={() => router.push(`/app_project/${project.project_id}/manage`)}
                           >
                             <Settings className="mr-1 h-3 w-3" />
                             編集

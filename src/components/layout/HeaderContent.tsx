@@ -152,12 +152,23 @@ export const HeaderContent: React.FC<HeaderContentProps> = ({
 
   // プロフィールハンドラー
   const handleProfile = () => {
-    if (onProfile) {
-      try {
-        onProfile();
-      } catch (error) {
-        console.error('Header profile error:', error);
+    try {
+      // 認証されていない場合はログインモーダルを開く
+      if (!isAuthenticated || !user?.user_id) {
+        openLoginModal();
+        return;
       }
+      
+      // カスタムプロフィールハンドラーが指定されている場合はそれを実行
+      if (onProfile) {
+        onProfile();
+        return;
+      }
+      
+      // デフォルトの動作：現在のユーザーのプロフィールページに遷移
+      window.location.href = `/page/user/${user.user_id}`;
+    } catch (error) {
+      console.error('Header profile error:', error);
     }
   };
 

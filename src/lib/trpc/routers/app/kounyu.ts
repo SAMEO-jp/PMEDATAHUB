@@ -8,7 +8,8 @@ import { createTRPCRouter, publicProcedure } from '../../trpc';
 import {
   getKounyuWithAssignments,
   getKounyuDetail,
-  getKounyuList
+  getKounyuList,
+  getKounyuManagementNumbers
 } from '../../../db/queries/kounyuQueries';
 import {
   createKounyuMaster,
@@ -145,6 +146,31 @@ export const kounyuRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: '購入品一覧の取得に失敗しました',
+        });
+      }
+    }),
+
+  /**
+   * 既存の管理番号一覧取得（重複チェック用）
+   */
+  getManagementNumbers: publicProcedure
+    .query(async () => {
+      try {
+        const result = await getKounyuManagementNumbers();
+
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: result.error || '管理番号一覧の取得に失敗しました',
+          });
+        }
+
+        return { success: true, data: result.data };
+      } catch (error) {
+        console.error('tRPC kounyu.getManagementNumbers error:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '管理番号一覧の取得に失敗しました',
         });
       }
     }),

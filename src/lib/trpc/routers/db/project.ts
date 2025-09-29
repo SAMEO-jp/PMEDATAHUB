@@ -7,11 +7,14 @@ import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
 import { GetRecode, GetConditionData } from '@src/lib/db/crud/db_GetData';
 import { createRecord, updateRecord, deleteRecord } from '@src/lib/db/crud/db_CRUD';
+import { getProjectMembers } from '@src/lib/db/queries/projectMemberQueries';
+import { runProjectIdSubMigration } from '@src/lib/db/migrations/add_project_id_sub_column';
 import type { Project } from '@src/types/db_project';
 
 // プロジェクト作成用のスキーマ
 const ProjectCreateSchema = z.object({
   PROJECT_ID: z.string().min(1, 'プロジェクトIDは必須です'),
+  PROJECT_ID_SUB: z.string().optional(),
   PROJECT_NAME: z.string().min(1, 'プロジェクト名は必須です'),
   PROJECT_STATUS: z.enum(['active', 'completed', 'archived']).default('active'),
   PROJECT_CLIENT_NAME: z.string().optional(),
@@ -22,6 +25,7 @@ const ProjectCreateSchema = z.object({
 
 // プロジェクト更新用のスキーマ
 const ProjectUpdateSchema = z.object({
+  PROJECT_ID_SUB: z.string().optional(),
   PROJECT_NAME: z.string().min(1, 'プロジェクト名は必須です').optional(),
   PROJECT_STATUS: z.enum(['active', 'completed', 'archived']).optional(),
   PROJECT_CLIENT_NAME: z.string().optional(),
@@ -348,14 +352,7 @@ export const projectRouter = createTRPCRouter({
     }))
     .query(async ({ input }) => {
       try {
-        const result = await GetConditionData<any[]>(
-          'PROJECT_ID = ?',
-          [input.project_id],
-          { 
-            tableName: 'PROJECT_MEMBER', 
-            idColumn: 'ID'
-          }
-        );
+        const result = await getProjectMembers(input.project_id);
         
         if (!result.success) {
           throw new TRPCError({
@@ -442,6 +439,31 @@ export const projectRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'メンバーの削除に失敗しました',
+        });
+      }
+    }),
+
+  /**
+   * PROJECT_ID_SUBカラムを追加
+   */
+  addProjectIdSubColumn: publicProcedure
+    .mutation(async () => {
+      try {
+        const result = await runProjectIdSubMigration();
+
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: result.error || 'カラム追加に失敗しました',
+          });
+        }
+
+        return { success: true, message: 'PROJECT_ID_SUBカラムの追加が完了しました' };
+      } catch (error) {
+        console.error('tRPC project.addProjectIdSubColumn error:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'カラム追加に失敗しました',
         });
       }
     }),

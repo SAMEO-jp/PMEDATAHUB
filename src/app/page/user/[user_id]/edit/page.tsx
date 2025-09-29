@@ -168,45 +168,6 @@ export default function UserEditPage({ params }: UserEditPageProps) {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* パンくずリスト */}
-      <nav className="mb-4">
-        <ol className="flex items-center space-x-2 text-sm text-gray-500">
-          <li>
-            <button
-              onClick={() => router.push('/')}
-              className="hover:text-blue-600 transition-colors"
-            >
-              ホーム
-            </button>
-          </li>
-          <li className="flex items-center">
-            <ChevronRight className="h-4 w-4" />
-          </li>
-          <li>
-            <button
-              onClick={() => router.push('/page/user')}
-              className="hover:text-blue-600 transition-colors"
-            >
-              ユーザー一覧
-            </button>
-          </li>
-          <li className="flex items-center">
-            <ChevronRight className="h-4 w-4" />
-          </li>
-          <li>
-            <button
-              onClick={() => router.push(`/page/user/${params.user_id}`)}
-              className="hover:text-blue-600 transition-colors"
-            >
-              {formData.name_japanese}
-            </button>
-          </li>
-          <li className="flex items-center">
-            <ChevronRight className="h-4 w-4" />
-          </li>
-          <li className="text-gray-900 font-medium">編集</li>
-        </ol>
-      </nav>
 
       <div className="flex justify-between items-center mb-6">
         <div>

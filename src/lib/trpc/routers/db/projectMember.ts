@@ -19,14 +19,14 @@ export const projectMemberRouter = createTRPCRouter({
     .input(z.object({
       project_id: z.string().min(1, 'プロジェクトIDは必須です'),
       user_id: z.string().min(1, 'ユーザーIDは必須です'),
-      role: z.enum(['PM', '開発者', '設計者', 'テスター', '閲覧者'], {
-        errorMap: () => ({ message: 'ロールは PM, 開発者, 設計者, テスター, 閲覧者のいずれかを指定してください' })
+      role: z.enum(['設計', '製造', '工事', 'プロマネ'], {
+        errorMap: () => ({ message: 'ロールは 設計, 製造, 工事, プロマネのいずれかを指定してください' })
       }),
       joined_at: z.string().min(1, '参加日は必須です'),
     }))
     .mutation(async ({ input }) => {
       try {
-        const result = await addProjectMember(input.project_id, input.user_id, input.role || '閲覧者', input.joined_at);
+        const result = await addProjectMember(input.project_id, input.user_id, input.role || '設計', input.joined_at);
 
         if (!result.success) {
           throw new TRPCError({
@@ -41,9 +41,12 @@ export const projectMemberRouter = createTRPCRouter({
           throw error;
         }
         console.error('tRPC projectMember.add error:', error);
+        
+        // より詳細なエラーメッセージを提供
+        const errorMessage = error instanceof Error ? error.message : 'メンバーの追加に失敗しました';
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'メンバーの追加に失敗しました',
+          message: `メンバーの追加に失敗しました: ${errorMessage}`,
         });
       }
     }),
@@ -56,7 +59,7 @@ export const projectMemberRouter = createTRPCRouter({
       project_id: z.string().min(1, 'プロジェクトIDは必須です'),
       user_id: z.string().min(1, 'ユーザーIDは必須です'),
       data: z.object({
-        role: z.string().optional(),
+        role: z.enum(['設計', '製造', '工事', 'プロマネ']).optional(),
         joined_at: z.string().optional(),
         left_at: z.string().optional(),
         status: z.string().optional(),

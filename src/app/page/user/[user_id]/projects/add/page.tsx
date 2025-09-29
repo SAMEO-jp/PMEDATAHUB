@@ -34,19 +34,35 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
   // フォームデータ
   const [formData, setFormData] = useState({
     project_id: '',
-    role: '閲覧者',
+    role: '設計',
     joined_at: new Date().toISOString().split('T')[0] // 今日の日付をデフォルト
   });
 
   // 新規プロジェクト作成フォーム
   const [newProjectData, setNewProjectData] = useState({
     PROJECT_ID: '',
+    PROJECT_ID_SUB: '',
     PROJECT_NAME: '',
+    PROJECT_DESCRIPTION: '',
+    PROJECT_START_DATE: '',
     PROJECT_STATUS: 'active' as 'active' | 'completed' | 'archived',
     PROJECT_CLIENT_NAME: '',
-    PROJECT_START_DATE: '',
+    PROJECT_CLIENT_PERSON: '',
+    PROJECT_CLIENT_CONTACT: '',
     PROJECT_START_ENDDATE: '',
-    PROJECT_DESCRIPTION: ''
+    PROJECT_SYSTEM_NAME: '',
+    PROJECT_SYSTEM_DESCRIPTION: '',
+    PROJECT_NOTE: '',
+    PROJECT_CLASSIFICATION: '',
+    PROJECT_BUDGENT_GRADE: '',
+    installationDate: '',
+    drawingCompletionDate: '',
+    PROJECT_EQUIPMENT_CATEGORY: '',
+    PROJECT_SYOHIN_CATEGORY: '',
+    SPARE1: '',
+    SPARE2: '',
+    SPARE3: '',
+    IS_PROJECT: '1'
   });
 
   // バリデーションエラー
@@ -83,12 +99,28 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
       // フォームをリセット
       setNewProjectData({
         PROJECT_ID: '',
+        PROJECT_ID_SUB: '',
         PROJECT_NAME: '',
+        PROJECT_DESCRIPTION: '',
+        PROJECT_START_DATE: '',
         PROJECT_STATUS: 'active',
         PROJECT_CLIENT_NAME: '',
-        PROJECT_START_DATE: '',
+        PROJECT_CLIENT_PERSON: '',
+        PROJECT_CLIENT_CONTACT: '',
         PROJECT_START_ENDDATE: '',
-        PROJECT_DESCRIPTION: ''
+        PROJECT_SYSTEM_NAME: '',
+        PROJECT_SYSTEM_DESCRIPTION: '',
+        PROJECT_NOTE: '',
+        PROJECT_CLASSIFICATION: '',
+        PROJECT_BUDGENT_GRADE: '',
+        installationDate: '',
+        drawingCompletionDate: '',
+        PROJECT_EQUIPMENT_CATEGORY: '',
+        PROJECT_SYOHIN_CATEGORY: '',
+        SPARE1: '',
+        SPARE2: '',
+        SPARE3: '',
+        IS_PROJECT: '1'
       });
       // エラーをクリア
       setErrors({});
@@ -140,12 +172,28 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
 
     createProject({
       PROJECT_ID: newProjectData.PROJECT_ID,
+      PROJECT_ID_SUB: newProjectData.PROJECT_ID_SUB || undefined,
       PROJECT_NAME: newProjectData.PROJECT_NAME,
+      PROJECT_DESCRIPTION: newProjectData.PROJECT_DESCRIPTION || undefined,
+      PROJECT_START_DATE: newProjectData.PROJECT_START_DATE || undefined,
       PROJECT_STATUS: newProjectData.PROJECT_STATUS,
       PROJECT_CLIENT_NAME: newProjectData.PROJECT_CLIENT_NAME || undefined,
-      PROJECT_START_DATE: newProjectData.PROJECT_START_DATE || undefined,
+      PROJECT_CLIENT_PERSON: newProjectData.PROJECT_CLIENT_PERSON || undefined,
+      PROJECT_CLIENT_CONTACT: newProjectData.PROJECT_CLIENT_CONTACT || undefined,
       PROJECT_START_ENDDATE: newProjectData.PROJECT_START_ENDDATE || undefined,
-      PROJECT_DESCRIPTION: newProjectData.PROJECT_DESCRIPTION || undefined
+      PROJECT_SYSTEM_NAME: newProjectData.PROJECT_SYSTEM_NAME || undefined,
+      PROJECT_SYSTEM_DESCRIPTION: newProjectData.PROJECT_SYSTEM_DESCRIPTION || undefined,
+      PROJECT_NOTE: newProjectData.PROJECT_NOTE || undefined,
+      PROJECT_CLASSIFICATION: newProjectData.PROJECT_CLASSIFICATION || undefined,
+      PROJECT_BUDGENT_GRADE: newProjectData.PROJECT_BUDGENT_GRADE || undefined,
+      installationDate: newProjectData.installationDate || undefined,
+      drawingCompletionDate: newProjectData.drawingCompletionDate || undefined,
+      PROJECT_EQUIPMENT_CATEGORY: newProjectData.PROJECT_EQUIPMENT_CATEGORY || undefined,
+      PROJECT_SYOHIN_CATEGORY: newProjectData.PROJECT_SYOHIN_CATEGORY || undefined,
+      SPARE1: newProjectData.SPARE1 || undefined,
+      SPARE2: newProjectData.SPARE2 || undefined,
+      SPARE3: newProjectData.SPARE3 || undefined,
+      IS_PROJECT: newProjectData.IS_PROJECT
     });
   };
 
@@ -178,7 +226,7 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
     addProjectMember({
       project_id: formData.project_id,
       user_id: params.user_id,
-      role: formData.role as "PM" | "開発者" | "設計者" | "テスター" | "閲覧者",
+      role: formData.role as "設計" | "製造" | "工事" | "プロマネ",
       joined_at: formData.joined_at
     });
   };
@@ -292,24 +340,55 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
                     新規プロジェクト作成
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-6xl w-full">
                   <DialogHeader>
                     <DialogTitle>新規プロジェクト作成</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="PROJECT_ID">プロジェクトID <span className="text-red-500">*</span></Label>
-                      <Input
-                        id="PROJECT_ID"
-                        value={newProjectData.PROJECT_ID}
-                        onChange={(e) => handleNewProjectInputChange('PROJECT_ID', e.target.value)}
-                        className={errors.PROJECT_ID ? 'border-red-500' : ''}
-                        placeholder="プロジェクトIDを入力してください"
-                      />
-                      {errors.PROJECT_ID && (
-                        <p className="text-sm text-red-500">{errors.PROJECT_ID}</p>
-                      )}
+                  <div className="space-y-6 mt-6">
+                    {/* 基本情報 - 3列レイアウト */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="PROJECT_ID">プロジェクトID <span className="text-red-500">*</span></Label>
+                        <Input
+                          id="PROJECT_ID"
+                          value={newProjectData.PROJECT_ID}
+                          onChange={(e) => handleNewProjectInputChange('PROJECT_ID', e.target.value)}
+                          className={errors.PROJECT_ID ? 'border-red-500' : ''}
+                          placeholder="プロジェクトIDを入力してください"
+                        />
+                        {errors.PROJECT_ID && (
+                          <p className="text-sm text-red-500">{errors.PROJECT_ID}</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="PROJECT_ID_SUB">プロジェクトIDサブ</Label>
+                        <Input
+                          id="PROJECT_ID_SUB"
+                          value={newProjectData.PROJECT_ID_SUB}
+                          onChange={(e) => handleNewProjectInputChange('PROJECT_ID_SUB', e.target.value)}
+                          placeholder="プロジェクトIDサブを入力してください（任意）"
+                        />
+                        <p className="text-xs text-gray-500">プロジェクトのサブIDを設定できます</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="PROJECT_STATUS">ステータス</Label>
+                        <Select
+                          value={newProjectData.PROJECT_STATUS}
+                          onValueChange={(value) => handleNewProjectInputChange('PROJECT_STATUS', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="ステータスを選択してください" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">進行中</SelectItem>
+                            <SelectItem value="completed">完了</SelectItem>
+                            <SelectItem value="archived">アーカイブ</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
+
+                    {/* プロジェクト名 - 全幅 */}
                     <div className="space-y-2">
                       <Label htmlFor="PROJECT_NAME">プロジェクト名 <span className="text-red-500">*</span></Label>
                       <Input
@@ -323,49 +402,39 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
                         <p className="text-sm text-red-500">{errors.PROJECT_NAME}</p>
                       )}
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="PROJECT_STATUS">ステータス</Label>
-                      <Select
-                        value={newProjectData.PROJECT_STATUS}
-                        onValueChange={(value) => handleNewProjectInputChange('PROJECT_STATUS', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="ステータスを選択してください" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="active">進行中</SelectItem>
-                          <SelectItem value="completed">完了</SelectItem>
-                          <SelectItem value="archived">アーカイブ</SelectItem>
-                        </SelectContent>
-                      </Select>
+
+                    {/* 日付情報 - 3列レイアウト */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="PROJECT_START_DATE">開始日</Label>
+                        <Input
+                          id="PROJECT_START_DATE"
+                          type="date"
+                          value={newProjectData.PROJECT_START_DATE}
+                          onChange={(e) => handleNewProjectInputChange('PROJECT_START_DATE', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="PROJECT_START_ENDDATE">終了日</Label>
+                        <Input
+                          id="PROJECT_START_ENDDATE"
+                          type="date"
+                          value={newProjectData.PROJECT_START_ENDDATE}
+                          onChange={(e) => handleNewProjectInputChange('PROJECT_START_ENDDATE', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="PROJECT_CLIENT_NAME">クライアント名</Label>
+                        <Input
+                          id="PROJECT_CLIENT_NAME"
+                          value={newProjectData.PROJECT_CLIENT_NAME}
+                          onChange={(e) => handleNewProjectInputChange('PROJECT_CLIENT_NAME', e.target.value)}
+                          placeholder="クライアント名を入力してください"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="PROJECT_CLIENT_NAME">クライアント名</Label>
-                      <Input
-                        id="PROJECT_CLIENT_NAME"
-                        value={newProjectData.PROJECT_CLIENT_NAME}
-                        onChange={(e) => handleNewProjectInputChange('PROJECT_CLIENT_NAME', e.target.value)}
-                        placeholder="クライアント名を入力してください"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="PROJECT_START_DATE">開始日</Label>
-                      <Input
-                        id="PROJECT_START_DATE"
-                        type="date"
-                        value={newProjectData.PROJECT_START_DATE}
-                        onChange={(e) => handleNewProjectInputChange('PROJECT_START_DATE', e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="PROJECT_START_ENDDATE">終了日</Label>
-                      <Input
-                        id="PROJECT_START_ENDDATE"
-                        type="date"
-                        value={newProjectData.PROJECT_START_ENDDATE}
-                        onChange={(e) => handleNewProjectInputChange('PROJECT_START_ENDDATE', e.target.value)}
-                      />
-                    </div>
+
+                    {/* 説明 - 全幅 */}
                     <div className="space-y-2">
                       <Label htmlFor="PROJECT_DESCRIPTION">説明</Label>
                       <Input
@@ -375,6 +444,24 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
                         placeholder="プロジェクトの説明を入力してください"
                       />
                     </div>
+
+                    {/* プロジェクトフラグ選択 */}
+                    <div className="space-y-2">
+                      <Label htmlFor="IS_PROJECT">プロジェクト種別 <span className="text-red-500">*</span></Label>
+                      <Select
+                        value={newProjectData.IS_PROJECT}
+                        onValueChange={(value) => handleNewProjectInputChange('IS_PROJECT', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="プロジェクト種別を選択してください" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">プロジェクト</SelectItem>
+                          <SelectItem value="0">間接プロジェクト</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
                     {errors.general && (
                       <div className="p-4 bg-red-50 border border-red-200 rounded-md">
                         <p className="text-sm text-red-600">{errors.general}</p>
@@ -401,77 +488,79 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* プロジェクト選択 */}
-            <div className="space-y-2">
-              <Label htmlFor="project_id" className="text-sm font-medium">
-                プロジェクト <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={formData.project_id}
-                onValueChange={(value) => handleInputChange('project_id', value)}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger className={errors.project_id ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="プロジェクトを選択してください" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableProjects.map((project) => (
-                    <SelectItem key={project.PROJECT_ID} value={project.PROJECT_ID}>
-                      {project.PROJECT_NAME} ({project.PROJECT_ID})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.project_id && (
-                <p className="text-sm text-red-500">{errors.project_id}</p>
-              )}
-              {availableProjects.length === 0 && (
-                <p className="text-sm text-orange-600">参加可能なプロジェクトがありません。新規プロジェクトを作成してください。</p>
-              )}
-            </div>
+            {/* 3列レイアウトのフォーム */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* プロジェクト選択 */}
+              <div className="space-y-2">
+                <Label htmlFor="project_id" className="text-sm font-medium">
+                  プロジェクト <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.project_id}
+                  onValueChange={(value) => handleInputChange('project_id', value)}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger className={errors.project_id ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="プロジェクトを選択してください" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableProjects.map((project) => (
+                      <SelectItem key={project.PROJECT_ID} value={project.PROJECT_ID}>
+                        {project.PROJECT_NAME} ({project.PROJECT_ID})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.project_id && (
+                  <p className="text-sm text-red-500">{errors.project_id}</p>
+                )}
+                {availableProjects.length === 0 && (
+                  <p className="text-sm text-orange-600">参加可能なプロジェクトがありません。新規プロジェクトを作成してください。</p>
+                )}
+              </div>
 
-            {/* 役割選択 */}
-            <div className="space-y-2">
-              <Label htmlFor="role" className="text-sm font-medium">
-                役割 <span className="text-red-500">*</span>
-              </Label>
-              <Select
-                value={formData.role}
-                onValueChange={(value) => handleInputChange('role', value)}
-                disabled={isSubmitting}
-              >
-                <SelectTrigger className={errors.role ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="役割を選択してください" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PM">PM</SelectItem>
-                  <SelectItem value="開発者">開発者</SelectItem>
-                  <SelectItem value="設計者">設計者</SelectItem>
-                  <SelectItem value="テスター">テスター</SelectItem>
-                  <SelectItem value="閲覧者">閲覧者</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.role && (
-                <p className="text-sm text-red-500">{errors.role}</p>
-              )}
-            </div>
+              {/* 役割選択 */}
+              <div className="space-y-2">
+                <Label htmlFor="role" className="text-sm font-medium">
+                  役割 <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.role}
+                  onValueChange={(value) => handleInputChange('role', value)}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger className={errors.role ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="役割を選択してください" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="設計">設計</SelectItem>
+                    <SelectItem value="製造">製造</SelectItem>
+                    <SelectItem value="工事">工事</SelectItem>
+                    <SelectItem value="プロマネ">プロマネ</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.role && (
+                  <p className="text-sm text-red-500">{errors.role}</p>
+                )}
+              </div>
 
-            {/* 参加日 */}
-            <div className="space-y-2">
-              <Label htmlFor="joined_at" className="text-sm font-medium">
-                参加日 <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="joined_at"
-                type="date"
-                value={formData.joined_at}
-                onChange={(e) => handleInputChange('joined_at', e.target.value)}
-                className={errors.joined_at ? 'border-red-500' : ''}
-                disabled={isSubmitting}
-              />
-              {errors.joined_at && (
-                <p className="text-sm text-red-500">{errors.joined_at}</p>
-              )}
+              {/* 参加日 */}
+              <div className="space-y-2">
+                <Label htmlFor="joined_at" className="text-sm font-medium">
+                  参加日 <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="joined_at"
+                  type="date"
+                  value={formData.joined_at}
+                  onChange={(e) => handleInputChange('joined_at', e.target.value)}
+                  className={errors.joined_at ? 'border-red-500' : ''}
+                  disabled={isSubmitting}
+                />
+                {errors.joined_at && (
+                  <p className="text-sm text-red-500">{errors.joined_at}</p>
+                )}
+              </div>
             </div>
 
             {errors.general && (
@@ -502,7 +591,7 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    参加させる
+                    参加する
                   </>
                 )}
               </Button>

@@ -475,7 +475,7 @@ function PJ005MemberManagementDemoContent() {
                   <strong>対象プロジェクト:</strong> {project.name}
                 </p>
                 <p className="text-sm text-gray-600 mb-2">
-                  <strong>{selectedMember.name}</strong> をプロジェクトから削除しますか？
+                  <strong>{selectedMember.name}</strong> をプロジェクトから退出させますか？
                 </p>
                 <p className="text-xs text-gray-500">
                   この操作は取り消すことができません。

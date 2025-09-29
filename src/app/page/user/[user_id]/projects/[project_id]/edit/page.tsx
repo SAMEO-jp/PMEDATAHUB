@@ -68,8 +68,8 @@ export default function UserProjectEditPage({ params }: UserProjectEditPageProps
       router.push(`/page/user/${params.user_id}`);
     },
     onError: (error) => {
-      console.error('プロジェクトメンバー削除エラー:', error);
-      setErrors({ general: 'プロジェクトメンバーの削除に失敗しました' });
+      console.error('プロジェクトメンバー退出エラー:', error);
+      setErrors({ general: 'プロジェクトメンバーの退出に失敗しました' });
       setIsSubmitting(false);
     }
   });
@@ -142,7 +142,7 @@ export default function UserProjectEditPage({ params }: UserProjectEditPageProps
   };
 
   const handleRemove = async () => {
-    if (!confirm('このユーザーをプロジェクトから削除しますか？\nこの操作は元に戻すことができません。')) {
+    if (!confirm('このユーザーをプロジェクトから退出させますか？\n退出後も履歴は保持されます。')) {
       return;
     }
 
@@ -273,10 +273,10 @@ export default function UserProjectEditPage({ params }: UserProjectEditPageProps
                   <SelectValue placeholder="役割を選択してください" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="member">メンバー</SelectItem>
-                  <SelectItem value="leader">リーダー</SelectItem>
-                  <SelectItem value="manager">マネージャー</SelectItem>
-                  <SelectItem value="viewer">閲覧者</SelectItem>
+                  <SelectItem value="設計">設計</SelectItem>
+                  <SelectItem value="製造">製造</SelectItem>
+                  <SelectItem value="工事">工事</SelectItem>
+                  <SelectItem value="プロマネ">プロマネ</SelectItem>
                 </SelectContent>
               </Select>
               {errors.role && (
@@ -358,7 +358,7 @@ export default function UserProjectEditPage({ params }: UserProjectEditPageProps
                 className="bg-red-600 hover:bg-red-700"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                プロジェクトから削除
+                プロジェクトから退出
               </Button>
 
               <div className="space-x-4">
