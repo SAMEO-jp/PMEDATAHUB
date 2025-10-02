@@ -31,7 +31,7 @@ export const EventProvider = ({
         if (storedEvents) {
           const outlookEvents = JSON.parse(storedEvents);
           console.log('🗂️ 既存のOutlookイベントを読み込み中:', outlookEvents.length, '件');
-          console.log('📋 既存イベント詳細:', outlookEvents.map(e => ({ id: e.id, title: e.title, startTime: e.startTime, endTime: e.endTime })));
+          console.log('📋 既存イベント詳細:', outlookEvents.map((e: any) => ({ id: e.id, title: e.title, startTime: e.startTime, endTime: e.endTime })));
           
           // OutlookイベントをTimeGridEvent形式に変換して追加
           outlookEvents.forEach((workItem: any) => {

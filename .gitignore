@@ -36,3 +36,4 @@ pme-system-share/
 pme-system-standalone/
 pme-system-standalone.zip
 pme-system-normal.zip
+*.zip

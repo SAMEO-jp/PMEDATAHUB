@@ -28,6 +28,7 @@ export interface UserProjectInfo {
   role: string;
   joined_at: string;
   status: 'active' | 'completed' | 'archived';
+  IS_PROJECT: string;
 }
 
 export interface UserSetsubiAssignment {

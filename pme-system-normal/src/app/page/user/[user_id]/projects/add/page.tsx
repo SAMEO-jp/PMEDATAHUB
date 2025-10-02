@@ -178,7 +178,7 @@ export default function UserProjectAddPage({ params }: UserProjectAddPageProps) 
     addProjectMember({
       project_id: formData.project_id,
       user_id: params.user_id,
-      role: formData.role as "PM" | "開発者" | "設計者" | "テスター" | "閲覧者",
+      role: formData.role as "設計" | "製造" | "工事" | "プロマネ",
       joined_at: formData.joined_at
     });
   };

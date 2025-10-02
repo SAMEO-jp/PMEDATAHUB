@@ -31,7 +31,7 @@ export async function GET(
     headers.set('Content-Type', 'image/jpeg');
     headers.set('Cache-Control', 'public, max-age=3600'); // 1時間キャッシュ
 
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(new Uint8Array(fileBuffer), {
       status: 200,
       headers
     });

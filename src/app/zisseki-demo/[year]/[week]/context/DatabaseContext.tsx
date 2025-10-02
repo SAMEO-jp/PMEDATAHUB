@@ -52,6 +52,7 @@ type DatabaseContextType = {
       project_id: string;
       project_name: string;
       role: string;
+      IS_PROJECT: string;
     }>;
     /** 担当設備一覧 */
     setsubi_assignments: Array<{

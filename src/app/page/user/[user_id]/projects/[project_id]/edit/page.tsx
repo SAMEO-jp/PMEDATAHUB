@@ -133,7 +133,7 @@ export default function UserProjectEditPage({ params }: UserProjectEditPageProps
       project_id: params.project_id,
       user_id: params.user_id,
       data: {
-        role: formData.role,
+        role: formData.role as "設計" | "製造" | "工事" | "プロマネ",
         joined_at: formData.joined_at,
         left_at: formData.left_at || undefined,
         status: formData.status
