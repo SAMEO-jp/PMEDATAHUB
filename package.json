@@ -6,7 +6,7 @@
         "dev": "next dev",
         "dev:safe": "bash scripts/start-dev-safe.sh",
         "build": "next build",
-        "build:standalone": "next build --config next.config.standalone.js",
+        "build:standalone": "cp next.config.standalone.js next.config.js && next build && cp next.config.js next.config.backup.js",
         "package:normal": "node create-shareable-package.js normal",
         "package:standalone": "node create-shareable-package.js standalone",
         "start": "next start",
