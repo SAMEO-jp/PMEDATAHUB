@@ -2,9 +2,6 @@
 /* eslint-disable no-undef */
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Standalone Output: 完全自己完結型のアプリケーションを作成
-  output: 'standalone',
-  
   // 本番環境でのソースマップの生成を無効化
   productionBrowserSourceMaps: false,
   
@@ -68,6 +65,3 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
-
-
-
