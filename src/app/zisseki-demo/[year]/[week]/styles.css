@@ -220,10 +220,10 @@
   display: grid;
   grid-template-columns: 1fr 320px; /* タイムグリッド: サイドバー = 約3:1 */
   grid-template-rows: 1fr; /* メインコンテンツのみ */
-  grid-template-areas: 
+  grid-template-areas:
     "time-grid sidebar";
   gap: 1rem; /* サイドバーとタイムグリッドの間に隙間を追加 */
-  padding: 1rem 1rem 0 0; /* 上部と右側に1remの隙間を追加 */
+  padding: 0 1rem 0 0; /* 上部の隙間をゼロに設定 */
   height: 92vh;
   box-sizing: border-box;
 }
@@ -306,7 +306,7 @@
 
 .zisseki-demo .sidebar-card {
   background-color: var(--bg-primary);
-  border-radius: var(--border-radius-lg);
+  border-radius: 0;
   box-shadow: var(--shadow-md);
   overflow: hidden;
 }

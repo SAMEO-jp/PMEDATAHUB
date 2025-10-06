@@ -72,13 +72,24 @@ export const TimeSlots = ({
           {timeSlots.map((hour) => (
             <React.Fragment key={hour}>
               {/* 分刻みのスロット（通常は30分刻み：0分と30分） */}
-              {minuteSlots.map((minute) => (
-                <div
-                  key={`${hour}-${minute}`}
-                  className="h-8 border-b border-r border-gray-100 hover:bg-blue-50 cursor-pointer"
-                  onDoubleClick={() => onTimeSlotClick(day, hour, minute)}
-                />
-              ))}
+              {minuteSlots.map((minute) => {
+                // 曜日を取得（0: 日曜日, 1: 月曜日, ..., 6: 土曜日）
+                const dayOfWeek = day.getDay();
+                
+                // 時間帯に応じた背景色を設定
+                // 平日（月-金）の9時-17時半: 白色、その他: 薄いグレー
+                const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5; // 月曜日から金曜日
+                const isWorkHours = hour >= 9 && (hour < 17 || (hour === 17 && minute === 0)); // 9:00-17:30
+                const bgColorClass = isWeekday && isWorkHours ? "bg-white" : "bg-gray-100";
+                
+                return (
+                  <div
+                    key={`${hour}-${minute}`}
+                    className={`h-8 border-b border-r border-gray-300 hover:bg-blue-50 cursor-pointer ${bgColorClass}`}
+                    onDoubleClick={() => onTimeSlotClick(day, hour, minute)}
+                  />
+                );
+              })}
             </React.Fragment>
           ))}
 

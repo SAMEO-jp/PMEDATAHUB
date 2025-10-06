@@ -9,7 +9,7 @@ type TimeLabelsProps = {
  */
 export const TimeLabels = ({ timeSlots }: TimeLabelsProps) => {
   return (
-    <div className="col-span-1 sticky left-0 z-10">
+    <div className="col-span-1">
       {/* 各時間スロットに対してラベルを生成 */}
       {timeSlots.map((hour) => (
         <div

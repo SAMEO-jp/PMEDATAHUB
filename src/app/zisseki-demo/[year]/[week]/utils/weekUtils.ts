@@ -3,34 +3,31 @@
  */
 
 /**
- * 指定された日付のISO週番号を取得
+ * 指定された日付の週番号を取得（日曜始まり）
  * @param date 日付
- * @returns ISO週番号（1-53）
+ * @returns 週番号（1-53）
  */
 export function getISOWeek(date: Date): number {
   const d = new Date(date.getTime());
   d.setHours(0, 0, 0, 0);
   
-  // 木曜日に設定（ISO週の基準）
-  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  // 指定日付が属する週の日曜日を取得
+  const sundayOfWeek = new Date(d.getTime());
+  sundayOfWeek.setDate(d.getDate() - d.getDay());
   
-  // 年の最初の木曜日を取得
+  // 年始の日曜日（1月1日を含む週の日曜日）を取得
   const yearStart = new Date(d.getFullYear(), 0, 1);
-  yearStart.setDate(yearStart.getDate() + 3 - (yearStart.getDay() + 6) % 7);
+  const firstSundayOfYear = new Date(yearStart.getTime());
+  firstSundayOfYear.setDate(yearStart.getDate() - yearStart.getDay());
   
-  // 週番号を計算
-  let week = Math.ceil((d.getTime() - yearStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
-  
-  // 0以下の場合は1に修正
-  if (week <= 0) {
-    week = 1;
-  }
+  // 週番号を計算（1から開始）
+  const week = Math.ceil((sundayOfWeek.getTime() - firstSundayOfYear.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
   
   return week;
 }
 
 /**
- * 指定された年の週数を取得
+ * 指定された年の週数を取得（日曜始まり）
  * @param year 年
  * @returns その年の週数（52または53）
  */
@@ -38,39 +35,32 @@ export function getWeeksInYear(year: number): number {
   const lastDay = new Date(year, 11, 31);
   const lastWeek = getISOWeek(lastDay);
   
-  // 年末が年始の週に含まれる場合
-  if (lastWeek === 1) {
-    return getISOWeek(new Date(year, 11, 31 - 7));
-  }
-  
   return lastWeek;
 }
 
 /**
- * 指定された週の開始日（月曜日）を取得
+ * 指定された週の開始日（日曜日）を取得
  * @param year 年
  * @param week 週番号
- * @returns 週の開始日
+ * @returns 週の開始日（日曜日）
  */
 export function getWeekStartDate(year: number, week: number): Date {
-  // 年の最初の木曜日を取得
+  // 年始の日曜日（1月1日を含む週の日曜日）を取得
   const yearStart = new Date(year, 0, 1);
-  yearStart.setDate(yearStart.getDate() + 3 - (yearStart.getDay() + 6) % 7);
+  const firstSundayOfYear = new Date(yearStart.getTime());
+  firstSundayOfYear.setDate(yearStart.getDate() - yearStart.getDay());
   
-  // 指定された週の木曜日を計算
-  const targetThursday = new Date(yearStart.getTime() + (week - 1) * 7 * 24 * 60 * 60 * 1000);
+  // 指定された週の日曜日を計算
+  const targetSunday = new Date(firstSundayOfYear.getTime() + (week - 1) * 7 * 24 * 60 * 60 * 1000);
   
-  // 月曜日を取得（木曜日から3日前）
-  const monday = new Date(targetThursday.getTime() - 3 * 24 * 60 * 60 * 1000);
-  
-  return monday;
+  return targetSunday;
 }
 
 /**
  * 指定された週の日付配列を取得
  * @param year 年
  * @param week 週番号
- * @returns 週の日付配列（月曜日から日曜日）
+ * @returns 週の日付配列（日曜日から土曜日）
  */
 export function getWeekDays(year: number, week: number): Date[] {
   const startDate = getWeekStartDate(year, week);
@@ -117,18 +107,13 @@ export function getNextWeek(year: number, week: number): { year: number; week: n
 }
 
 /**
- * 現在の週の年と週番号を取得
+ * 現在の週の年と週番号を取得（日曜始まり）
  * @returns { year: number, week: number }
  */
 export function getCurrentWeek(): { year: number; week: number } {
   const now = new Date();
   const year = now.getFullYear();
-  let week = getISOWeek(now);
-  
-  // 0以下の場合は1に修正
-  if (week <= 0) {
-    week = 1;
-  }
+  const week = getISOWeek(now);
   
   return { year, week };
 }

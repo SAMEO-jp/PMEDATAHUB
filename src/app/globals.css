@@ -1260,3 +1260,14 @@ a {
 .menu-toggle-button button:hover {
   background-color: #f3f4f6;
 }
+
+/* スクロールバー非表示スタイル */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}

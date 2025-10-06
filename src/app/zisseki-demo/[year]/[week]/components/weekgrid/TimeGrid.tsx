@@ -33,10 +33,8 @@ export const TimeGrid = ({
   useLayoutEffect(() => {
     if (scrollContainerRef.current) {
       // 即座にスクロール位置を設定（ちらつきを防ぐ）
-      const headerHeight = 42;
-      const workTimeSectionHeight = 64;
       const timeSlotHeight = 32; // 各30分スロットの高さ（h-8 = 32px）
-      const scrollToPosition = headerHeight + workTimeSectionHeight + (8 * timeSlotHeight);
+      const scrollToPosition = 8 * 2 * timeSlotHeight; // 8時 = 8時間 × 2スロット（30分刻み）× 32px
       
       // 即座にスクロール位置を設定
       scrollContainerRef.current.scrollTop = scrollToPosition;
@@ -52,10 +50,8 @@ export const TimeGrid = ({
           const timeSlotElements = scrollContainerRef.current.querySelectorAll('[class*="h-8"]');
           const actualTimeSlotHeight = timeSlotElements.length > 0 ? timeSlotElements[0].getBoundingClientRect().height : 32;
           
-          // より正確な位置を計算
-          const headerHeight = 42;
-          const workTimeSectionHeight = 64;
-          const accurateScrollPosition = headerHeight + workTimeSectionHeight + (8 * actualTimeSlotHeight);
+          // より正確な位置を計算（8時の位置）
+          const accurateScrollPosition = 8 * 2 * actualTimeSlotHeight; // 8時 = 8時間 × 2スロット（30分刻み）× 実際の高さ
           
           // 位置が大きく異なる場合のみ調整
           if (Math.abs(scrollContainerRef.current.scrollTop - accurateScrollPosition) > 10) {
@@ -67,16 +63,9 @@ export const TimeGrid = ({
   }, [year, week]);
 
   return (
-    <div className="h-full bg-gray-50 rounded-lg shadow overflow-hidden">
-      {/* 全体を一つのスクロールコンテナにまとめる */}
-      <div 
-        ref={scrollContainerRef}
-        className="overflow-auto h-full"
-        style={{ 
-          scrollPaddingTop: "9rem",
-          scrollBehavior: "auto" // ちらつきを防ぐため即座にスクロール
-        }}
-      >
+    <div className="h-full bg-gray-50 shadow overflow-hidden flex flex-col">
+      {/* 上部固定エリア: ヘッダー + 勤務時間セクション */}
+      <div className="flex-shrink-0">
         <div className="grid" style={{ gridTemplateColumns: '40px repeat(7, 1fr)' }}>
           {/* ヘッダー部分 */}
           <TimeGridHeader weekDays={weekDays} />
@@ -87,7 +76,18 @@ export const TimeGrid = ({
             workTimes={workTimes}
             onWorkTimeChange={onWorkTimeChange}
           />
+        </div>
+      </div>
 
+      {/* 下部スクロールエリア: 時間ラベル + タイムスロット */}
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 overflow-auto hide-scrollbar"
+        style={{
+          scrollBehavior: "auto" // ちらつきを防ぐため即座にスクロール
+        }}
+      >
+        <div className="grid" style={{ gridTemplateColumns: '40px repeat(7, 1fr)' }}>
           {/* 時間ラベル */}
           <TimeLabels timeSlots={timeSlots} />
 

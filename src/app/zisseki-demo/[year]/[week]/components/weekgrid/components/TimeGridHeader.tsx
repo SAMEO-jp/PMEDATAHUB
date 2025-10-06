@@ -23,7 +23,7 @@ export const TimeGridHeader = ({ weekDays }: TimeGridHeaderProps) => {
     <>
       {/* 時間ラベルのヘッダー（左上の空白セル） */}
       {/* タイムグリッドの左上角に配置される空白エリア - 時間ラベル列のヘッダー部分 */}
-      <div className="sticky top-0 left-0 z-20 p-1 border-r border-b bg-gray-50 w-10"></div>
+      <div className="p-1 border-r border-b border-gray-300 bg-gray-50 w-10"></div>
       
       {/* 日付ヘッダー - stickyで上部に固定 */}
       {weekDays.map((day, index) => {
@@ -31,17 +31,15 @@ export const TimeGridHeader = ({ weekDays }: TimeGridHeaderProps) => {
         const dayOfWeek = day.getDay();
         
         // 日付に応じた背景色を設定
-        // 今日: 青色、日曜日: 赤色、土曜日: 青色、平日: グレー
+        // 今日: 青色、その他: グレー（日曜日・土曜日も平日と同じ色）
         const bgColorClass = 
           isToday(day) ? "bg-blue-100" : 
-          dayOfWeek === 0 ? "bg-red-100" : 
-          dayOfWeek === 6 ? "bg-blue-100" : 
           "bg-gray-50";
           
         return (
         <div
           key={index}
-          className={`sticky top-0 z-10 p-0.5 text-center border-r border-b ${bgColorClass}`}
+          className={`p-0.5 text-center border-r border-b border-gray-300 ${bgColorClass}`}
           style={{ height: "42px", minWidth: "60px" }}  // ヘッダーの高さを42px、最小幅を60pxに固定
         >
           {/* 日付表示エリア */}
