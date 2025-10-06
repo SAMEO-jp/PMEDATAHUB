@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Settings } from 'lucide-react';
 import { ViewModeContext } from './ViewModeContext';
-import { HeaderContent } from '@/components/layout/HeaderContent';
+import { HeaderContent } from '../../components/layout/HeaderContent';
 
 // 週番号を取得する関数
 const getWeekNumber = (date: Date): number => {
