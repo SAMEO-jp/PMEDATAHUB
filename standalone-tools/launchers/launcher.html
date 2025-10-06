@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PME DataHub - 自動起動</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+        }
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .status {
+            font-size: 1.2rem;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+        .button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .error {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .info {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🚀 PME DataHub</div>
+        <div class="status" id="status">サーバーを起動しています...</div>
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div id="message"></div>
+        <div class="info">
+            <p>このページを閉じると自動的にサーバーが停止します</p>
+            <p>アプリケーションは <strong>http://localhost:3000</strong> で起動します</p>
+        </div>
+        <button class="button" id="manualStart" onclick="startServer()">手動でサーバー開始</button>
+        <button class="button" id="openApp" onclick="openApplication()" style="display: none;">アプリケーションを開く</button>
+        <button class="button" id="stopServer" onclick="stopServer()" style="display: none;">サーバー停止</button>
+    </div>
+
+    <script>
+        let serverProcess = null;
+        let serverStarted = false;
+        let checkInterval = null;
+        let redirectTimeout = null;
+        let ws = null;
+
+        // ページ読み込み時に自動的にサーバーを開始
+        window.addEventListener('load', function() {
+            connectToLauncherServer();
+        });
+
+        // ページを閉じる際にサーバーを停止
+        window.addEventListener('beforeunload', function() {
+            stopServer();
+        });
+
+        // ページの可視性が変わった時の処理
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && serverStarted) {
+                // ページが非表示になったらサーバーを停止
+                console.log('ページが非表示になりました。サーバーを停止します。');
+                stopServer();
+            }
+        });
+
+        // WebSocketサーバーに接続
+        function connectToLauncherServer() {
+            const statusEl = document.getElementById('status');
+            const messageEl = document.getElementById('message');
+            
+            statusEl.textContent = 'ランチャーサーバーに接続中...';
+            messageEl.innerHTML = '<div class="info">WebSocketサーバーに接続しています...</div>';
+
+            try {
+                ws = new WebSocket('ws://localhost:3001');
+                
+                ws.onopen = function() {
+                    console.log('WebSocketサーバーに接続されました');
+                    statusEl.textContent = '接続完了 - サーバーを起動しています...';
+                    messageEl.innerHTML = '<div class="success">✅ ランチャーサーバーに接続されました</div>';
+                    startServer();
+                };
+                
+                ws.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    handleWebSocketMessage(data);
+                };
+                
+                ws.onclose = function() {
+                    console.log('WebSocket接続が切断されました');
+                    statusEl.textContent = '接続が切断されました';
+                    messageEl.innerHTML = '<div class="error">❌ ランチャーサーバーとの接続が切断されました</div>';
+                };
+                
+                ws.onerror = function(error) {
+                    console.error('WebSocketエラー:', error);
+                    statusEl.textContent = '接続エラー';
+                    messageEl.innerHTML = '<div class="error">❌ ランチャーサーバーに接続できません<br>launcher-server.js を起動してください</div>';
+                };
+                
+            } catch (error) {
+                console.error('WebSocket接続エラー:', error);
+                statusEl.textContent = '接続エラー';
+                messageEl.innerHTML = `<div class="error">❌ エラー: ${error.message}</div>`;
+            }
+        }
+
+        // WebSocketメッセージを処理
+        function handleWebSocketMessage(data) {
+            const statusEl = document.getElementById('status');
+            const progressBar = document.getElementById('progressBar');
+            const messageEl = document.getElementById('message');
+            const manualStartBtn = document.getElementById('manualStart');
+            const openAppBtn = document.getElementById('openApp');
+            const stopServerBtn = document.getElementById('stopServer');
+
+            switch (data.type) {
+                case 'connected':
+                    console.log('接続確認:', data.message);
+                    break;
+                    
+                case 'progress':
+                    progressBar.style.width = data.progress + '%';
+                    messageEl.innerHTML = `<div class="info">${data.message}</div>`;
+                    break;
+                    
+                case 'success':
+                    if (data.action === 'start') {
+                        serverStarted = true;
+                        progressBar.style.width = '100%';
+                        statusEl.textContent = 'サーバーが起動しました！';
+                        messageEl.innerHTML = '<div class="success">✅ サーバーが正常に起動しました</div>';
+                        
+                        manualStartBtn.style.display = 'none';
+                        openAppBtn.style.display = 'inline-block';
+                        stopServerBtn.style.display = 'inline-block';
+                        
+                        // 3秒後に自動的にアプリケーションを開く
+                        redirectTimeout = setTimeout(() => {
+                            openApplication();
+                        }, 3000);
+                    } else if (data.action === 'stop') {
+                        serverStarted = false;
+                        statusEl.textContent = 'サーバーが停止しました';
+                        messageEl.innerHTML = '<div class="info">サーバーが正常に停止しました</div>';
+                        
+                        manualStartBtn.style.display = 'inline-block';
+                        openAppBtn.style.display = 'none';
+                        stopServerBtn.style.display = 'none';
+                    }
+                    break;
+                    
+                case 'error':
+                    statusEl.textContent = 'エラーが発生しました';
+                    messageEl.innerHTML = `<div class="error">❌ エラー: ${data.message}</div>`;
+                    progressBar.style.width = '0%';
+                    break;
+                    
+                case 'server-output':
+                    console.log('[サーバー出力]', data.message);
+                    break;
+                    
+                case 'server-error':
+                    console.error('[サーバーエラー]', data.message);
+                    break;
+                    
+                case 'server-stopped':
+                    serverStarted = false;
+                    statusEl.textContent = 'サーバーが停止しました';
+                    messageEl.innerHTML = '<div class="info">サーバープロセスが終了しました</div>';
+                    break;
+            }
+        }
+
+        async function startServer() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ action: 'start' }));
+            } else {
+                const statusEl = document.getElementById('status');
+                const messageEl = document.getElementById('message');
+                statusEl.textContent = 'WebSocket接続エラー';
+                messageEl.innerHTML = '<div class="error">❌ ランチャーサーバーに接続できません</div>';
+            }
+        }
+
+
+        function openApplication() {
+            window.open('http://localhost:3000', '_blank');
+        }
+
+        function stopServer() {
+            if (checkInterval) {
+                clearInterval(checkInterval);
+            }
+            
+            if (redirectTimeout) {
+                clearTimeout(redirectTimeout);
+            }
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ action: 'stop' }));
+            }
+
+            // WebSocket接続を閉じる
+            if (ws) {
+                ws.close();
+            }
+        }
+
+    </script>
+</body>
+</html>

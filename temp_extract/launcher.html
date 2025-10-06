@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PME DataHub - 自動起動</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+        }
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .status {
+            font-size: 1.2rem;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+        .button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .error {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .info {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🚀 PME DataHub</div>
+        <div class="status" id="status">サーバーを起動しています...</div>
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div id="message"></div>
+        <div class="info">
+            <p>このページを閉じると自動的にサーバーが停止します</p>
+            <p>アプリケーションは <strong>http://localhost:3000</strong> で起動します</p>
+        </div>
+        <button class="button" id="manualStart" onclick="startServer()">手動でサーバー開始</button>
+        <button class="button" id="openApp" onclick="openApplication()" style="display: none;">アプリケーションを開く</button>
+        <button class="button" id="stopServer" onclick="stopServer()" style="display: none;">サーバー停止</button>
+    </div>
+
+    <script>
+        let serverProcess = null;
+        let serverStarted = false;
+        let checkInterval = null;
+        let redirectTimeout = null;
+
+        // ページ読み込み時に自動的にサーバーを開始
+        window.addEventListener('load', function() {
+            startServer();
+        });
+
+        // ページを閉じる際にサーバーを停止
+        window.addEventListener('beforeunload', function() {
+            stopServer();
+        });
+
+        // ページの可視性が変わった時の処理
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && serverStarted) {
+                // ページが非表示になったらサーバーを停止
+                console.log('ページが非表示になりました。サーバーを停止します。');
+                stopServer();
+            }
+        });
+
+        async function startServer() {
+            const statusEl = document.getElementById('status');
+            const progressBar = document.getElementById('progressBar');
+            const messageEl = document.getElementById('message');
+            const manualStartBtn = document.getElementById('manualStart');
+            const openAppBtn = document.getElementById('openApp');
+            const stopServerBtn = document.getElementById('stopServer');
+
+            try {
+                statusEl.textContent = 'サーバーを起動しています...';
+                progressBar.style.width = '20%';
+                messageEl.innerHTML = '<div class="info">Node.jsサーバーを起動中...</div>';
+
+                // サーバープロセスを開始（実際の実装では適切な方法を使用）
+                serverProcess = await startNodeServer();
+                progressBar.style.width = '60%';
+                
+                statusEl.textContent = 'サーバー起動中...';
+                messageEl.innerHTML = '<div class="info">サーバーの準備を待っています...</div>';
+
+                // サーバーの起動を監視
+                checkInterval = setInterval(async () => {
+                    const isRunning = await checkServerStatus();
+                    if (isRunning && !serverStarted) {
+                        serverStarted = true;
+                        progressBar.style.width = '100%';
+                        statusEl.textContent = 'サーバーが起動しました！';
+                        messageEl.innerHTML = '<div class="success">✅ サーバーが正常に起動しました</div>';
+                        
+                        manualStartBtn.style.display = 'none';
+                        openAppBtn.style.display = 'inline-block';
+                        stopServerBtn.style.display = 'inline-block';
+                        
+                        // 3秒後に自動的にアプリケーションを開く
+                        redirectTimeout = setTimeout(() => {
+                            openApplication();
+                        }, 3000);
+                        
+                        clearInterval(checkInterval);
+                    }
+                }, 1000);
+
+            } catch (error) {
+                console.error('サーバー起動エラー:', error);
+                statusEl.textContent = 'サーバー起動に失敗しました';
+                messageEl.innerHTML = `<div class="error">❌ エラー: ${error.message}</div>`;
+                progressBar.style.width = '0%';
+            }
+        }
+
+        async function startNodeServer() {
+            // Node.jsランチャースクリプトを実行
+            return new Promise((resolve, reject) => {
+                try {
+                    // サーバー起動のシミュレーション（実際の実装ではElectronやNode.jsプロセスを使用）
+                    // 実際の環境では以下のような処理が必要：
+                    // 1. Electronアプリとしてパッケージ化
+                    // 2. または、ローカルサーバー経由でNode.jsプロセスを制御
+                    
+                    // 現在はシミュレーション
+                    fetch('/api/launcher/start', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            resolve({ pid: data.pid });
+                        } else {
+                            reject(new Error(data.error));
+                        }
+                    })
+                    .catch(error => {
+                        // ローカルサーバーが利用できない場合はシミュレーション
+                        setTimeout(() => {
+                            resolve({
+                                pid: Math.floor(Math.random() * 10000) + 1000
+                            });
+                        }, 2000);
+                    });
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('http://localhost:3000/api/health', {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function openApplication() {
+            window.open('http://localhost:3000', '_blank');
+        }
+
+        function stopServer() {
+            const statusEl = document.getElementById('status');
+            const progressBar = document.getElementById('progressBar');
+            const messageEl = document.getElementById('message');
+            const manualStartBtn = document.getElementById('manualStart');
+            const openAppBtn = document.getElementById('openApp');
+            const stopServerBtn = document.getElementById('stopServer');
+
+            if (checkInterval) {
+                clearInterval(checkInterval);
+            }
+            
+            if (redirectTimeout) {
+                clearTimeout(redirectTimeout);
+            }
+
+            if (serverProcess && serverStarted) {
+                // サーバープロセスを停止
+                try {
+                    // 実際のプロセス停止処理
+                    console.log('サーバープロセスを停止しています...');
+                } catch (error) {
+                    console.error('サーバー停止エラー:', error);
+                }
+            }
+
+            serverStarted = false;
+            serverProcess = null;
+            
+            statusEl.textContent = 'サーバーが停止しました';
+            progressBar.style.width = '0%';
+            messageEl.innerHTML = '<div class="info">サーバーが正常に停止しました</div>';
+            
+            manualStartBtn.style.display = 'inline-block';
+            openAppBtn.style.display = 'none';
+            stopServerBtn.style.display = 'none';
+        }
+
+        // 定期的にサーバー状態をチェック（サーバーが起動している間）
+        setInterval(() => {
+            if (serverStarted) {
+                checkServerStatus().then(isRunning => {
+                    if (!isRunning) {
+                        console.log('サーバーが停止しました');
+                        stopServer();
+                    }
+                });
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

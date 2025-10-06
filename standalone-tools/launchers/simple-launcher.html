@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PME DataHub - シンプルランチャー</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 90%;
+        }
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .status {
+            font-size: 1.2rem;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+        .button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .error {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .info {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 20px;
+            text-align: left;
+        }
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+        .platform-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🚀 PME DataHub</div>
+        <div class="status" id="status">システム起動オプション</div>
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div id="message"></div>
+        
+        <div class="platform-info" id="platformInfo">
+            <p><strong>検出されたプラットフォーム:</strong> <span id="platformName">-</span></p>
+            <p><strong>推奨起動方法:</strong> <span id="recommendedMethod">-</span></p>
+        </div>
+
+        <button class="button" id="checkServer" onclick="checkServerStatus()">サーバー状態をチェック</button>
+        <button class="button" id="openApp" onclick="openApplication()" style="display: none;">アプリケーションを開く</button>
+        <button class="button" id="stopServer" onclick="stopServer()" style="display: none;">サーバー停止</button>
+
+        <div class="info">
+            <p><strong>💡 起動方法:</strong></p>
+            <div class="code">
+                <p><strong>方法1（推奨）:</strong> node simple-launcher.js</p>
+                <p><strong>方法2:</strong> node server.js</p>
+                <p><strong>方法3:</strong> npm start</p>
+            </div>
+            <p>このページを閉じてもサーバーは停止しません。手動で停止してください。</p>
+            <p>アプリケーションは <strong>http://localhost:3000</strong> で起動します</p>
+        </div>
+    </div>
+
+    <script>
+        let serverStarted = false;
+        let checkInterval = null;
+
+        // ページ読み込み時の処理
+        window.addEventListener('load', function() {
+            detectPlatform();
+            checkServerStatus();
+        });
+
+        // プラットフォームを判別
+        function detectPlatform() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const platform = navigator.platform.toLowerCase();
+            
+            let platformName = 'Unknown';
+            let recommendedMethod = 'node simple-launcher.js';
+            
+            if (userAgent.includes('windows') || platform.includes('win')) {
+                platformName = 'Windows';
+                recommendedMethod = 'node simple-launcher.js';
+            } else if (userAgent.includes('mac') || platform.includes('mac')) {
+                platformName = 'macOS';
+                recommendedMethod = 'node simple-launcher.js';
+            } else {
+                platformName = 'Linux';
+                recommendedMethod = 'node simple-launcher.js';
+            }
+            
+            document.getElementById('platformName').textContent = platformName;
+            document.getElementById('recommendedMethod').textContent = recommendedMethod;
+        }
+
+        // サーバー状態をチェック
+        async function checkServerStatus() {
+            const statusEl = document.getElementById('status');
+            const messageEl = document.getElementById('message');
+            const progressBar = document.getElementById('progressBar');
+            const checkBtn = document.getElementById('checkServer');
+            const openBtn = document.getElementById('openApp');
+            const stopBtn = document.getElementById('stopServer');
+
+            try {
+                statusEl.textContent = 'サーバー状態をチェックしています...';
+                progressBar.style.width = '20%';
+                messageEl.innerHTML = '<div class="info">サーバーの起動状況を確認中...</div>';
+
+                const isRunning = await checkServerHealth();
+                
+                if (isRunning) {
+                    serverStarted = true;
+                    progressBar.style.width = '100%';
+                    statusEl.textContent = 'サーバーが起動しています！';
+                    messageEl.innerHTML = '<div class="success">✅ サーバーが正常に起動しています</div>';
+                    
+                    checkBtn.style.display = 'none';
+                    openBtn.style.display = 'inline-block';
+                    stopBtn.style.display = 'inline-block';
+                    
+                    // 自動的にアプリケーションを開く
+                    setTimeout(() => {
+                        openApplication();
+                    }, 2000);
+                } else {
+                    serverStarted = false;
+                    progressBar.style.width = '0%';
+                    statusEl.textContent = 'サーバーが停止しています';
+                    messageEl.innerHTML = `
+                        <div class="error">❌ サーバーが起動していません</div>
+                        <div class="info">
+                            <p><strong>サーバーを起動するには以下のコマンドを実行してください：</strong></p>
+                            <div class="code">
+                                node simple-launcher.js
+                            </div>
+                            <p>または</p>
+                            <div class="code">
+                                node server.js
+                            </div>
+                        </div>
+                    `;
+                    
+                    checkBtn.style.display = 'inline-block';
+                    openBtn.style.display = 'none';
+                    stopBtn.style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('サーバー状態チェックエラー:', error);
+                statusEl.textContent = 'サーバー状態チェックエラー';
+                messageEl.innerHTML = `<div class="error">❌ エラー: ${error.message}</div>`;
+                progressBar.style.width = '0%';
+            }
+        }
+
+        // サーバーのヘルスチェック
+        async function checkServerHealth() {
+            try {
+                const response = await fetch('http://localhost:3000', {
+                    method: 'HEAD',
+                    mode: 'no-cors'
+                });
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        // アプリケーションを開く
+        function openApplication() {
+            window.open('http://localhost:3000', '_blank');
+        }
+
+        // サーバーを停止
+        function stopServer() {
+            const statusEl = document.getElementById('status');
+            const messageEl = document.getElementById('message');
+            const progressBar = document.getElementById('progressBar');
+            const checkBtn = document.getElementById('checkServer');
+            const openBtn = document.getElementById('openApp');
+            const stopBtn = document.getElementById('stopServer');
+
+            serverStarted = false;
+            
+            statusEl.textContent = 'サーバー停止';
+            progressBar.style.width = '0%';
+            messageEl.innerHTML = `
+                <div class="info">
+                    <p>サーバーを停止するには、ターミナルで <strong>Ctrl+C</strong> を押してください。</p>
+                    <p>または、サーバープロセスを直接終了してください。</p>
+                </div>
+            `;
+            
+            checkBtn.style.display = 'inline-block';
+            openBtn.style.display = 'none';
+            stopBtn.style.display = 'none';
+        }
+
+        // 定期的にサーバー状態をチェック
+        setInterval(() => {
+            if (!serverStarted) {
+                checkServerStatus();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
