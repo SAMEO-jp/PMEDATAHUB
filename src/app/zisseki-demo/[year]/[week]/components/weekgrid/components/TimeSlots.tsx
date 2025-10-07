@@ -14,6 +14,7 @@ type TimeSlotsProps = {
   selectedEvent: TimeGridEvent | null;  // 選択されたイベント
   onTimeSlotClick: (day: Date, hour: number, minute: number) => void;  // タイムスロットダブルクリック時のコールバック
   onEventClick: (event: TimeGridEvent) => void;  // イベントクリック時のコールバック
+  onTaskDrop?: (day: Date, hour: number, minute: number, taskData: any) => void;  // タスクドロップ時のコールバック
 }
 
 /**
@@ -28,7 +29,8 @@ export const TimeSlots = ({
   events,
   selectedEvent,
   onTimeSlotClick,
-  onEventClick
+  onEventClick,
+  onTaskDrop
 }: TimeSlotsProps) => {
   
   /**
@@ -39,6 +41,31 @@ export const TimeSlots = ({
   const getWorkTimeForDay = (day: Date): WorkTimeData | undefined => {
     const dateString = formatDateString(day);
     return workTimes.find(wt => wt.date === dateString);
+  };
+
+  /**
+   * ドラッグオーバーハンドラー
+   */
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  };
+
+  /**
+   * ドロップハンドラー
+   */
+  const handleDrop = (e: React.DragEvent, day: Date, hour: number, minute: number) => {
+    e.preventDefault();
+    
+    try {
+      const taskData = JSON.parse(e.dataTransfer.getData('application/json'));
+      
+      if (onTaskDrop) {
+        onTaskDrop(day, hour, minute, taskData);
+      }
+    } catch (error) {
+      console.error('タスクデータの解析に失敗しました:', error);
+    }
   };
 
   return (
@@ -87,6 +114,8 @@ export const TimeSlots = ({
                     key={`${hour}-${minute}`}
                     className={`h-8 border-b border-r border-gray-300 hover:bg-blue-50 cursor-pointer ${bgColorClass}`}
                     onDoubleClick={() => onTimeSlotClick(day, hour, minute)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, day, hour, minute)}
                   />
                 );
               })}

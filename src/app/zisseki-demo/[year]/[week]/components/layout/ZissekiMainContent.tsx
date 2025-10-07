@@ -168,7 +168,7 @@ export function ZissekiMainContent({ year, week, onSave, saveFunctionRef }: Ziss
   // ========================================
   
   return (
-    <div className="zisseki-demo zisseki-grid-layout h-screen bg-gray-50">
+    <div className="zisseki-demo zisseki-grid-layout h-full bg-gray-50">
       {/* タイムグリッドエリア */}
       <div className="time-grid-area overflow-hidden">
         <Suspense fallback={<LoadingSpinner />}>

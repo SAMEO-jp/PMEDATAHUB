@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World - エージェントモード動作確認</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            color: #333;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .subtitle {
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        .status {
+            background: #4CAF50;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            display: inline-block;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .timestamp {
+            color: #999;
+            font-size: 0.9rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hello World! 👋</h1>
+        <p class="subtitle">エージェントモード動作確認用ページ</p>
+        <div class="status">✅ エージェントモード動作中</div>
+        <p class="timestamp">作成日時: <span id="timestamp"></span></p>
+    </div>
+
+    <script>
+        // 現在の日時を表示
+        document.getElementById('timestamp').textContent = new Date().toLocaleString('ja-JP');
+        
+        // ページ読み込み完了時のログ
+        console.log('🎉 Hello World ページが正常に読み込まれました！');
+        console.log('📅 作成日時:', new Date().toLocaleString('ja-JP'));
+        console.log('🤖 エージェントモード動作確認用ページです');
+    </script>
+</body>
+</html>

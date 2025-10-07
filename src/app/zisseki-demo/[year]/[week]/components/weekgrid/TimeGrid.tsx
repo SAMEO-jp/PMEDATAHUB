@@ -19,6 +19,33 @@ export const TimeGrid = ({
   onTimeSlotClick,
   onWorkTimeChange,
 }: TimeGridProps) => {
+
+  // タスクドロップハンドラー
+  const handleTaskDrop = (day: Date, hour: number, minute: number, taskData: any) => {
+    console.log('タスクがドロップされました:', { day, hour, minute, taskData });
+    
+    // タスクデータからイベントを作成
+    const newEvent = {
+      id: `task-${taskData.id}-${Date.now()}`,
+      title: taskData.title,
+      description: taskData.description || '',
+      startTime: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
+      endTime: taskData.estimatedTime 
+        ? `${(hour + Math.floor((minute + taskData.estimatedTime) / 60)).toString().padStart(2, '0')}:${((minute + taskData.estimatedTime) % 60).toString().padStart(2, '0')}`
+        : `${(hour + 1).toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
+      date: day.toISOString().split('T')[0],
+      category: taskData.category,
+      priority: taskData.priority,
+    };
+    
+    // イベント作成をトリガー（実際の実装では適切なイベントハンドラーを呼び出す）
+    if (onTimeSlotClick) {
+      onTimeSlotClick(day, hour, minute);
+    }
+    
+    // TODO: 実際のイベント作成処理を実装
+    console.log('新しいイベント:', newEvent);
+  };
   // データ管理フック
   const { weekDays, timeSlots, minuteSlots } = useTimeGridData(year, week);
   
@@ -101,6 +128,7 @@ export const TimeGrid = ({
             selectedEvent={selectedEvent}
             onTimeSlotClick={onTimeSlotClick}
             onEventClick={onEventClick}
+            onTaskDrop={handleTaskDrop}
           />
         </div>
       </div>
