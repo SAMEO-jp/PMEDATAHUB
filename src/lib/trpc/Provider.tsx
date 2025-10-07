@@ -13,7 +13,19 @@ function getBaseUrl() {
 }
 
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 5 * 60 * 1000, // 5分間はキャッシュが新鮮
+        gcTime: 10 * 60 * 1000, // 10分間キャッシュを保持
+        refetchOnWindowFocus: false, // ウィンドウフォーカス時に再取得しない
+        refetchOnMount: false, // マウント時に再取得しない
+        refetchOnReconnect: false, // 再接続時に再取得しない
+        retry: 1, // エラー時は1回だけリトライ
+      },
+    },
+  }));
+  
   const [trpcClient] = useState(() =>
     trpc.createClient({
       links: [

@@ -8,23 +8,23 @@ interface ColorPickerProps {
   label?: string;
 }
 
-// プリセットカラーの定義
+// プリセットカラーの定義（より淡い色中心）
 const PRESET_COLORS = [
-  '#3B82F6', // blue-500
-  '#10B981', // emerald-500
-  '#F59E0B', // amber-500
-  '#EF4444', // red-500
-  '#8B5CF6', // violet-500
-  '#06B6D4', // cyan-500
-  '#84CC16', // lime-500
-  '#F97316', // orange-500
-  '#EC4899', // pink-500
-  '#6B7280', // gray-500
-  '#059669', // emerald-600
-  '#DC2626', // red-600
-  '#7C3AED', // violet-600
-  '#0891B2', // cyan-600
-  '#65A30D', // lime-600
+  '#BFDBFE', // blue-200（より淡い青）
+  '#A7F3D0', // emerald-200（より淡いエメラルド）
+  '#FDE68A', // amber-200（より淡い黄色）
+  '#FECACA', // red-200（より淡い赤）
+  '#DDD6FE', // violet-200（より淡い紫）
+  '#A5F3FC', // cyan-200（より淡いシアン）
+  '#D9F99D', // lime-200（より淡いライム）
+  '#FED7AA', // orange-200（より淡いオレンジ）
+  '#FBCFE8', // pink-200（より淡いピンク）
+  '#E5E7EB', // gray-200（より淡いグレー）
+  '#D1FAE5', // emerald-100（さらに淡いエメラルド）
+  '#FEE2E2', // red-100（さらに淡い赤）
+  '#EDE9FE', // violet-100（さらに淡い紫）
+  '#CFFAFE', // cyan-100（さらに淡いシアン）
+  '#ECFCCB', // lime-100（さらに淡いライム）
 ];
 
 export const ColorPicker: React.FC<ColorPickerProps> = ({

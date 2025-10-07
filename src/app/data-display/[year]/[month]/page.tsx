@@ -1,6 +1,6 @@
 "use client"
 
-import { useContext } from "react"
+import { useContext, useMemo } from "react"
 import { useParams } from "next/navigation"
 import { useProjectAll } from '@src/hooks/useProjectData'
 import { useZissekiMonthData } from '@src/hooks/useZissekiData'
@@ -23,21 +23,34 @@ export default function DataDisplayPage() {
   // 認証状態を取得
   const { user } = useAuthState()
 
-  // プロジェクト一覧を取得（常に実行）
+  // プロジェクト一覧を取得（キャッシュ有効）
   const { data: projectData, isLoading: projectsLoading, error: projectsError } = useProjectAll({
     page: 1,
     limit: 100,
   });
 
-  // 実績データを取得（常に実行）
+  // 実績データを取得（キャッシュ有効）
   const { data: zissekiData, isLoading: zissekiLoading, error: zissekiError } = useZissekiMonthData(
     year, 
     month, 
     user?.user_id || ''
   );
 
-  const projects = (projectData as any)?.data || [];
-  const events = (zissekiData as any)?.data?.events || [];
+  // データをメモ化
+  const projects = useMemo(() => (projectData as any)?.data || [], [projectData]);
+  const events = useMemo(() => (zissekiData as any)?.data?.events || [], [zissekiData]);
+
+  // ローディング中の表示
+  if (projectsLoading || zissekiLoading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">データを読み込んでいます...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full">

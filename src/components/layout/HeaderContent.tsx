@@ -80,6 +80,7 @@ export const HeaderContent: React.FC<HeaderContentProps> = ({
       subtitle: customizedConfig.subtitle,
       actions: customizedConfig.actions,
       breadcrumbItems: customizedConfig.breadcrumbItems,
+      // customComponentsは各ページが設定するため、ここでは触らない
     });
     
     setComponentConfig({

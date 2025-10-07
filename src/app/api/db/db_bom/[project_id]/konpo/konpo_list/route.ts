@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { project_id: string } }
 ) {
   try {
-    // Get project ID
+    // プロジェクトIDを取得
     const projectId = params.project_id;
 
     // KONPO_LIST table configuration
@@ -16,7 +16,7 @@ export async function GET(
       idColumn: 'KONPO_LIST_ID'
     };
 
-    // Get data
+    // データ取得
     const result = await GetAllData<KonpoList[]>(tableConfig);
 
     if (!result.success || !result.data) {

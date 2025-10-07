@@ -238,11 +238,20 @@ function ZissekiPageContent({
       }
     };
 
-    // サブタイトルに自動保存状態を追加
+    // 中央に年週情報を表示（自動保存状態付き）
     console.log('🔧 ヘッダー設定を更新中...', { year, week, outlookSyncStatus });
-    
+
     setDisplayConfig({
-      subtitle: `${year}年 第${week}週 ${getAutoSaveLabel()}`,
+      title: `${year}年 第${week}週`,
+      titleSuffix: '',
+      subtitle: '',
+      customComponents: {
+        center: (
+          <div className="header-center-info">
+            {getAutoSaveLabel()}
+          </div>
+        )
+      },
       actions: [
         {
           id: 'outlook-sync',

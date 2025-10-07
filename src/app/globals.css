@@ -1020,6 +1020,335 @@ a {
     flex-shrink: 0;
     position: relative;
 }
+
+/* zisseki-demo専用サイドバーのスタイル */
+.zisseki-sidebar {
+    background: #ffffff;
+    color: #333333;
+    border-right: 1px solid #e0e0e0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.zisseki-sidebar .sidebar-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.zisseki-sidebar .sidebar-header a {
+    color: #333333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.zisseki-sidebar .sidebar-header a:hover {
+    opacity: 0.8;
+}
+
+
+/* ナビゲーション */
+.zisseki-sidebar .sidebar-nav ul li a {
+    color: #333333;
+    border-radius: 6px;
+    margin: 2px 8px;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 8px 12px;
+}
+
+.zisseki-sidebar .sidebar-nav ul li a:hover {
+    background-color: #f0f0f0;
+    color: #333333;
+}
+
+.zisseki-sidebar .sidebar-nav ul li a.active {
+    background-color: #e0e0e0;
+    color: #333333;
+    font-weight: 500;
+}
+
+.zisseki-sidebar .sidebar-nav ul li a .material-symbols-outlined {
+    font-size: 18px;
+    margin-right: 12px;
+}
+
+/* 階層メニューのスタイル */
+.sidebar-nav-item-parent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.sidebar-nav-item-parent .lucide {
+    font-size: 16px;
+    transition: transform 0.2s ease;
+}
+
+.sidebar-submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    margin-left: 20px;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-nav-item-child {
+    padding-left: 24px;
+    position: relative;
+}
+
+.sidebar-nav-item-child::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+}
+
+.sidebar-nav-item-child .material-symbols-outlined {
+    font-size: 16px;
+    margin-right: 8px;
+}
+
+/* クイックアクション */
+.quick-actions {
+    padding: 16px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.quick-actions-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #666666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.quick-action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    color: #333333;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quick-action-btn:hover {
+    background: #f0f0f0;
+    color: #333333;
+}
+
+.quick-action-btn .lucide {
+    width: 16px;
+    height: 16px;
+}
+
+/* フッター */
+.zisseki-sidebar .sidebar-footer {
+    background: #f8f9fa;
+    border-top: 1px solid #e0e0e0;
+}
+
+.zisseki-sidebar .user-info {
+    color: #333333;
+    padding: 12px 16px;
+}
+
+.zisseki-sidebar .user-info:hover {
+    background-color: #f0f0f0;
+}
+
+.zisseki-sidebar .user-info .name {
+    color: #333333;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.zisseki-sidebar .user-info .role {
+    color: #666666;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.zisseki-sidebar .user-info .material-symbols-outlined {
+    font-size: 20px;
+}
+
+/* ポップアップ */
+.zisseki-popup {
+    background: #ffffff;
+    color: #333333;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.zisseki-popup .year-week-info {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.zisseki-popup .popup-divider {
+    border-color: #e0e0e0;
+}
+
+.zisseki-popup .login-button,
+.zisseki-popup .logout-button {
+    color: #333333;
+}
+
+.zisseki-popup .login-button:hover,
+.zisseki-popup .logout-button:hover {
+    background-color: #f0f0f0;
+}
+
+/* カレンダーウィジェット */
+.calendar-widget {
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+.calendar-widget-section {
+    padding: 16px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.calendar-header-with-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    gap: 8px;
+}
+
+.calendar-nav-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: #666666;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.calendar-nav-btn:hover {
+    background: #f0f0f0;
+    color: #333333;
+}
+
+.calendar-nav-btn-left,
+.calendar-nav-btn-right {
+    flex-shrink: 0;
+}
+
+.calendar-title {
+    flex: 1;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333333;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    margin-bottom: 2px;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: #666666;
+    padding: 4px 2px;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+}
+
+.calendar-day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: #333333;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    margin: 0 auto;
+}
+
+.calendar-day.current-month {
+    color: #333333;
+}
+
+.calendar-day.other-month {
+    color: #cccccc;
+    cursor: not-allowed;
+}
+
+.calendar-day:hover.current-month {
+    background: #f0f0f0;
+}
+
+.calendar-day.selected {
+    background: #dc3545;
+    color: white;
+    font-weight: 500;
+}
+
+.calendar-day.selected-week {
+    background: #f8f9fa;
+}
+
+.calendar-day.today {
+    font-weight: 600;
+    color: #dc3545;
+}
+
+.calendar-day.today.selected {
+    color: white;
+}
 .user-info {
     display: flex;
     align-items: center;

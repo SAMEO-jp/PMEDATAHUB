@@ -15,7 +15,7 @@ export async function GET(
       );
     }
 
-    // Get konpo tanni list
+    // 梱包単位一覧を取得
     const result = await GetConditionData<KonpoTanni[]>(
       'PROJECT_ID = ?',
       [projectId],

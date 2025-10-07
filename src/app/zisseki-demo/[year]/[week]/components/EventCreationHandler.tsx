@@ -50,7 +50,7 @@ const createNewEvent = (
     endDateTime: new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour + 1, minute).toISOString(),
     project: "",
     user_id: userId || 'guest', // ユーザーIDまたはデフォルト
-    color: "#3788d8",
+    color: "#BFDBFE", // より淡い青（blue-200）
     top: hour * 64 + (minute / 60) * 64,
     height: 64,
     activityCode: activityCode,

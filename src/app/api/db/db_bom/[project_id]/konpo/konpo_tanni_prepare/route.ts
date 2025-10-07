@@ -21,7 +21,7 @@ export async function GET(
     db = await initializeDatabase();
     console.log('DB: Database connection established');
 
-    // Get parts from BUZAI_PART and KONPO_TANNI that need konpo tanni preparation
+    // 梱包単位準備が必要な部品をBUZAI_PARTとKONPO_TANNIから取得
     const query = `
       SELECT 
         bp.ZUMEN_ID,

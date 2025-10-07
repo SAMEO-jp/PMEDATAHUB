@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useMemo, useCallback } from 'react'
 import type { Project } from '@src/types/db_project'
 import type { TimeGridEvent } from '@src/app/zisseki-demo/[year]/[week]/types'
 import { ViewModeContext } from '../../../ViewModeContext'
@@ -32,64 +32,64 @@ export default function ZissekiChartView({
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const { setSelectedProjectName } = useContext(ViewModeContext)
   
-  // 実績データから直接プロジェクト一覧を作成（プロジェクトテーブルとの照合を避ける）
-  const uniqueProjectNames = [...new Set(events.map(e => e.project).filter(Boolean))];
-  
-  // 実績データのプロジェクト名をベースにしたプロジェクト一覧を作成
-  const projectsFromEvents = uniqueProjectNames.map((projectName, index) => ({
-    PROJECT_ID: `event-project-${index}`, // 仮のID
-    PROJECT_NAME: projectName,
-    PROJECT_CLIENT_NAME: null,
-  }));
-  
-  // プロジェクトテーブルからも取得して、可能な限りマッチング
-  const projectsWithEvents = projectsFromEvents.map(eventProject => {
-    // プロジェクトテーブルから一致するものを探す（PROJECT_IDと照合）
-    const matchedProject = projects.find(project => {
-      // 実績データのprojectフィールド（プロジェクトナンバー）とPROJECT_IDを照合
-      if (project.PROJECT_ID === eventProject.PROJECT_NAME) return true;
-      if (project.PROJECT_ID?.toLowerCase() === eventProject.PROJECT_NAME?.toLowerCase()) return true;
-      if (project.PROJECT_ID?.includes(eventProject.PROJECT_NAME)) return true;
-      if (eventProject.PROJECT_NAME?.includes(project.PROJECT_ID)) return true;
-      return false;
+  // プロジェクト一覧の計算をメモ化
+  const allProjects = useMemo(() => {
+    // 実績データから直接プロジェクト一覧を作成
+    const uniqueProjectNames = [...new Set(events.map(e => e.project).filter(Boolean))];
+    
+    // 実績データのプロジェクト名をベースにしたプロジェクト一覧を作成
+    const projectsFromEvents = uniqueProjectNames.map((projectName, index) => ({
+      PROJECT_ID: `event-project-${index}`,
+      PROJECT_NAME: projectName,
+      PROJECT_CLIENT_NAME: null,
+    }));
+    
+    // プロジェクトテーブルからマッチング
+    const projectsWithEvents = projectsFromEvents.map(eventProject => {
+      const matchedProject = projects.find(project => {
+        if (project.PROJECT_ID === eventProject.PROJECT_NAME) return true;
+        if (project.PROJECT_ID?.toLowerCase() === eventProject.PROJECT_NAME?.toLowerCase()) return true;
+        if (project.PROJECT_ID?.includes(eventProject.PROJECT_NAME)) return true;
+        if (eventProject.PROJECT_NAME?.includes(project.PROJECT_ID)) return true;
+        return false;
+      });
+      
+      return matchedProject || eventProject;
+    });
+
+    const result = [...projectsWithEvents];
+    
+    // プロジェクトテーブルから実績データに含まれていないプロジェクトを追加
+    projects.forEach(project => {
+      const isAlreadyIncluded = result.some(p => 
+        p.PROJECT_ID === project.PROJECT_ID || 
+        p.PROJECT_NAME === project.PROJECT_NAME
+      );
+      
+      const hasEventData = events.some(event => {
+        return event.project === project.PROJECT_ID || 
+               event.project === project.PROJECT_NAME ||
+               project.PROJECT_ID === event.project ||
+               project.PROJECT_NAME === event.project;
+      });
+      
+      if (!isAlreadyIncluded && hasEventData) {
+        result.push(project);
+      }
     });
     
-    // マッチした場合はプロジェクトテーブルの情報を使用、そうでなければ実績データの情報を使用
-    return matchedProject || eventProject;
-  });
-
-  // 実績データがあるプロジェクトのみを表示（目的間接プロジェクトも含む）
-  const allProjects = [...projectsWithEvents];
+    return result;
+  }, [projects, events]);
   
-  // プロジェクトテーブルから実績データに含まれていないプロジェクトを追加
-  // ただし、実績データがあるプロジェクトのみを対象とする
-  projects.forEach(project => {
-    const isAlreadyIncluded = allProjects.some(p => 
-      p.PROJECT_ID === project.PROJECT_ID || 
-      p.PROJECT_NAME === project.PROJECT_NAME
-    );
-    
-    // 実績データに該当するプロジェクトがあるかチェック
-    const hasEventData = events.some(event => {
-      // プロジェクトIDまたはプロジェクト名でマッチング
-      return event.project === project.PROJECT_ID || 
-             event.project === project.PROJECT_NAME ||
-             project.PROJECT_ID === event.project ||
-             project.PROJECT_NAME === event.project;
-    });
-    
-    // 実績データがあるプロジェクトのみを追加
-    if (!isAlreadyIncluded && hasEventData) {
-      allProjects.push(project);
-    }
-  });
-  
-  // 選択されたプロジェクトの情報を取得
-  const selectedProjectInfo = selectedProject 
-    ? allProjects.find((p) => p.PROJECT_ID === selectedProject)
-    : null;
+  // 選択されたプロジェクトの情報を取得（メモ化）
+  const selectedProjectInfo = useMemo(() => {
+    return selectedProject 
+      ? allProjects.find((p) => p.PROJECT_ID === selectedProject)
+      : null;
+  }, [selectedProject, allProjects]);
 
-  const handleProjectSelect = (projectId: string | null) => {
+  // プロジェクト選択ハンドラーをメモ化
+  const handleProjectSelect = useCallback((projectId: string | null) => {
     setSelectedProject(projectId);
     
     // 選択されたプロジェクト名をContextに設定
@@ -99,7 +99,7 @@ export default function ZissekiChartView({
     } else {
       setSelectedProjectName(null);
     }
-  };
+  }, [allProjects, setSelectedProjectName]);
 
   return (
     <div className="flex h-full">

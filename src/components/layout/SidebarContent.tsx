@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { getCurrentYearWeekString } from '@/utils/dateUtils';
+import { getCurrentYearWeekString, getYearAndWeek } from '@/utils/dateUtils';
 
 // Material Symbols のフォールバック用アイコンマッピング
 const iconFallbacks: Record<string, string> = {
@@ -123,6 +123,9 @@ export const SidebarContent: React.FC = () => {
   // 現在のページがプロジェクト関連かどうかを判定
   const isProjectPage = pathname.includes('/app_project/') && projectId;
 
+  // 今週の年と週番号を取得
+  const { year, week } = getYearAndWeek();
+
   // プロジェクトサブメニューの項目
   const projectMenuItems: MenuItem[] = [
     { id: 'detail', name: '詳細', icon: 'description', href: `/app_project/${projectId}/detail` },
@@ -134,14 +137,14 @@ export const SidebarContent: React.FC = () => {
     { id: 'cmom', name: 'CMOM', icon: 'table_chart', href: `/app_project/${projectId}/cmom` },
   ];
 
-  // 全体メニューの項目
+  // 全体メニューの項目（zisseki-demo専用サイドバーと同じ）
   const globalMenuItems: MenuItem[] = [
     { id: 'home', name: 'ホーム', icon: 'home', href: '/' },
-    { id: 'project', name: 'プロジェクト管理', icon: 'assignment', href: '/app_project' },
-    { id: 'table', name: 'テーブル管理', icon: 'grid_view', href: '/test' },
-    { id: 'report', name: '日報管理', icon: 'edit_calendar', href: '/nippou' },
-    { id: 'user', name: 'ユーザー管理', icon: 'group', href: '/test' },
-    { id: 'settings', name: '設定', icon: 'settings', href: '/test' },
+    { id: 'calendar', name: '週間カレンダー', icon: 'calendar_month', href: `/zisseki-demo/${year}/${week}` },
+    { id: 'schedule', name: 'スケジュール', icon: 'schedule', href: '/zisseki-demo/schedule' },
+    { id: 'tasks', name: 'タスク管理', icon: 'task', href: '/zisseki-demo/tasks' },
+    { id: 'analytics', name: '実績分析', icon: 'analytics', href: '/zisseki-demo/analytics' },
+    { id: 'settings', name: '設定', icon: 'settings', href: '/zisseki-demo/settings' },
   ];
 
   // 現在表示するメニュー項目を選択

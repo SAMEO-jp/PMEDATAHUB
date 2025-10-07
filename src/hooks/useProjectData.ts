@@ -35,6 +35,9 @@ export const useProjectAll = (pagination?: PaginationParams) => {
     {
       staleTime: 5 * 60 * 1000, // 5分間キャッシュ
       gcTime: 10 * 60 * 1000, // 10分間キャッシュ保持
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
     }
   );
 };

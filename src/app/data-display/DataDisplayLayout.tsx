@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Settings } from 'lucide-react';
 import { ViewModeContext } from './ViewModeContext';
@@ -117,8 +117,16 @@ export default function DataDisplayLayout({
     }
   }
 
+  // Context の値をメモ化して不要な再レンダリングを防ぐ
+  const contextValue = useMemo(() => ({ 
+    viewMode, 
+    setViewMode, 
+    selectedProjectName, 
+    setSelectedProjectName 
+  }), [viewMode, selectedProjectName]);
+
   return (
-    <ViewModeContext.Provider value={{ viewMode, setViewMode, selectedProjectName, setSelectedProjectName }}>
+    <ViewModeContext.Provider value={contextValue}>
       <div className="flex flex-col h-screen">
         {/* 統一されたヘッダーシステムを使用 */}
         <HeaderContent 

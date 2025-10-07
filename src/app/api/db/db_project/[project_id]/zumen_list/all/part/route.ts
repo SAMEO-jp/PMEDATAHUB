@@ -13,7 +13,7 @@ export async function GET(
   try {
     db = await initializeDatabase();
 
-    // Get all part information for the project's drawings
+    // プロジェクトの図面に含まれる全ての部品情報を取得
     const query = `
       SELECT 
         -- Drawing information

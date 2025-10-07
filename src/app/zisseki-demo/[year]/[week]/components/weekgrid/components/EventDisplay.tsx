@@ -7,6 +7,7 @@ import { useEventContext } from "../../../context/EventContext"
 import { useDatabase } from "../../../context/DatabaseContext"
 import { calculateEventDateTime } from "../../../utils/eventPositionCalculator"
 import { eventActions } from "../../../hooks/reducer/event/eventActions"
+import { getContrastTextColor } from "../../../utils/colorUtils"
 
 interface OverlapLayout {
   width: number;
@@ -93,8 +94,8 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
   const [isCtrlDrag, setIsCtrlDrag] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
-  const [showDragPreview, setShowDragPreview] = useState(false);
-  const [dragPreviewPosition, setDragPreviewPosition] = useState({ top: 0, left: 0, width: 0, height: 0 });
+  // const [showDragPreview, setShowDragPreview] = useState(false);
+  // const [dragPreviewPosition, setDragPreviewPosition] = useState({ top: 0, left: 0, width: 0, height: 0 });
   const elementRef = useRef<HTMLDivElement>(null);
 
   // 選択状態を判定
@@ -222,11 +223,9 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
     if (offsetY <= resizeThreshold) {
       setIsResizing('top');
       setOriginalPosition({ top: event.top, height: event.height });
-      setShowDragPreview(false); // リサイズ時はプレビュー非表示
     } else if (offsetY >= rect.height - resizeThreshold) {
       setIsResizing('bottom');
       setOriginalPosition({ top: event.top, height: event.height });
-      setShowDragPreview(false); // リサイズ時はプレビュー非表示
     } else {
       // 通常のドラッグ移動
       setIsDragging(true);
@@ -235,8 +234,6 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
         y: e.clientY - rect.top
       });
       setOriginalPosition({ top: event.top, height: event.height });
-      // ドラッグ開始時はプレビューを非表示（移動開始時に表示）
-      setShowDragPreview(false);
     }
 
     e.preventDefault();
@@ -263,26 +260,7 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
       setTempPosition(prev => ({ ...prev, top: snappedTop }));
       setTempDayIndex(newDayIndex);
 
-      // プレビューの表示判定 - 一定距離移動したら表示
-      const moveDistance = Math.abs(snappedTop - originalPosition.top) +
-                          Math.abs(newDayIndex - (dayIndex || 0)) * 200; // 日付変更も考慮
-      if (moveDistance > 20) { // 20px以上移動したらプレビュー表示
-        setShowDragPreview(true);
-
-        // プレビュー位置の計算 - 各日のタイムスロットコンテナを基準に計算
-        const daySlotContainer = elementRef.current?.parentElement; // col-span-1 relative のdiv
-        if (daySlotContainer) {
-          const containerRect = daySlotContainer.getBoundingClientRect();
-
-          // プレビュー位置を計算（各日のコンテナ内で相対的に配置）
-          setDragPreviewPosition({
-            top: snappedTop,
-            left: 4, // コンテナ内の左マージン
-            width: containerRect.width - 8, // コンテナ幅から左右マージンを引く
-            height: tempPosition.height
-          });
-        }
-      }
+      // プレビュー機能は無効化
     } else if (isResizing) {
       // リサイズ - 一時的なサイズを更新
       const parentRect = elementRef.current.parentElement?.getBoundingClientRect();
@@ -328,7 +306,6 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
     setDragOffset({ x: 0, y: 0 });
     setOriginalPosition({ top: 0, height: 0 });
     setTempDayIndex(dayIndex || 0);
-    setShowDragPreview(false); // ドラッグ終了時にプレビューを非表示
   }, [isDragging, isResizing, tempPosition, tempDayIndex, updateEventPosition, dayIndex]);
 
   // グローバルイベントリスナーの設定
@@ -387,31 +364,7 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
 
   return (
     <>
-      {/* ドラッグプレビュー表示 */}
-      {showDragPreview && (
-        <div
-          className="absolute border-2 border-dashed border-blue-400 bg-blue-100/30 rounded-md pointer-events-none z-40"
-          style={{
-            top: `${dragPreviewPosition.top}px`,
-            left: `${dragPreviewPosition.left}px`,
-            width: `${dragPreviewPosition.width}px`,
-            height: `${Math.max(dragPreviewPosition.height, minutesToPixels(10))}px`,
-            opacity: 0.7,
-          }}
-        >
-          {/* プレビュー内の情報表示 */}
-          <div className="p-1 h-full flex flex-col justify-start">
-            <div className="font-semibold truncate text-xs text-blue-700 opacity-80">
-              {event.title}
-            </div>
-            {event.description && Math.max(dragPreviewPosition.height, minutesToPixels(10)) >= 45 && (
-              <div className="text-xs opacity-60 truncate text-blue-600">
-                {event.description}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* ドラッグプレビュー表示 - 無効化 */}
 
       <div
         ref={elementRef}
@@ -428,7 +381,7 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
           right: overlapLayout ? "auto" : "4px",
           width: overlapLayout ? `${overlapLayout.width}%` : "auto",
           backgroundColor: event.color,
-          color: "white",
+          color: getContrastTextColor(event.color),
           cursor: isDragging ? 'move' : isResizing ? 'ns-resize' : 'pointer',
           opacity: isDragging || isResizing ? 0.8 : 1,
           transform: isDragging || isResizing ? 'scale(1.02)' : 'scale(1)',

@@ -24,7 +24,7 @@ export async function GET(
       );
     }
 
-    // 蝗ｳ髱｢荳隕ｧ縺ｮ蜿門ｾ・    // Get drawing list
+    // 図面一覧を取得
     const result = await GetConditionData<BomZumen[]>(
       'PROJECT_ID = ?',
       [params.project_id],

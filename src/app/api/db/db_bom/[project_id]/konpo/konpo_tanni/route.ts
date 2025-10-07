@@ -14,7 +14,7 @@ export async function GET(
       idColumn: 'KONPO_TANNI_ID'
     };
 
-    // Get data
+    // データ取得
     const result = await GetAllData<KonpoTanni[]>(tableConfig);
 
     if (!result.success || !result.data) {

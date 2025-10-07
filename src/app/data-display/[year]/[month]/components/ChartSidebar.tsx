@@ -18,7 +18,7 @@ interface ChartSidebarProps {
   error: any;
 }
 
-export default function ChartSidebar({ 
+const ChartSidebar = React.memo(function ChartSidebar({ 
   selectedProject, 
   onProjectSelect, 
   projects, 
@@ -101,4 +101,6 @@ export default function ChartSidebar({
       </div>
     </div>
   );
-}
+});
+
+export default ChartSidebar;
