@@ -269,21 +269,16 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
       if (moveDistance > 20) { // 20px以上移動したらプレビュー表示
         setShowDragPreview(true);
 
-        // プレビュー位置の計算
-        const gridContainer = elementRef.current.closest('[style*="grid-template-columns"]');
-        if (gridContainer) {
-          const containerRect = gridContainer.getBoundingClientRect();
-          const timeLabelsWidth = 80; // 時間ラベル部分の幅
-          const dayColumnWidth = (containerRect.width - timeLabelsWidth) / 7;
+        // プレビュー位置の計算 - 各日のタイムスロットコンテナを基準に計算
+        const daySlotContainer = elementRef.current?.parentElement; // col-span-1 relative のdiv
+        if (daySlotContainer) {
+          const containerRect = daySlotContainer.getBoundingClientRect();
 
-          // プレビュー位置を計算
-          const previewLeft = timeLabelsWidth + (newDayIndex * dayColumnWidth) + 4; // 4px はマージン
-          const previewWidth = dayColumnWidth - 8; // 左右マージン8px分引く
-
+          // プレビュー位置を計算（各日のコンテナ内で相対的に配置）
           setDragPreviewPosition({
             top: snappedTop,
-            left: previewLeft,
-            width: previewWidth,
+            left: 4, // コンテナ内の左マージン
+            width: containerRect.width - 8, // コンテナ幅から左右マージンを引く
             height: tempPosition.height
           });
         }
