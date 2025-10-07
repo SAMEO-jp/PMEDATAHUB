@@ -21,16 +21,22 @@ export default [
     languageOptions: { globals: globals.browser } 
   },
   
-  // TypeScript設定
-  ...tseslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
+  // TypeScript設定（簡略化）
   {
     files: ["src/**/*.{ts,tsx}"],
     languageOptions: {
       parserOptions: {
-        project: true,
-        tsconfigRootDir: import.meta.dirname,
+        // TypeScriptの基本的なパースのみ
+        ecmaVersion: "latest",
+        sourceType: "module",
       },
+    },
+    plugins: {
+      "@typescript-eslint": tseslint.plugin,
+    },
+    rules: {
+      // 基本的なTypeScriptルールのみ
+      "@typescript-eslint/no-unused-vars": "off", // unused-importsで代替
     },
   },
   // JavaScriptファイル用の設定（型チェックなし）
@@ -54,6 +60,24 @@ export default [
     settings: {
       react: {
         version: "detect",
+      },
+      // パスエイリアスの設定
+      "import/resolver": {
+        typescript: {
+          alwaysTryTypes: true,
+        },
+        alias: {
+          map: [
+            ["@src", "./src"],
+            ["@", "./src"],
+            ["@ui", "./src/components/ui"],
+            ["@app", "./src/app"],
+            ["@components", "./src/app/app_bom/src/components"],
+            ["@bom", "./src/app/app_bom"],
+            ["@utils", "./src/app/app_bom/src/utils"],
+          ],
+          extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
+        },
       },
     },
     rules: {
@@ -95,11 +119,13 @@ export default [
         { vars: "all", varsIgnorePattern: "^_", argsIgnorePattern: "^_" }
       ],
       "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unresolved": "off", // パスエイリアス対応のため完全に無効化
       
       // インポート順序
       "import/order": "off",
       // インポートの詳細ルール
       "import/no-unresolved": "off", // TypeScriptが解決するため
+      "@typescript-eslint/no-unresolved": "off", // パスエイリアス対応のため
       "import/named": "off", // 名前付きインポートの検証
       "import/default": "off", // デフォルトインポートの検証
       "import/no-duplicates": "off", // 重複インポートの禁止

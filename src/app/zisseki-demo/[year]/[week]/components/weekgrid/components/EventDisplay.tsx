@@ -397,7 +397,6 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
             e.currentTarget.style.cursor = getCursorStyle(e);
           }
         }}
-        title={`${event.title} - 業務コード: ${event.activityCode || '未設定'} - ドラッグで移動・右クリックでコピー/削除・DELキーで削除・端をドラッグで時間調整`}
       >
       {/* リサイズハンドル（上） */}
       <div className="absolute top-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover:opacity-100 bg-white/20 transition-opacity" />

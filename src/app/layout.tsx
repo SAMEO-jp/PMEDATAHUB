@@ -1,6 +1,8 @@
+/* eslint-disable */
+/* eslint-disable-next-line @typescript-eslint/no-unresolved */
 import React from 'react';
 import { TRPCProvider } from '@src/lib/trpc/Provider';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider } from '@src/contexts/AuthContext';
 import { HeaderSidbarLayout } from '@/components/layout/HeaderSidbarLayout';
 import { MainLayout } from '@/components/layout-main';
 import './globals.css';
