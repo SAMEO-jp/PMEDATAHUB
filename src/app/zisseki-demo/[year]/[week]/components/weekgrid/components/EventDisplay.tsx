@@ -93,6 +93,8 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
   const [isCtrlDrag, setIsCtrlDrag] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+  const [showDragPreview, setShowDragPreview] = useState(false);
+  const [dragPreviewPosition, setDragPreviewPosition] = useState({ top: 0, left: 0, width: 0, height: 0 });
   const elementRef = useRef<HTMLDivElement>(null);
 
   // 選択状態を判定
@@ -220,9 +222,11 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
     if (offsetY <= resizeThreshold) {
       setIsResizing('top');
       setOriginalPosition({ top: event.top, height: event.height });
+      setShowDragPreview(false); // リサイズ時はプレビュー非表示
     } else if (offsetY >= rect.height - resizeThreshold) {
       setIsResizing('bottom');
       setOriginalPosition({ top: event.top, height: event.height });
+      setShowDragPreview(false); // リサイズ時はプレビュー非表示
     } else {
       // 通常のドラッグ移動
       setIsDragging(true);
@@ -231,6 +235,8 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
         y: e.clientY - rect.top
       });
       setOriginalPosition({ top: event.top, height: event.height });
+      // ドラッグ開始時はプレビューを非表示（移動開始時に表示）
+      setShowDragPreview(false);
     }
 
     e.preventDefault();
@@ -250,14 +256,38 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
       const newTop = e.clientY - parentRect.top - dragOffset.y;
       const clampedTop = Math.max(0, newTop);
       const snappedTop = snapToGrid(clampedTop);
-      
+
       // 横方向の移動（日付変更）
       const newDayIndex = weekDays ? calculateDayIndexFromMouseX(e.clientX, weekDays) : (dayIndex || 0);
-      
+
       setTempPosition(prev => ({ ...prev, top: snappedTop }));
       setTempDayIndex(newDayIndex);
-      
-      // 日付変更の検出（デバッグログは削除）
+
+      // プレビューの表示判定 - 一定距離移動したら表示
+      const moveDistance = Math.abs(snappedTop - originalPosition.top) +
+                          Math.abs(newDayIndex - (dayIndex || 0)) * 200; // 日付変更も考慮
+      if (moveDistance > 20) { // 20px以上移動したらプレビュー表示
+        setShowDragPreview(true);
+
+        // プレビュー位置の計算
+        const gridContainer = elementRef.current.closest('[style*="grid-template-columns"]');
+        if (gridContainer) {
+          const containerRect = gridContainer.getBoundingClientRect();
+          const timeLabelsWidth = 80; // 時間ラベル部分の幅
+          const dayColumnWidth = (containerRect.width - timeLabelsWidth) / 7;
+
+          // プレビュー位置を計算
+          const previewLeft = timeLabelsWidth + (newDayIndex * dayColumnWidth) + 4; // 4px はマージン
+          const previewWidth = dayColumnWidth - 8; // 左右マージン8px分引く
+
+          setDragPreviewPosition({
+            top: snappedTop,
+            left: previewLeft,
+            width: previewWidth,
+            height: tempPosition.height
+          });
+        }
+      }
     } else if (isResizing) {
       // リサイズ - 一時的なサイズを更新
       const parentRect = elementRef.current.parentElement?.getBoundingClientRect();
@@ -297,12 +327,13 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
         updateEventPosition(tempPosition.top, tempPosition.height);
       }
     }
-    
+
     setIsDragging(false);
     setIsResizing(null);
     setDragOffset({ x: 0, y: 0 });
     setOriginalPosition({ top: 0, height: 0 });
     setTempDayIndex(dayIndex || 0);
+    setShowDragPreview(false); // ドラッグ終了時にプレビューを非表示
   }, [isDragging, isResizing, tempPosition, tempDayIndex, updateEventPosition, dayIndex]);
 
   // グローバルイベントリスナーの設定
@@ -361,10 +392,36 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
 
   return (
     <>
+      {/* ドラッグプレビュー表示 */}
+      {showDragPreview && (
+        <div
+          className="absolute border-2 border-dashed border-blue-400 bg-blue-100/30 rounded-md pointer-events-none z-40"
+          style={{
+            top: `${dragPreviewPosition.top}px`,
+            left: `${dragPreviewPosition.left}px`,
+            width: `${dragPreviewPosition.width}px`,
+            height: `${Math.max(dragPreviewPosition.height, minutesToPixels(10))}px`,
+            opacity: 0.7,
+          }}
+        >
+          {/* プレビュー内の情報表示 */}
+          <div className="p-1 h-full flex flex-col justify-start">
+            <div className="font-semibold truncate text-xs text-blue-700 opacity-80">
+              {event.title}
+            </div>
+            {event.description && Math.max(dragPreviewPosition.height, minutesToPixels(10)) >= 45 && (
+              <div className="text-xs opacity-60 truncate text-blue-600">
+                {event.description}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div
         ref={elementRef}
         className={`absolute overflow-hidden text-xs border shadow-md rounded-md cursor-pointer group select-none ${
-          isSelected 
+          isSelected
             ? "border-2 border-blue-500 ring-2 ring-blue-200" // 選択時：青い枠とリング
             : "border-gray-300"   // 通常時：グレーの枠
         } ${isDragging || isResizing ? 'shadow-xl z-50' : ''}`}
@@ -383,8 +440,8 @@ export const EventDisplay = ({ event, selectedEvent, onClick, onEventUpdate, wee
           transition: isDragging || isResizing ? 'none' : 'transform 0.1s ease',
           zIndex: overlapLayout ? overlapLayout.zIndex : 1,
           // 日付変更時の視覚効果
-          boxShadow: isDragging && tempDayIndex !== (dayIndex || 0) 
-            ? '0 8px 25px rgba(59, 130, 246, 0.6), 0 0 0 2px rgba(59, 130, 246, 0.3)' 
+          boxShadow: isDragging && tempDayIndex !== (dayIndex || 0)
+            ? '0 8px 25px rgba(59, 130, 246, 0.6), 0 0 0 2px rgba(59, 130, 246, 0.3)'
             : isDragging || isResizing ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '',
           borderStyle: 'solid'
         }}
