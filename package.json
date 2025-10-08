@@ -18,7 +18,8 @@
         "lint:cache": "eslint . --cache --cache-location node_modules/.cache/eslint/ --max-warnings=0",
         "check": "npm run typecheck && npm run lint:cache",
         "starts": "node server.js",
-        "studio": "prisma studio"
+        "studio": "prisma studio",
+        "wiki:sync": "cd ../wikijs-sync-tool && DOCS_DIR=/home/same/Desktop/PMEDATAHUB/docs npm run sync:nav"
     },
     "dependencies": {
         "@heroicons/react": "^2.2.0",
