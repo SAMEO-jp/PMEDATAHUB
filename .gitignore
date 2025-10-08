@@ -37,3 +37,6 @@ pme-system-standalone/
 pme-system-standalone.zip
 pme-system-normal.zip
 *.zip
+
+# MCP設定ファイル（APIキー含む）
+.cursor/mcp.json

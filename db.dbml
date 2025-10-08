@@ -1,0 +1,48 @@
+Table tasks {
+  id integer [pk, increment, note: 'PRIMARY KEY AUTOINCREMENT']
+  parent_task_id integer [note: '親ID（NULL=ルート）自己参照']
+  project_id text [not null, note: 'プロジェクトID']
+  epc_id text [note: 'EPC_ID 設計/製造/工事/プロマネ']
+  equipment_id integer [note: '設備ID']
+  task_type text [not null, default: 'タスク', note: '将来の分類整理に備える']
+  name text [not null, note: 'タスク名']
+  description text [note: '説明']
+  start_date text [note: '開始日']
+  end_date text [note: '終了日']
+  status text [not null, default: '未着手', note: 'ステータス']
+  estimated_hours real [note: '予定時間']
+  actual_hours real [note: '実績時間']
+  sort_order integer [default: 0, note: '同階層内での順序']
+  priority text [default: 'medium', note: '優先度']
+  is_deleted integer [default: 0, note: '削除フラグ']
+  created_at text [not null, note: '作成日時']
+  updated_at text [not null, note: '更新日時']
+}
+
+Table task_user_history {
+  id integer [pk, increment]
+  task_id integer [not null, note: 'タスクID']
+  user_id text [not null, note: 'ユーザーID']
+  assigned_at text [not null, note: 'アサイン日時']
+  removed_at text [note: '削除日時（NULL=現在有効）']
+  note: '担当者変更履歴'
+}
+
+Table Project {
+  PROJECT_ID text [pk, note: 'プロジェクトID']
+}
+
+Table User {
+  user_id text [pk, note: 'ユーザーID']
+}
+
+Table SetsubiMaster {
+  id integer [pk, note: '設備ID']
+}
+
+// リレーション定義
+Ref: tasks.project_id > Project.PROJECT_ID
+Ref: tasks.equipment_id > SetsubiMaster.id
+Ref: tasks.parent_task_id > tasks.id
+Ref: task_user_history.task_id > tasks.id
+Ref: task_user_history.user_id > User.user_id

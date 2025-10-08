@@ -59,6 +59,19 @@ const mockActivities: Activity[] = [
 
 export function RecentActivities() {
   const [activities] = useState<Activity[]>(mockActivities);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  const categories = [
+    { id: 'all', label: 'すべて' },
+    { id: '会議', label: '会議' },
+    { id: '開発', label: '開発' },
+    { id: '資料作成', label: '資料作成' },
+    { id: 'テスト', label: 'テスト' }
+  ];
+
+  const filteredActivities = selectedCategory === 'all'
+    ? activities
+    : activities.filter(activity => activity.category === selectedCategory);
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -85,60 +98,77 @@ export function RecentActivities() {
   return (
     <div className="recent-activities h-full flex flex-col bg-white">
       {/* ヘッダー */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-          <Clock className="w-5 h-5" />
+      <div className="p-3 border-b border-gray-200">
+        <h2 className="text-base font-semibold text-gray-800 mb-2 flex items-center gap-2">
+          <Clock className="w-4 h-4" />
           直近の実績
         </h2>
+
+        {/* フィルター */}
+        <div className="flex gap-1.5 flex-wrap">
+          {categories.map(category => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`px-2 py-1 text-xs rounded-full transition-colors ${
+                selectedCategory === category.id
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {category.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* 実績一覧 */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-3">
-          {activities.length > 0 ? (
-            activities.map(activity => (
+      <div className="flex-1 overflow-y-auto p-3">
+        <div className="space-y-2">
+          {filteredActivities.length > 0 ? (
+            filteredActivities.map(activity => (
               <div
                 key={activity.id}
-                className="activity-item p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                className="activity-item p-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
               >
-                <div className="flex items-start justify-between mb-2">
+                <div className="flex items-start justify-between mb-1.5">
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-800 text-sm leading-tight mb-1">
+                    <h3 className="font-medium text-gray-800 text-xs leading-tight mb-0.5">
                       {activity.title}
                     </h3>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-[11px] text-gray-600">
                       {activity.project}
                     </p>
                   </div>
-                  <span className={`px-2 py-1 text-xs rounded-full border ${getCategoryColor(activity.category)}`}>
+                  <span className={`px-1.5 py-0.5 text-[10px] rounded-full border ${getCategoryColor(activity.category)}`}>
                     {activity.category}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5" />
+                <div className="flex items-center justify-between text-[11px] text-gray-500">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3 h-3" />
                     <span>{activity.date}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
+                    <Clock className="w-3 h-3" />
                     <span>{formatDuration(activity.duration)}</span>
                   </div>
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-center text-gray-500 text-sm py-8">
-              直近の実績がありません
+            <div className="text-center text-gray-500 text-xs py-6">
+              該当する実績がありません
             </div>
           )}
         </div>
       </div>
 
       {/* フッター */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
+      <div className="p-3 border-t border-gray-200 bg-gray-50">
         <div className="text-xs text-gray-500 text-center">
-          <p>📊 {activities.length}件の実績</p>
+          <p>📊 {filteredActivities.length}件の実績</p>
         </div>
       </div>
     </div>

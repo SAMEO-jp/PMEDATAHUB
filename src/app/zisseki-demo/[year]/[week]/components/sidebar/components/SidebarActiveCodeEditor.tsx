@@ -250,8 +250,7 @@ export const SidebarActiveCodeEditor = ({
             getAdditionalData: (detailTab: string, classification: ClassificationInfo) => {
               return {
                 classification: classification.name,
-                category: localState.subTab,
-                subTabType: detailTab
+                category: localState.subTab
               };
             },
             getPurchaseClassifications: () => {

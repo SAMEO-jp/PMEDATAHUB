@@ -73,13 +73,6 @@ export default function ManagePage() {
       stylePattern: 'data' as const
     },
     { 
-      title: "データ表示", 
-      description: "月別の実績データを表形式で表示・分析します。フィルタリング、ソート、CSVダウンロード機能を提供します。", 
-      linkText: "データ表示を開く",
-      href: `/data-display/${currentYear}/${currentMonth}`,
-      stylePattern: 'data' as const
-    },
-    { 
       title: "テーブル管理", 
       description: "テーブルの作成、編集、管理を行います。", 
       linkText: "テーブル管理を開く",
@@ -87,11 +80,11 @@ export default function ManagePage() {
       stylePattern: 'table' as const
     },
     {
-      title: "実績入力",
-      description: "週単位でのイベント管理と実績入力を行います。プロジェクトの進捗状況や作業内容を記録できます。",
-      linkText: "実績入力を開く",
-      href: getZissekiDemoUrl(),
-      stylePattern: 'demo' as const
+      title: "タスク管理",
+      description: "タスクの作成、編集、管理を行います。プロジェクトに紐づくタスクの進捗管理や担当者の割り当てができます。",
+      linkText: "タスク管理を開く",
+      href: "/manage/task",
+      stylePattern: 'project' as const
     },
     {
       title: "ページ管理",

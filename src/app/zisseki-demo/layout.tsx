@@ -45,7 +45,7 @@ export default function ZissekiLayout({ children }: ZissekiLayoutProps) {
   }, []);
 
   return (
-    <div className="zisseki-layout-container h-full flex relative">
+    <div className="zisseki-layout-container h-full flex relative bg-white">
       {/* 左サイドバーコンテンツ（条件付き表示） */}
       {leftSidebarSection && (
         <div 
@@ -79,7 +79,7 @@ export default function ZissekiLayout({ children }: ZissekiLayoutProps) {
       )}
       
       {/* メインコンテンツエリア（右側） */}
-      <div className="main-content-area flex-1 overflow-hidden">
+      <div className="main-content-area flex-1 overflow-hidden bg-white">
         {children}
       </div>
     </div>

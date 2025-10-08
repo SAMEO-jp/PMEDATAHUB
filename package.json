@@ -17,10 +17,12 @@
         "typecheck": "tsc --noEmit --incremental",
         "lint:cache": "eslint . --cache --cache-location node_modules/.cache/eslint/ --max-warnings=0",
         "check": "npm run typecheck && npm run lint:cache",
-        "starts": "node server.js"
+        "starts": "node server.js",
+        "studio": "prisma studio"
     },
     "dependencies": {
         "@heroicons/react": "^2.2.0",
+        "@prisma/client": "^6.16.3",
         "@radix-ui/react-alert-dialog": "^1.1.14",
         "@radix-ui/react-avatar": "^1.1.2",
         "@radix-ui/react-checkbox": "^1.3.2",
@@ -78,6 +80,8 @@
         "globals": "^16.2.0",
         "postcss": "^8.5.6",
         "postcss-import": "^16.1.1",
+        "prisma": "^6.16.3",
+        "prisma-dbml-generator": "^0.12.0",
         "tailwindcss": "^3.4.18",
         "ts-node": "^10.9.2",
         "typescript": "^5.4.2",

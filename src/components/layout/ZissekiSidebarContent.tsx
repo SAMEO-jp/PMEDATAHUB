@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Clock, Target, BarChart3 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -132,10 +133,10 @@ export const ZissekiSidebarContent: React.FC = () => {
   return (
     <aside className="sidebar zisseki-sidebar flex flex-col h-full">
       <div className="sidebar-header">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <IconComponent iconName="edit_calendar" />
-          <span>実績管理システム</span>
-        </div>
+          <span>業務システム</span>
+        </Link>
       </div>
       
       {/* カレンダーウィジェット */}

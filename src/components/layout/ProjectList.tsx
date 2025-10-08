@@ -129,19 +129,19 @@ export function ProjectList() {
   return (
     <div className="project-list h-full flex flex-col bg-white">
       {/* ヘッダー */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-          <Folder className="w-5 h-5" />
+      <div className="p-3 border-b border-gray-200">
+        <h2 className="text-base font-semibold text-gray-800 mb-2 flex items-center gap-2">
+          <Folder className="w-4 h-4" />
           プロジェクト一覧
         </h2>
 
         {/* フィルター */}
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap">
           {statuses.map(status => (
             <button
               key={status.id}
               onClick={() => setSelectedStatus(status.id)}
-              className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+              className={`px-2 py-1 text-xs rounded-full transition-colors ${
                 selectedStatus === status.id
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -154,50 +154,50 @@ export function ProjectList() {
       </div>
 
       {/* プロジェクト一覧 */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-3">
+      <div className="flex-1 overflow-y-auto p-3">
+        <div className="space-y-2">
           {filteredProjects.length > 0 ? (
             filteredProjects.map(project => (
               <div
                 key={project.id}
-                className="project-item p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                className="project-item p-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
               >
-                <div className="flex items-start justify-between mb-2">
+                <div className="flex items-start justify-between mb-1.5">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-gray-800 text-sm leading-tight">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <h3 className="font-medium text-gray-800 text-xs leading-tight">
                         {project.name}
                       </h3>
-                      <AlertCircle className={`w-3.5 h-3.5 ${getPriorityColor(project.priority)}`} />
+                      <AlertCircle className={`w-3 h-3 ${getPriorityColor(project.priority)}`} />
                     </div>
                     {project.description && (
-                      <p className="text-xs text-gray-600 line-clamp-1">
+                      <p className="text-[11px] text-gray-600 line-clamp-1">
                         {project.description}
                       </p>
                     )}
                   </div>
-                  <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(project.status)}`}>
+                  <span className={`px-1.5 py-0.5 text-[10px] rounded-full border ${getStatusColor(project.status)}`}>
                     {getStatusLabel(project.status)}
                   </span>
                 </div>
 
                 {/* 進捗バー */}
-                <div className="mb-2">
-                  <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                <div className="mb-1.5">
+                  <div className="flex items-center justify-between text-[10px] text-gray-600 mb-0.5">
                     <span>進捗</span>
                     <span className="font-medium">{project.progress}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 rounded-full h-1.5">
                     <div
-                      className={`h-2 rounded-full transition-all ${getProgressColor(project.progress)}`}
+                      className={`h-1.5 rounded-full transition-all ${getProgressColor(project.progress)}`}
                       style={{ width: `${project.progress}%` }}
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5" />
+                <div className="flex items-center justify-between text-[11px] text-gray-500">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3 h-3" />
                     <span>{project.startDate}</span>
                     {project.endDate && (
                       <>
@@ -207,14 +207,14 @@ export function ProjectList() {
                     )}
                   </div>
                   <div className="flex items-center gap-1">
-                    <TrendingUp className="w-3.5 h-3.5" />
+                    <TrendingUp className="w-3 h-3" />
                     <span>{project.memberCount}名</span>
                   </div>
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-center text-gray-500 text-sm py-8">
+            <div className="text-center text-gray-500 text-xs py-6">
               該当するプロジェクトがありません
             </div>
           )}
@@ -222,7 +222,7 @@ export function ProjectList() {
       </div>
 
       {/* フッター */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
+      <div className="p-3 border-t border-gray-200 bg-gray-50">
         <div className="text-xs text-gray-500 text-center">
           <p>📁 {filteredProjects.length}件のプロジェクト</p>
         </div>

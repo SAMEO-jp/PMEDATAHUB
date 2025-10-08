@@ -49,16 +49,6 @@ const EventSchema = z.object({
   itemName: z.string().optional(),
   purposeProject: z.string().optional(),
   departmentCode: z.string().optional(),
-  planningSubType: z.string().optional(),
-  estimateSubType: z.string().optional(),
-  designSubType: z.string().optional(),
-  meetingType: z.string().optional(),
-  travelType: z.string().optional(),
-  stakeholderType: z.string().optional(),
-  documentType: z.string().optional(),
-  documentMaterial: z.string().optional(),
-  subTabType: z.string().optional(),
-  activityColumn: z.string().optional(),
   indirectType: z.string().optional(),
   indirectDetailType: z.string().optional(),
   selectedTab: z.string().optional(),
@@ -100,16 +90,6 @@ interface EventRecord {
   equipment_id: string | null;
   equipment_Name: string | null;
   itemName: string | null;
-  planningSubType: string | null;
-  estimateSubType: string | null;
-  designSubType: string | null;
-  meetingType: string | null;
-  travelType: string | null;
-  stakeholderType: string | null;
-  documentType: string | null;
-  documentMaterial: string | null;
-  subTabType: string | null;
-  activityColumn: string | null;
   indirectType: string | null;
   indirectDetailType: string | null;
   selectedTab: string | null;
@@ -172,16 +152,6 @@ export const zissekiRouter = createTRPCRouter({
             equipment_id,
             equipment_Name,
             itemName,
-            planningSubType,
-            estimateSubType,
-            designSubType,
-            meetingType,
-            travelType,
-            stakeholderType,
-            documentType,
-            documentMaterial,
-            subTabType,
-            activityColumn,
             indirectType,
             indirectDetailType,
             selectedTab,
@@ -235,16 +205,6 @@ export const zissekiRouter = createTRPCRouter({
           itemName: event.itemName || '',
           purposeProject: event.purposeProject || '',
           departmentCode: event.departmentCode || '',
-          planningSubType: event.planningSubType || '',
-          estimateSubType: event.estimateSubType || '',
-          designSubType: event.designSubType || '',
-          meetingType: event.meetingType || '',
-          travelType: event.travelType || '',
-          stakeholderType: event.stakeholderType || '',
-          documentType: event.documentType || '',
-          documentMaterial: event.documentMaterial || '',
-          subTabType: event.subTabType || '',
-          activityColumn: event.activityColumn || '',
           indirectType: event.indirectType || '',
           indirectDetailType: event.indirectDetailType || '',
           selectedTab: event.selectedTab || '',
@@ -362,16 +322,6 @@ export const zissekiRouter = createTRPCRouter({
             equipment_id: event.equipment_id || '',
             equipment_Name: event.equipment_Name || '',
             itemName: event.itemName || '',
-            planningSubType: event.planningSubType || '',
-            estimateSubType: event.estimateSubType || '',
-            designSubType: event.designSubType || '',
-            meetingType: event.meetingType || '',
-            travelType: event.travelType || '',
-            stakeholderType: event.stakeholderType || '',
-            documentType: event.documentType || '',
-            documentMaterial: event.documentMaterial || '',
-            subTabType: event.subTabType || '',
-            activityColumn: event.activityColumn || '',
             indirectType: event.indirectType || '',
             indirectDetailType: event.indirectDetailType || '',
             selectedTab: event.selectedTab || '',
@@ -391,15 +341,13 @@ export const zissekiRouter = createTRPCRouter({
               top, height, color, unsaved, category, employeeNumber,
               activityCode, purposeProject, departmentCode, equipmentNumber,
               equipmentName, equipment_id, equipment_Name, itemName,
-              planningSubType, estimateSubType, designSubType, meetingType,
-              travelType, stakeholderType, documentType, documentMaterial,
-              subTabType, activityColumn, indirectType, indirectDetailType,
+              indirectType, indirectDetailType,
               selectedTab, selectedProjectSubTab, selectedIndirectSubTab,
               selectedIndirectDetailTab, selectedOtherSubTab, status,
               createdAt, updatedAt
             ) VALUES (
               ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-              ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+              ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
           `;
 
@@ -409,10 +357,7 @@ export const zissekiRouter = createTRPCRouter({
             eventData.color, eventData.unsaved, eventData.category, eventData.employeeNumber,
             eventData.activityCode, eventData.purposeProject, eventData.departmentCode,
             eventData.equipmentNumber, eventData.equipmentName, eventData.equipment_id,
-            eventData.equipment_Name, eventData.itemName, eventData.planningSubType,
-            eventData.estimateSubType, eventData.designSubType, eventData.meetingType,
-            eventData.travelType, eventData.stakeholderType, eventData.documentType,
-            eventData.documentMaterial, eventData.subTabType, eventData.activityColumn,
+            eventData.equipment_Name, eventData.itemName,
             eventData.indirectType, eventData.indirectDetailType, eventData.selectedTab,
             eventData.selectedProjectSubTab, eventData.selectedIndirectSubTab,
             eventData.selectedIndirectDetailTab, eventData.selectedOtherSubTab,
@@ -504,16 +449,6 @@ export const zissekiRouter = createTRPCRouter({
           equipment_id: event.equipment_id,
           equipment_Name: event.equipment_Name,
           itemName: event.itemName,
-          planningSubType: event.planningSubType,
-          estimateSubType: event.estimateSubType,
-          designSubType: event.designSubType,
-          meetingType: event.meetingType,
-          travelType: event.travelType,
-          stakeholderType: event.stakeholderType,
-          documentType: event.documentType,
-          documentMaterial: event.documentMaterial,
-          subTabType: event.subTabType,
-          activityColumn: event.activityColumn,
           indirectType: event.indirectType,
           indirectDetailType: event.indirectDetailType,
           selectedTab: event.selectedTab,
@@ -679,16 +614,6 @@ export const zissekiRouter = createTRPCRouter({
             equipment_id,
             equipment_Name,
             itemName,
-            planningSubType,
-            estimateSubType,
-            designSubType,
-            meetingType,
-            travelType,
-            stakeholderType,
-            documentType,
-            documentMaterial,
-            subTabType,
-            activityColumn,
             indirectType,
             indirectDetailType,
             selectedTab,
@@ -742,16 +667,6 @@ export const zissekiRouter = createTRPCRouter({
           itemName: event.itemName || '',
           purposeProject: event.purposeProject || '',
           departmentCode: event.departmentCode || '',
-          planningSubType: event.planningSubType || '',
-          estimateSubType: event.estimateSubType || '',
-          designSubType: event.designSubType || '',
-          meetingType: event.meetingType || '',
-          travelType: event.travelType || '',
-          stakeholderType: event.stakeholderType || '',
-          documentType: event.documentType || '',
-          documentMaterial: event.documentMaterial || '',
-          subTabType: event.subTabType || '',
-          activityColumn: event.activityColumn || '',
           indirectType: event.indirectType || '',
           indirectDetailType: event.indirectDetailType || '',
           selectedTab: event.selectedTab || '',

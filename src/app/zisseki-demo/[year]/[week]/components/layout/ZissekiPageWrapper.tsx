@@ -83,5 +83,5 @@ export function ZissekiPageWrapper({ children }: ZissekiPageWrapperProps) {
   // メインコンテンツ
   // ========================================
   
-  return <>{children}</>;
+  return <div className="bg-white h-full w-full">{children}</div>;
 }

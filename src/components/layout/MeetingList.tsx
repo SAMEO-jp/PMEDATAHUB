@@ -95,19 +95,19 @@ export function MeetingList() {
   return (
     <div className="meeting-list h-full flex flex-col bg-white">
       {/* ヘッダー */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-          <Calendar className="w-5 h-5" />
+      <div className="p-3 border-b border-gray-200">
+        <h2 className="text-base font-semibold text-gray-800 mb-2 flex items-center gap-2">
+          <Calendar className="w-4 h-4" />
           会議一覧
         </h2>
 
         {/* フィルター */}
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap">
           {types.map(type => (
             <button
               key={type.id}
               onClick={() => setSelectedType(type.id)}
-              className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+              className={`px-2 py-1 text-xs rounded-full transition-colors ${
                 selectedType === type.id
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -120,47 +120,47 @@ export function MeetingList() {
       </div>
 
       {/* 会議一覧 */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-3">
+      <div className="flex-1 overflow-y-auto p-3">
+        <div className="space-y-2">
           {filteredMeetings.length > 0 ? (
             filteredMeetings.map(meeting => (
               <div
                 key={meeting.id}
-                className="meeting-item p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                className="meeting-item p-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
               >
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-medium text-gray-800 text-sm leading-tight flex-1">
+                <div className="flex items-start justify-between mb-1.5">
+                  <h3 className="font-medium text-gray-800 text-xs leading-tight flex-1">
                     {meeting.title}
                   </h3>
-                  <span className={`px-2 py-1 text-xs rounded-full border ${getTypeColor(meeting.type)}`}>
+                  <span className={`px-1.5 py-0.5 text-[10px] rounded-full border ${getTypeColor(meeting.type)}`}>
                     {getTypeLabel(meeting.type)}
                   </span>
                 </div>
 
-                <div className="space-y-1 text-xs text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-3.5 h-3.5" />
+                <div className="space-y-0.5 text-[11px] text-gray-600">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3 h-3" />
                     <span>{meeting.date}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3 h-3" />
                     <span>{meeting.time}</span>
                   </div>
                   {meeting.location && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="w-3 h-3" />
                       <span>{meeting.location}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
-                    <Users className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-1.5">
+                    <Users className="w-3 h-3" />
                     <span>{meeting.participants}名</span>
                   </div>
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-center text-gray-500 text-sm py-8">
+            <div className="text-center text-gray-500 text-xs py-6">
               該当する会議がありません
             </div>
           )}
@@ -168,7 +168,7 @@ export function MeetingList() {
       </div>
 
       {/* フッター */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
+      <div className="p-3 border-t border-gray-200 bg-gray-50">
         <div className="text-xs text-gray-500 text-center">
           <p>📅 {filteredMeetings.length}件の会議</p>
         </div>

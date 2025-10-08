@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { CheckSquare, Clock } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -80,77 +81,85 @@ export function TaskSidebar() {
   };
 
   return (
-    <div className="task-sidebar h-full flex flex-col">
+    <div className="task-sidebar h-full flex flex-col bg-white">
       {/* ヘッダー */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <h2 className="text-lg font-semibold text-gray-800">タスク一覧</h2>
-        <p className="text-sm text-gray-600">ドラッグして予定表に追加</p>
-      </div>
+      <div className="p-3 border-b border-gray-200">
+        <h2 className="text-base font-semibold text-gray-800 mb-2 flex items-center gap-2">
+          <CheckSquare className="w-4 h-4" />
+          タスク一覧
+        </h2>
 
-      {/* カテゴリフィルター */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex flex-wrap gap-2">
+        {/* フィルター */}
+        <div className="flex gap-1.5 flex-wrap">
           {categories.map(category => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+              className={`px-2 py-1 text-xs rounded-full transition-colors ${
                 selectedCategory === category
-                  ? 'bg-blue-100 text-blue-800 border-blue-300'
-                  : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {category === 'all' ? '全て' : category}
+              {category === 'all' ? 'すべて' : category}
             </button>
           ))}
         </div>
       </div>
 
       {/* タスク一覧 */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-3">
-          {filteredTasks.map(task => (
-            <div
-              key={task.id}
-              draggable
-              onDragStart={(e) => handleDragStart(e, task)}
-              className="task-item p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-medium text-gray-800 text-sm leading-tight">
-                  {task.title}
-                </h3>
-                <span className={`px-2 py-1 text-xs rounded-full border ${getPriorityColor(task.priority)}`}>
-                  {task.priority === 'high' ? '高' : task.priority === 'medium' ? '中' : '低'}
-                </span>
-              </div>
-              
-              {task.description && (
-                <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-                  {task.description}
-                </p>
-              )}
-              
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span className="px-2 py-1 bg-gray-100 rounded">
-                  {task.category}
-                </span>
-                {task.estimatedTime && (
-                  <span>
-                    {Math.floor(task.estimatedTime / 60)}時間{task.estimatedTime % 60}分
+      <div className="flex-1 overflow-y-auto p-3">
+        <div className="space-y-2">
+          {filteredTasks.length > 0 ? (
+            filteredTasks.map(task => (
+              <div
+                key={task.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, task)}
+                className="task-item p-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
+              >
+                <div className="flex items-start justify-between mb-1.5">
+                  <h3 className="font-medium text-gray-800 text-xs leading-tight flex-1">
+                    {task.title}
+                  </h3>
+                  <span className={`px-1.5 py-0.5 text-[10px] rounded-full border ${getPriorityColor(task.priority)}`}>
+                    {task.priority === 'high' ? '高' : task.priority === 'medium' ? '中' : '低'}
                   </span>
+                </div>
+                
+                {task.description && (
+                  <p className="text-[11px] text-gray-600 mb-1.5 line-clamp-2">
+                    {task.description}
+                  </p>
                 )}
+                
+                <div className="flex items-center justify-between text-[11px] text-gray-500">
+                  <span className="px-1.5 py-0.5 bg-gray-100 rounded">
+                    {task.category}
+                  </span>
+                  {task.estimatedTime && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      <span>
+                        {Math.floor(task.estimatedTime / 60)}時間{task.estimatedTime % 60}分
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="text-center text-gray-500 text-xs py-6">
+              該当するタスクがありません
             </div>
-          ))}
+          )}
         </div>
       </div>
 
       {/* フッター */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
+      <div className="p-3 border-t border-gray-200 bg-gray-50">
         <div className="text-xs text-gray-500 text-center">
           <p>📋 {filteredTasks.length}件のタスク</p>
-          <p>💡 ドラッグして予定表に配置</p>
         </div>
       </div>
     </div>
