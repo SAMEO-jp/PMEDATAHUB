@@ -26,6 +26,7 @@ const iconFallbacks: Record<string, string> = {
   'inventory': '📦',
   'widgets': '🧩',
   'table_chart': '📊',
+  'local_shipping': '🚚', // 新しいアイコンを追加
 };
 
 // アイコン表示用のヘルパー関数
@@ -135,6 +136,7 @@ export const SidebarContent: React.FC = () => {
     { id: 'ebom', name: 'EBOM', icon: 'inventory', href: `/app_project/${projectId}/ebom` },
     { id: 'mbom', name: 'MBOM', icon: 'widgets', href: `/app_project/${projectId}/mbom` },
     { id: 'cmom', name: 'CMOM', icon: 'table_chart', href: `/app_project/${projectId}/cmom` },
+    { id: 'contract-management', name: '契約管理', icon: 'description', href: `/app_project/${projectId}/contract-management` },
   ];
 
   // 全体メニューの項目（zisseki-demo専用サイドバーと同じ）
@@ -143,6 +145,7 @@ export const SidebarContent: React.FC = () => {
     { id: 'calendar', name: '週間カレンダー', icon: 'calendar_month', href: `/zisseki-demo/${year}/${week}` },
     { id: 'schedule', name: 'スケジュール', icon: 'schedule', href: '/zisseki-demo/schedule' },
     { id: 'tasks', name: 'タスク管理', icon: 'task', href: '/zisseki-demo/tasks' },
+    { id: 'shipping-guidance', name: '出荷案内書作成', icon: 'local_shipping', href: '/shipping-guidance' }, // 新しいメニュー項目
     { id: 'analytics', name: '実績分析', icon: 'analytics', href: '/zisseki-demo/analytics' },
     { id: 'settings', name: '設定', icon: 'settings', href: '/zisseki-demo/settings' },
   ];

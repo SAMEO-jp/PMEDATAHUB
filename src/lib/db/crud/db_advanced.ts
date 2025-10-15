@@ -1,5 +1,6 @@
-import { initializeDatabase, DataResult } from '../connection/db_connection';
+import { initializeDatabase } from '../connection/db_connection';
 import type { Database } from 'sqlite';
+import { DALResponse } from '@src/lib/types/api';
 
 /*********************************************************
  * トランザクションを実行する
@@ -8,19 +9,18 @@ import type { Database } from 'sqlite';
  *********************************************************/
 export async function runTransaction<T>(
   callback: (db: Database) => Promise<T>
-): Promise<DataResult<T>> {
+): Promise<DALResponse<T>> {
   let db: Database | null = null;
   try {
     db = await initializeDatabase();
     await db.run('BEGIN TRANSACTION');
     
     const result = await callback(db);
-    
+
     await db.run('COMMIT');
     return {
       success: true,
-      data: result,
-      error: null
+      data: result
     };
   } catch (error) {
     if (db) {
@@ -33,8 +33,10 @@ export async function runTransaction<T>(
     console.error('トランザクション実行中にエラーが発生しました:', error);
     return {
       success: false,
-      error: 'データベースエラーが発生しました',
-      data: null
+      error: {
+        code: 'DATABASE_ERROR',
+        message: 'データベースエラーが発生しました'
+      }
     };
   } finally {
     if (db) {
@@ -58,7 +60,7 @@ export async function exists(
   table: string,
   id: string | number,
   idColumn = 'id'
-): Promise<DataResult<boolean>> {
+): Promise<DALResponse<boolean>> {
   let db: Database | null = null;
   try {
     db = await initializeDatabase();
@@ -67,15 +69,16 @@ export async function exists(
     
     return {
       success: true,
-      data: !!result,
-      error: null
+      data: !!result
     };
   } catch (error) {
     console.error('レコードの存在確認に失敗しました:', error);
     return {
       success: false,
-      error: 'データベースエラーが発生しました',
-      data: null
+      error: {
+        code: 'DATABASE_ERROR',
+        message: 'データベースエラーが発生しました'
+      }
     };
   } finally {
     if (db) {
@@ -210,10 +213,10 @@ export interface SqlExecutionResult {
   executedAt: string;
 }
 
-export async function executeQuery(
+export async function executeSelectQuery(
   sqlQuery: string,
   limit = 100
-): Promise<DataResult<SqlExecutionResult>> {
+): Promise<DALResponse<SqlExecutionResult>> {
   let db: Database | null = null;
   const startTime = Date.now();
   
@@ -274,8 +277,7 @@ export async function executeQuery(
     
     return {
       success: true,
-      data: result,
-      error: null
+      data: result
     };
   } catch (error) {
     const executionTime = (Date.now() - startTime) / 1000;
@@ -287,8 +289,10 @@ export async function executeQuery(
     console.error('SQL実行に失敗しました:', error);
     return {
       success: false,
-      error: `SQL実行エラー: ${errorMessage}`,
-      data: null
+      error: {
+        code: 'DATABASE_ERROR',
+        message: `SQL実行エラー: ${errorMessage}`
+      }
     };
   } finally {
     if (db) {
@@ -480,6 +484,94 @@ export async function getDatabaseStats(): Promise<DataResult<DatabaseStats>> {
       success: false,
       error: 'データベース統計の取得に失敗しました',
       data: null
+    };
+  } finally {
+    if (db) {
+      try {
+        await db.close();
+      } catch (closeErr) {
+        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+      }
+    }
+  }
+}
+
+export async function createProjectsTable(): Promise<DALResponse<string>> {
+  let db: Database | null = null;
+  try {
+    db = await initializeDatabase();
+    const createTableSql = `
+      CREATE TABLE IF NOT EXISTS projects (
+        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        "プロジェクトID" TEXT NOT NULL UNIQUE,
+        "プロジェクト名" TEXT NOT NULL,
+        "プロジェクト説明" TEXT,
+        "プロジェクト開始日" TEXT, -- Date型はSQLiteではTEXTで保存される
+        "プロジェクト終了日" TEXT,
+        "プロジェクトステータスID" INTEGER,
+        "クライアント名ID" INTEGER,
+        "プロジェクト分類ID" INTEGER,
+        "予算グレードID" INTEGER,
+        "設備カテゴリID" INTEGER,
+        "商品カテゴリID" INTEGER,
+        "備考" TEXT,
+        "プロジェクトフラグ" INTEGER
+      );
+    `;
+    await db.run(createTableSql);
+    return { success: true, data: 'projectsテーブルが正常に作成または既に存在しています。' };
+  } catch (error) {
+    console.error('projectsテーブルの作成に失敗しました:', error);
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: error instanceof Error ? error.message : 'Unknown database error',
+      },
+    };
+  } finally {
+    if (db) {
+      try {
+        await db.close();
+      } catch (closeErr) {
+        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+      }
+    }
+  }
+}
+
+export async function createProjectBusinessGroupTable(): Promise<DALResponse<string>> {
+  let db: Database | null = null;
+  try {
+    db = await initializeDatabase();
+    const createTableSql = `
+      CREATE TABLE IF NOT EXISTS プロジェクト業務グループ (
+        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        "プロジェクト業務グループID" INTEGER UNIQUE,
+        "親グループID" INTEGER,
+        "業務種類ID" INTEGER NOT NULL,
+        "プロジェクトID" TEXT NOT NULL,
+        "業務種類ID_2" INTEGER NOT NULL,
+        "使用目的" TEXT NOT NULL,
+        "設置場所" TEXT NOT NULL,
+        "ステータス" TEXT NOT NULL,
+        "使用開始日" TEXT NOT NULL,
+        "使用終了日" TEXT NOT NULL,
+        "トランザクションID" INTEGER NOT NULL,
+        FOREIGN KEY("プロジェクトID") REFERENCES projects("プロジェクトID"),
+        FOREIGN KEY("業務種類ID_2") REFERENCES 業務種類(ID)
+      );
+    `;
+    await db.run(createTableSql);
+    return { success: true, data: 'プロジェクト業務グループテーブルが正常に作成または既に存在しています。' };
+  } catch (error) {
+    console.error('プロジェクト業務グループテーブルの作成に失敗しました:', error);
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: error instanceof Error ? error.message : 'Unknown database error',
+      },
     };
   } finally {
     if (db) {

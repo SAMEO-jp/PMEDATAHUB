@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { initializeDatabase, DataResult, TableConfig, TableReadConfig } from '../connection/db_connection';
+import { initializeDatabase, TableConfig, TableReadConfig } from '../connection/db_connection';
+import { DALResponse } from '@src/lib/types/api';
 import type { Database } from 'sqlite';
 
 /*********************************************************
@@ -12,7 +13,7 @@ import type { Database } from 'sqlite';
  * 接続管理は後から考えること
  **********************************************************/
 
-export async function GetRecode<T=unknown>(id: string | number, config: TableConfig): Promise<DataResult<T>> {
+export async function getRecord<T=unknown>(id: string | number, config: TableConfig): Promise<DALResponse<T>> {
   let db: Database | null = null;
     try {
         // データベース接続
@@ -25,22 +26,25 @@ export async function GetRecode<T=unknown>(id: string | number, config: TableCon
         if (!result) {
             return {
                 success: false,
-                error: `指定されたID(${id})のデータが見つかりません`,
-                data: null
+                error: {
+                    code: 'RECORD_NOT_FOUND',
+                    message: `指定されたID(${id})のデータが見つかりません`
+                }
             };
         }
         // 正常に取得できた場合
         return {
             success: true,
-            error: null,
             data: result
         };
     }catch (error) {
         console.error('データの取得に失敗しました:', error);
         return {
             success: false,
-            error: 'データベースエラーが発生しました',
-            data: null
+            error: {
+                code: 'DATABASE_ERROR',
+                message: 'データベースエラーが発生しました'
+            }
         };
     }finally {
     // dbが存在する時だけ安全にclose
@@ -61,11 +65,11 @@ export async function GetRecode<T=unknown>(id: string | number, config: TableCon
  * @param config - テーブル設定（テーブル名とIDカラム名）
  * @returns 取得結果（成功/失敗、データ、エラーメッセージ）
  **********************************************************/
-export async function GetConditionData<T=unknown>(
+export async function getConditionalData<T=unknown>(
   conditionExpr: string,
   conditionValues: (string | number)[],
   config: TableConfig
-): Promise<DataResult<T>> {
+): Promise<DALResponse<T>> {
   let db: Database | null = null;
   try {
     console.log('GetConditionData: データベース接続開始');
@@ -100,17 +104,16 @@ export async function GetConditionData<T=unknown>(
 
     return {
       success: true,
-      data: result as T,
-      count: result.length,
-      error: null
+      data: result as T
     };
   } catch (error) {
     console.error('GetConditionData: データの取得に失敗しました:', error);
     return {
       success: false,
-      error: 'データベースエラーが発生しました',
-      count: 0,
-      data: null
+      error: {
+        code: 'DATABASE_ERROR',
+        message: 'データベースエラーが発生しました'
+      }
     };
   } finally {
     if (db) {
@@ -130,16 +133,22 @@ export async function GetConditionData<T=unknown>(
  * @returns 取得結果（成功/失敗、データ、エラーメッセージ）
 **********************************************************/
 
-export async function GetAllData<T=unknown>(config: TableReadConfig): Promise<DataResult<T>> {
+export async function getAllData<T=unknown>(config: TableReadConfig): Promise<DALResponse<T>> {
   let db: Database | null = null;
   try {
     db = await initializeDatabase();
     const query = `SELECT * FROM ${config.tableName}`;
     const result = await db.all(query);
-    return { success: true, error: null,count: result.length, data: result as T };}
-  catch (error) {
+    return { success: true, data: result as T };
+  } catch (error) {
     console.error('データの取得に失敗しました:', error);
-    return { success: false, error: 'データベースエラーが発生しました', count: 0, data: null };}
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: 'データベースエラーが発生しました'
+      }
+    };
   finally {
     if (db) {
       try {await db.close();} 
@@ -162,7 +171,7 @@ export interface TableInfo {
   tags: string[];
 }
 
-export async function getAllTables(): Promise<DataResult<TableInfo[]>> {
+export async function getAllTables(): Promise<DALResponse<TableInfo[]>> {
   let db: any = null;
   try {
     db = await initializeDatabase();
@@ -204,19 +213,18 @@ export async function getAllTables(): Promise<DataResult<TableInfo[]>> {
       }
     }
     
-    return { 
-      success: true, 
-      error: null, 
-      count: tableInfos.length, 
-      data: tableInfos 
+    return {
+      success: true,
+      data: tableInfos
     };
   } catch (error) {
     console.error('テーブル一覧の取得に失敗しました:', error);
-    return { 
-      success: false, 
-      error: 'データベースエラーが発生しました', 
-      count: 0, 
-      data: null 
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: 'データベースエラーが発生しました'
+      }
     };
   } finally {
     if (db) {

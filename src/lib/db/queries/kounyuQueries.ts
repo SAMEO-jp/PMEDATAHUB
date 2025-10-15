@@ -1,150 +1,69 @@
 /**
- * 購入品関連のクエリ関数群
- * 複雑なJOINや特殊ビジネスロジックを含むクエリをここに集約
+ * 購入品関連のCRUD操作関数
  */
 
 import { initializeDatabase, DataResult } from '@src/lib/db/connection/db_connection';
 import type { Database } from 'sqlite';
-import type { KounyuMaster, KounyuAssignment, KounyuWithAssignment } from '@src/types/kounyu';
+import type { KounyuMaster, KounyuAssignment, KounyuFormData } from '@src/types/kounyu';
 
 /**
- * プロジェクトの購入品一覧を取得（担当者情報付き）
- * @param projectId - プロジェクトID
- * @returns 購入品一覧
+ * 購入品マスターを作成
+ * @param kounyuData - 購入品データ
+ * @returns 作成結果
  */
-export async function getKounyuWithAssignments(projectId: string): Promise<DataResult<KounyuWithAssignment[]>> {
+export async function createKounyuMaster(kounyuData: KounyuFormData): Promise<DataResult<KounyuMaster>> {
   let db: Database | null = null;
   try {
     db = await initializeDatabase();
 
     const query = `
-      SELECT
-        km.*,
-        GROUP_CONCAT(DISTINCT u.name_japanese) as assignee_names,
-        COUNT(DISTINCT ka.user_id) as assignee_count
-      FROM kounyu_master km
-      LEFT JOIN kounyu_assignment ka ON km.id = ka.kounyu_id AND ka.status = 'active'
-      LEFT JOIN USER u ON ka.user_id = u.user_id
-      WHERE km.project_id = ?
-      GROUP BY km.id
-      ORDER BY km.display_order ASC, km.created_at DESC
+      INSERT INTO kounyu_master (
+        project_id, management_number, item_name, contract_number, item_category,
+        setsubi_seiban, responsible_department, drawing_number, display_order, remarks,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `;
 
-    const rows = await db.all(query, [projectId]);
+    const result = await db.run(query, [
+      kounyuData.project_id,
+      kounyuData.management_number,
+      kounyuData.item_name,
+      kounyuData.contract_number || null,
+      kounyuData.item_category,
+      kounyuData.setsubi_seiban || null,
+      kounyuData.responsible_department || null,
+      kounyuData.drawing_number || null,
+      kounyuData.display_order,
+      kounyuData.remarks || null
+    ]);
 
-    const result: KounyuWithAssignment[] = rows.map((row: any) => ({
-      id: row.id,
-      project_id: row.project_id,
-      management_number: row.management_number,
-      item_name: row.item_name,
-      contract_number: row.contract_number,
-      item_category: row.item_category,
-      setsubi_seiban: row.setsubi_seiban,
-      responsible_department: row.responsible_department,
-      drawing_number: row.drawing_number,
-      display_order: row.display_order,
-      remarks: row.remarks,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-      assignee_count: row.assignee_count || 0,
-      current_assignees: row.assignee_names ? row.assignee_names.split(',').map((name: string) => ({ name_japanese: name })) : []
-    }));
+    if (result.lastID) {
+      // 作成したデータを取得
+      const selectQuery = 'SELECT * FROM kounyu_master WHERE id = ?';
+      const newRecord = await db.get<KounyuMaster>(selectQuery, [result.lastID]);
 
-    return {
-      success: true,
-      data: result,
-      error: null
-    };
-  } catch (error) {
-    console.error('購入品一覧取得に失敗しました:', error);
-    return {
-      success: false,
-      error: '購入品一覧の取得に失敗しました',
-      data: null
-    };
-  } finally {
-    if (db) {
-      try {
-        await db.close();
-      } catch (closeErr) {
-        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
-      }
-    }
-  }
-}
-
-/**
- * 購入品の詳細情報を取得（担当者詳細付き）
- * @param kounyuId - 購入品ID
- * @returns 購入品詳細情報
- */
-export async function getKounyuDetail(kounyuId: number): Promise<DataResult<KounyuWithAssignment>> {
-  let db: Database | null = null;
-  try {
-    db = await initializeDatabase();
-
-    // 基本情報取得
-    const kounyuQuery = `
-      SELECT * FROM kounyu_master WHERE id = ?
-    `;
-    const kounyuRow = await db.get(kounyuQuery, [kounyuId]);
-
-    if (!kounyuRow) {
+      return {
+        success: true,
+        data: newRecord as KounyuMaster,
+        error: null
+      };
+    } else {
       return {
         success: false,
-        error: '指定された購入品が見つかりません',
+        error: '購入品の作成に失敗しました',
         data: null
       };
     }
-
-    // 担当者情報取得
-    const assignmentQuery = `
-      SELECT
-        ka.*,
-        u.name_japanese,
-        u.bumon,
-        u.sitsu,
-        u.ka
-      FROM kounyu_assignment ka
-      JOIN USER u ON ka.user_id = u.user_id
-      WHERE ka.kounyu_id = ? AND ka.status = 'active'
-      ORDER BY ka.assigned_at DESC
-    `;
-    const assignments = await db.all(assignmentQuery, [kounyuId]);
-
-    const result: KounyuWithAssignment = {
-      id: kounyuRow.id,
-      project_id: kounyuRow.project_id,
-      management_number: kounyuRow.management_number,
-      item_name: kounyuRow.item_name,
-      contract_number: kounyuRow.contract_number,
-      item_category: kounyuRow.item_category,
-      setsubi_seiban: kounyuRow.setsubi_seiban,
-      responsible_department: kounyuRow.responsible_department,
-      drawing_number: kounyuRow.drawing_number,
-      display_order: kounyuRow.display_order,
-      remarks: kounyuRow.remarks,
-      created_at: kounyuRow.created_at,
-      updated_at: kounyuRow.updated_at,
-      assignments: assignments,
-      assignee_count: assignments.length,
-      current_assignees: assignments.map((a: any) => ({
-        user_id: a.user_id,
-        name_japanese: a.name_japanese,
-        department: `${a.bumon} ${a.sitsu} ${a.ka}`.trim()
-      }))
-    };
-
-    return {
-      success: true,
-      data: result,
-      error: null
-    };
   } catch (error) {
-    console.error('購入品詳細取得に失敗しました:', error);
+    console.error('購入品作成に失敗しました:', error);
+    console.error('エラー詳細:', {
+      message: error instanceof Error ? error.message : '不明なエラー',
+      stack: error instanceof Error ? error.stack : undefined,
+      kounyuData
+    });
     return {
       success: false,
-      error: '購入品詳細の取得に失敗しました',
+      error: error instanceof Error ? error.message : '購入品の作成に失敗しました',
       data: null
     };
   } finally {
@@ -159,149 +78,86 @@ export async function getKounyuDetail(kounyuId: number): Promise<DataResult<Koun
 }
 
 /**
- * 全購入品一覧を取得（担当割り当て用）
- * @returns 購入品一覧
- */
-export async function getKounyuList(): Promise<DataResult<KounyuMaster[]>> {
-  let db: Database | null = null;
-  try {
-    db = await initializeDatabase();
-
-    const query = `
-      SELECT * FROM kounyu_master
-      ORDER BY item_name ASC
-    `;
-
-    const rows = await db.all(query);
-
-    const kounyuList: KounyuMaster[] = rows.map((row: any) => ({
-      id: row.id,
-      project_id: row.project_id,
-      management_number: row.management_number,
-      item_name: row.item_name,
-      contract_number: row.contract_number,
-      item_category: row.item_category,
-      setsubi_seiban: row.setsubi_seiban,
-      responsible_department: row.responsible_department,
-      drawing_number: row.drawing_number,
-      display_order: row.display_order,
-      remarks: row.remarks,
-      created_at: row.created_at,
-      updated_at: row.updated_at
-    }));
-
-    return {
-      success: true,
-      data: kounyuList,
-      error: null
-    };
-  } catch (error) {
-    console.error('購入品一覧取得に失敗しました:', error);
-    return {
-      success: false,
-      error: '購入品一覧の取得に失敗しました',
-      data: null
-    };
-  } finally {
-    if (db) {
-      try {
-        await db.close();
-      } catch (closeErr) {
-        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
-      }
-    }
-  }
-}
-
-/**
- * 購入品担当割り当てを更新
- * @param assignmentId 担当割り当てID
- * @param updates 更新データ
+ * 購入品マスターを更新
+ * @param id - 購入品ID
+ * @param kounyuData - 更新データ
  * @returns 更新結果
  */
-export async function updateKounyuAssignment(
-  assignmentId: number,
-  updates: {
-    assigned_at?: string;
-    status?: string;
-  }
-): Promise<DataResult<KounyuAssignment>> {
+export async function updateKounyuMaster(id: number, kounyuData: Partial<KounyuFormData>): Promise<DataResult<KounyuMaster>> {
   let db: Database | null = null;
   try {
     db = await initializeDatabase();
 
-    // 更新するフィールドを構築
-    const updateFields: string[] = [];
-    const values: any[] = [];
+    const updateFields = [];
+    const values = [];
 
-    if (updates.assigned_at !== undefined) {
-      updateFields.push('assigned_at = ?');
-      values.push(updates.assigned_at);
+    if (kounyuData.management_number !== undefined) {
+      updateFields.push('management_number = ?');
+      values.push(kounyuData.management_number);
     }
-
-    if (updates.status !== undefined) {
-      updateFields.push('status = ?');
-      values.push(updates.status);
+    if (kounyuData.item_name !== undefined) {
+      updateFields.push('item_name = ?');
+      values.push(kounyuData.item_name);
+    }
+    if (kounyuData.contract_number !== undefined) {
+      updateFields.push('contract_number = ?');
+      values.push(kounyuData.contract_number || null);
+    }
+    if (kounyuData.item_category !== undefined) {
+      updateFields.push('item_category = ?');
+      values.push(kounyuData.item_category);
+    }
+    if (kounyuData.setsubi_seiban !== undefined) {
+      updateFields.push('setsubi_seiban = ?');
+      values.push(kounyuData.setsubi_seiban || null);
+    }
+    if (kounyuData.responsible_department !== undefined) {
+      updateFields.push('responsible_department = ?');
+      values.push(kounyuData.responsible_department || null);
+    }
+    if (kounyuData.drawing_number !== undefined) {
+      updateFields.push('drawing_number = ?');
+      values.push(kounyuData.drawing_number || null);
+    }
+    if (kounyuData.display_order !== undefined) {
+      updateFields.push('display_order = ?');
+      values.push(kounyuData.display_order);
+    }
+    if (kounyuData.remarks !== undefined) {
+      updateFields.push('remarks = ?');
+      values.push(kounyuData.remarks || null);
     }
 
     if (updateFields.length === 0) {
       return {
         success: false,
         error: '更新するフィールドが指定されていません',
-        data: null,
+        data: null
       };
     }
 
-    // 更新クエリを実行
-    const updateQuery = `
-      UPDATE kounyu_assignment
-      SET ${updateFields.join(', ')}
-      WHERE id = ?
-    `;
+    updateFields.push('updated_at = datetime(\'now\')');
 
-    values.push(assignmentId);
+    const query = `UPDATE kounyu_master SET ${updateFields.join(', ')} WHERE id = ?`;
+    values.push(id);
 
-    const result = await db.run(updateQuery, values);
+    await db.run(query, values);
 
-    if (result.changes === 0) {
-      return {
-        success: false,
-        error: '指定された担当割り当てが見つかりません',
-        data: null,
-      };
-    }
-
-    // 更新した割り当てを取得
-    const assignmentQuery = 'SELECT * FROM kounyu_assignment WHERE id = ?';
-    const row = await db.get(assignmentQuery, [assignmentId]);
-
-    if (!row) {
-      return {
-        success: false,
-        error: '更新した割り当ての取得に失敗しました',
-        data: null,
-      };
-    }
-
-    const assignment: KounyuAssignment = {
-      id: row.id,
-      kounyu_id: row.kounyu_id,
-      user_id: row.user_id,
-      assigned_at: row.assigned_at,
-      status: row.status
-    };
+    // 更新したデータを取得
+    const selectQuery = 'SELECT * FROM kounyu_master WHERE id = ?';
+    const updatedRecord = await db.get<KounyuMaster>(selectQuery, [id]);
 
     return {
       success: true,
-      data: assignment,
-      error: null,
+      data: updatedRecord as KounyuMaster,
+      error: null
     };
   } catch (error) {
-    console.error('購入品担当割り当ての更新に失敗しました:', error);
+    console.error('購入品更新に失敗しました:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'データベースエラーが発生しました',
-      data: null,
+      error: error instanceof Error ? error.message : '購入品の更新に失敗しました',
+      data: null
     };
   } finally {
     if (db) {
@@ -315,34 +171,154 @@ export async function updateKounyuAssignment(
 }
 
 /**
- * 既存の管理番号一覧を取得（重複チェック用）
- * @returns 管理番号一覧
+ * 購入品マスターを削除
+ * @param id - 購入品ID
+ * @returns 削除結果
  */
-export async function getKounyuManagementNumbers(): Promise<DataResult<string[]>> {
+export async function deleteKounyuMaster(id: number): Promise<DataResult<null>> {
   let db: Database | null = null;
   try {
     db = await initializeDatabase();
 
-    const query = `
-      SELECT DISTINCT management_number 
-      FROM kounyu_master 
-      ORDER BY management_number
-    `;
+    // 関連する担当割り当てを先に削除
+    await db.run('DELETE FROM kounyu_assignment WHERE kounyu_id = ?', [id]);
 
-    const rows = await db.all(query);
-    const managementNumbers = rows.map((row: any) => row.management_number);
+    // 購入品マスターを削除
+    await db.run('DELETE FROM kounyu_master WHERE id = ?', [id]);
 
     return {
       success: true,
-      data: managementNumbers,
+      data: null,
       error: null
     };
   } catch (error) {
-    console.error('getKounyuManagementNumbers error:', error);
+    console.error('購入品削除に失敗しました:', error);
     return {
       success: false,
+      error: error instanceof Error ? error.message : '購入品の削除に失敗しました',
+      data: null
+    };
+  } finally {
+    if (db) {
+      try {
+        await db.close();
+      } catch (closeErr) {
+        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+      }
+    }
+  }
+}
+
+/**
+ * 購入品担当を割り当て
+ * @param assignmentData - 担当割り当てデータ
+ * @returns 割り当て結果
+ */
+export async function assignKounyuToUser(assignmentData: {
+  project_id: string;
+  kounyu_id: number;
+  user_id: string;
+  status?: 'active' | 'inactive';
+}): Promise<DataResult<KounyuAssignment>> {
+  let db: Database | null = null;
+  try {
+    db = await initializeDatabase();
+
+    // 既に同じ担当が存在するか確認
+    const existing = await db.get(
+      'SELECT id FROM kounyu_assignment WHERE project_id = ? AND kounyu_id = ? AND user_id = ?',
+      [assignmentData.project_id, assignmentData.kounyu_id, assignmentData.user_id]
+    );
+
+    if (existing) {
+      // 既存の担当を更新
+      const updateQuery = `
+        UPDATE kounyu_assignment
+        SET status = ?, assigned_at = datetime('now')
+        WHERE id = ?
+      `;
+      await db.run(updateQuery, [assignmentData.status || 'active', existing.id]);
+
+      const selectQuery = 'SELECT * FROM kounyu_assignment WHERE id = ?';
+      const updatedRecord = await db.get<KounyuAssignment>(selectQuery, [existing.id]);
+
+      return {
+        success: true,
+        data: updatedRecord as KounyuAssignment,
+        error: null
+      };
+    } else {
+      // 新規作成
+      const insertQuery = `
+        INSERT INTO kounyu_assignment (project_id, kounyu_id, user_id, status, assigned_at)
+        VALUES (?, ?, ?, ?, datetime('now'))
+      `;
+
+      const result = await db.run(insertQuery, [
+        assignmentData.project_id,
+        assignmentData.kounyu_id,
+        assignmentData.user_id,
+        assignmentData.status || 'active'
+      ]);
+
+      if (result.lastID) {
+        const selectQuery = 'SELECT * FROM kounyu_assignment WHERE id = ?';
+        const newRecord = await db.get<KounyuAssignment>(selectQuery, [result.lastID]);
+
+        return {
+          success: true,
+          data: newRecord as KounyuAssignment,
+          error: null
+        };
+      } else {
+        return {
+          success: false,
+          error: '担当割り当てに失敗しました',
+          data: null
+        };
+      }
+    }
+  } catch (error) {
+    console.error('担当割り当てに失敗しました:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '担当割り当てに失敗しました',
+      data: null
+    };
+  } finally {
+    if (db) {
+      try {
+        await db.close();
+      } catch (closeErr) {
+        console.warn('DBクローズ時にエラーが発生しました:', closeErr);
+      }
+    }
+  }
+}
+
+/**
+ * 購入品担当を解除
+ * @param assignmentId - 担当割り当てID
+ * @returns 解除結果
+ */
+export async function removeKounyuAssignment(assignmentId: number): Promise<DataResult<null>> {
+  let db: Database | null = null;
+  try {
+    db = await initializeDatabase();
+
+    await db.run('DELETE FROM kounyu_assignment WHERE id = ?', [assignmentId]);
+
+    return {
+      success: true,
       data: null,
-      error: error instanceof Error ? error.message : '管理番号一覧の取得に失敗しました'
+      error: null
+    };
+  } catch (error) {
+    console.error('担当解除に失敗しました:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '担当解除に失敗しました',
+      data: null
     };
   } finally {
     if (db) {

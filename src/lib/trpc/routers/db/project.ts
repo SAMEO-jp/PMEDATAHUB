@@ -5,58 +5,12 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
+import { getAllRecords, getRecord, createRecord, updateRecord, deleteRecord, executeQuery } from '@src/lib/db/crud/db_CRUD';
+import { createProjectsTable } from '@src/lib/db/crud/db_advanced';
+import { Project, ProjectCreateSchema, ProjectUpdateSchema, ProjectGetAllSchema, ProjectSearchSchema } from '@src/types/project';
 import { GetRecode, GetConditionData } from '@src/lib/db/crud/db_GetData';
-import { createRecord, updateRecord, deleteRecord } from '@src/lib/db/crud/db_CRUD';
 import { getProjectMembers } from '@src/lib/db/queries/projectMemberQueries';
 import { runProjectIdSubMigration } from '@src/lib/db/migrations/add_project_id_sub_column';
-import type { Project } from '@src/types/db_project';
-
-// プロジェクト作成用のスキーマ
-const ProjectCreateSchema = z.object({
-  PROJECT_ID: z.string().min(1, 'プロジェクトIDは必須です'),
-  PROJECT_ID_SUB: z.string().optional(),
-  PROJECT_NAME: z.string().min(1, 'プロジェクト名は必須です'),
-  PROJECT_STATUS: z.enum(['active', 'completed', 'archived']).default('active'),
-  PROJECT_CLIENT_NAME: z.string().optional(),
-  PROJECT_CLIENT_PERSON: z.string().optional(),
-  PROJECT_CLIENT_CONTACT: z.string().optional(),
-  PROJECT_START_DATE: z.string().optional(),
-  PROJECT_START_ENDDATE: z.string().optional(),
-  PROJECT_DESCRIPTION: z.string().optional(),
-  PROJECT_SYSTEM_NAME: z.string().optional(),
-  PROJECT_SYSTEM_DESCRIPTION: z.string().optional(),
-  PROJECT_NOTE: z.string().optional(),
-  PROJECT_CLASSIFICATION: z.string().optional(),
-  PROJECT_BUDGENT_GRADE: z.string().optional(),
-  installationDate: z.string().optional(),
-  drawingCompletionDate: z.string().optional(),
-  PROJECT_EQUIPMENT_CATEGORY: z.string().optional(),
-  PROJECT_SYOHIN_CATEGORY: z.string().optional(),
-  SPARE1: z.string().optional(),
-  SPARE2: z.string().optional(),
-  SPARE3: z.string().optional(),
-  IS_PROJECT: z.string().optional(),
-});
-
-// プロジェクト更新用のスキーマ
-const ProjectUpdateSchema = z.object({
-  PROJECT_ID_SUB: z.string().optional(),
-  PROJECT_NAME: z.string().min(1, 'プロジェクト名は必須です').optional(),
-  PROJECT_STATUS: z.enum(['active', 'completed', 'archived']).optional(),
-  PROJECT_CLIENT_NAME: z.string().optional(),
-  PROJECT_START_DATE: z.string().optional(),
-  PROJECT_START_ENDDATE: z.string().optional(),
-  PROJECT_DESCRIPTION: z.string().optional(),
-});
-
-// プロジェクト検索用のスキーマ
-const ProjectSearchSchema = z.object({
-  PROJECT_NAME: z.string().optional(),
-  PROJECT_STATUS: z.enum(['active', 'completed', 'archived']).optional(),
-  PROJECT_CLIENT_NAME: z.string().optional(),
-  limit: z.number().min(1).max(100).default(20),
-  offset: z.number().min(0).default(0),
-});
 
 /**
  * プロジェクト関連のプロシージャをまとめたルーター。
@@ -69,30 +23,22 @@ export const projectRouter = createTRPCRouter({
    * .query() を使用するため、これはデータを取得する（読み取り）操作です。
    */
   getAll: publicProcedure
-    .input(z.object({
-      limit: z.number().min(1).max(100).default(20),
-      offset: z.number().min(0).default(0),
-    }).optional())
+    .input(ProjectGetAllSchema)
     .query(async ({ input }) => {
       try {
+        await createProjectsTable(); // テーブル作成を試行
         const limit = input?.limit || 20;
         const offset = input?.offset || 0;
         
-        const result = await GetConditionData<Project[]>(
-          '1=1',
-          [],
-          { 
-            tableName: 'PROJECT', 
-            idColumn: 'PROJECT_ID',
-            limit,
-            offset
-          }
+        const result = await getAllRecords<Project>(
+          'projects',
+          `SELECT * FROM projects LIMIT ${limit} OFFSET ${offset}`,
         );
         
         if (!result.success) {
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
-            message: typeof result.error === 'string' ? result.error : 'プロジェクト一覧の取得に失敗しました',
+            message: result.error?.message || 'プロジェクト一覧の取得に失敗しました',
           });
         }
         
@@ -114,19 +60,17 @@ export const projectRouter = createTRPCRouter({
    */
   getById: publicProcedure
     .input(z.object({
-      project_id: z.string().min(1, 'プロジェクトIDは必須です'),
+      ID: z.number().int().positive(),
     }))
     .query(async ({ input }) => {
       try {
-        const result = await GetRecode<Project>(input.project_id, {
-          tableName: 'PROJECT',
-          idColumn: 'PROJECT_ID'
-        });
+        await createProjectsTable(); // テーブル作成を試行
+        const result = await getRecord<Project>('projects', input.ID, 'ID');
         
         if (!result.success) {
           throw new TRPCError({
             code: 'NOT_FOUND',
-            message: result.error || 'プロジェクトが見つかりません',
+            message: result.error?.message || `プロジェクトID ${input.ID} が見つかりません`,
           });
         }
         
@@ -150,44 +94,41 @@ export const projectRouter = createTRPCRouter({
     .input(ProjectSearchSchema)
     .query(async ({ input }) => {
       try {
+        await createProjectsTable(); // テーブル作成を試行
         const { limit, offset, ...filters } = input;
         
         // 検索条件を構築
         const conditions: string[] = [];
         const params: any[] = [];
         
-        if (filters.PROJECT_NAME) {
-          conditions.push('PROJECT_NAME LIKE ?');
-          params.push(`%${filters.PROJECT_NAME}%`);
+        if (filters.プロジェクト名) {
+          conditions.push("プロジェクト名 LIKE ?");
+          params.push(`%${filters.プロジェクト名}%`);
         }
         
-        if (filters.PROJECT_STATUS) {
-          conditions.push('PROJECT_STATUS = ?');
-          params.push(filters.PROJECT_STATUS);
+        if (filters.プロジェクトステータスID !== undefined) {
+          conditions.push("プロジェクトステータスID = ?");
+          params.push(filters.プロジェクトステータスID);
         }
         
-        if (filters.PROJECT_CLIENT_NAME) {
-          conditions.push('PROJECT_CLIENT_NAME LIKE ?');
-          params.push(`%${filters.PROJECT_CLIENT_NAME}%`);
+        if (filters.クライアント名ID !== undefined) {
+          conditions.push("クライアント名ID = ?");
+          params.push(filters.クライアント名ID);
         }
         
         const whereClause = conditions.length > 0 ? conditions.join(' AND ') : '1=1';
+        const query = `SELECT * FROM projects WHERE ${whereClause} LIMIT ${limit} OFFSET ${offset}`;
         
-        const result = await GetConditionData<Project[]>(
-          whereClause,
-          params,
-          { 
-            tableName: 'PROJECT', 
-            idColumn: 'PROJECT_ID',
-            limit,
-            offset
-          }
+        const result = await getAllRecords<Project>(
+          'projects',
+          query,
+          params
         );
         
         if (!result.success) {
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
-            message: result.error || 'プロジェクト検索に失敗しました',
+            message: result.error?.message || 'プロジェクト検索に失敗しました',
           });
         }
         
@@ -212,7 +153,8 @@ export const projectRouter = createTRPCRouter({
     .input(ProjectCreateSchema)
     .mutation(async ({ input }) => {
       try {
-        const result = await createRecord('PROJECT', input);
+        await createProjectsTable(); // テーブル作成を試行
+        const result = await createRecord<Omit<Project, 'ID'>>('projects', input);
         
         if (!result.success) {
           throw new TRPCError({
@@ -239,17 +181,18 @@ export const projectRouter = createTRPCRouter({
    */
   update: publicProcedure
     .input(z.object({
-      project_id: z.string().min(1, 'プロジェクトIDは必須です'),
+      ID: z.number().int().positive(),
       data: ProjectUpdateSchema,
     }))
     .mutation(async ({ input }) => {
       try {
-        const result = await updateRecord('PROJECT', input.project_id as any, input.data, 'PROJECT_ID');
+        await createProjectsTable(); // テーブル作成を試行
+        const result = await updateRecord<Project>('projects', input.ID, input.data, 'ID');
         
         if (!result.success) {
           throw new TRPCError({
             code: 'NOT_FOUND',
-            message: result.error?.message || 'プロジェクトが見つからないか、更新に失敗しました',
+            message: result.error?.message || `プロジェクトID ${input.ID} の更新に失敗しました`,
           });
         }
         
@@ -270,17 +213,16 @@ export const projectRouter = createTRPCRouter({
    * プロジェクトを削除するプロシージャ。
    */
   delete: publicProcedure
-    .input(z.object({
-      project_id: z.string().min(1, 'プロジェクトIDは必須です'),
-    }))
+    .input(z.object({ ID: z.number().int().positive() }))
     .mutation(async ({ input }) => {
       try {
-        const result = await deleteRecord('PROJECT', input.project_id as any, 'PROJECT_ID');
+        await createProjectsTable(); // テーブル作成を試行
+        const result = await deleteRecord('projects', input.ID, 'ID');
         
         if (!result.success) {
           throw new TRPCError({
             code: 'NOT_FOUND',
-            message: result.error?.message || 'プロジェクトが見つかりません',
+            message: result.error?.message || `プロジェクトID ${input.ID} の削除に失敗しました`,
           });
         }
         
@@ -303,27 +245,17 @@ export const projectRouter = createTRPCRouter({
   getStats: publicProcedure
     .query(async () => {
       try {
+        await createProjectsTable(); // テーブル作成を試行
         // 全プロジェクト数
-        const totalResult = await GetConditionData<{ count: number }[]>(
-          '1=1',
-          [],
-          { 
-            tableName: 'PROJECT', 
-            idColumn: 'PROJECT_ID',
-            select: 'COUNT(*) as count'
-          }
+        const totalResult = await getAllRecords<{ count: number }[]>(
+          'projects',
+          'SELECT COUNT(*) as count FROM projects',
         );
         
         // ステータス別の集計
-        const statusResult = await GetConditionData<{ PROJECT_STATUS: string; count: number }[]>(
-          '1=1',
-          [],
-          { 
-            tableName: 'PROJECT', 
-            idColumn: 'PROJECT_ID',
-            select: 'PROJECT_STATUS, COUNT(*) as count',
-            groupBy: 'PROJECT_STATUS'
-          }
+        const statusResult = await getAllRecords<{ プロジェクトステータスID: number; count: number }[]>(
+          'projects',
+          'SELECT プロジェクトステータスID, COUNT(*) as count FROM projects GROUP BY プロジェクトステータスID',
         );
         
         if (!totalResult.success || !statusResult.success) {
@@ -341,9 +273,11 @@ export const projectRouter = createTRPCRouter({
           data: {
             totalCount,
             statusCounts: statusCounts.reduce((acc, item) => {
-              acc[item.PROJECT_STATUS] = item.count;
+              if (item.プロジェクトステータスID !== undefined) {
+                acc[item.プロジェクトステータスID] = item.count;
+              }
               return acc;
-            }, {} as Record<string, number>)
+            }, {} as Record<number, number>)
           }
         };
       } catch (error) {
@@ -363,16 +297,17 @@ export const projectRouter = createTRPCRouter({
    */
   getMembers: publicProcedure
     .input(z.object({
-      project_id: z.string().min(1, 'プロジェクトIDは必須です'),
+      プロジェクトID: z.string().min(1, 'プロジェクトIDは必須です'),
     }))
     .query(async ({ input }) => {
       try {
-        const result = await getProjectMembers(input.project_id);
+        await createProjectsTable(); // テーブル作成を試行
+        const result = await getProjectMembers(input.プロジェクトID);
         
         if (!result.success) {
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
-            message: result.error || 'プロジェクトメンバーの取得に失敗しました',
+            message: result.error?.message || 'プロジェクトメンバーの取得に失敗しました',
           });
         }
         
@@ -394,16 +329,17 @@ export const projectRouter = createTRPCRouter({
    */
   addMember: publicProcedure
     .input(z.object({
-      project_id: z.string().min(1, 'プロジェクトIDは必須です'),
-      user_id: z.string().min(1, 'ユーザーIDは必須です'),
-      role: z.string().min(1, '役割は必須です'),
+      プロジェクトID: z.string().min(1, 'プロジェクトIDは必須です'),
+      ユーザーID: z.string().min(1, 'ユーザーIDは必須です'),
+      役割: z.string().min(1, '役割は必須です'),
     }))
     .mutation(async ({ input }) => {
       try {
+        await createProjectsTable(); // テーブル作成を試行
         const result = await createRecord('PROJECT_MEMBER', {
-          PROJECT_ID: input.project_id,
-          USER_ID: input.user_id,
-          ROLE: input.role,
+          PROJECT_ID: input.プロジェクトID,
+          USER_ID: input.ユーザーID,
+          ROLE: input.役割,
         });
         
         if (!result.success) {
@@ -431,17 +367,22 @@ export const projectRouter = createTRPCRouter({
    */
   removeMember: publicProcedure
     .input(z.object({
-      project_id: z.string().min(1, 'プロジェクトIDは必須です'),
-      user_id: z.string().min(1, 'ユーザーIDは必須です'),
+      プロジェクトID: z.string().min(1, 'プロジェクトIDは必須です'),
+      ユーザーID: z.string().min(1, 'ユーザーIDは必須です'),
     }))
     .mutation(async ({ input }) => {
       try {
-        const result = await deleteRecord('PROJECT_MEMBER', input.user_id as any, 'USER_ID');
+        await createProjectsTable(); // テーブル作成を試行
+        // PROJECT_IDとUSER_IDの両方でレコードを特定して削除する必要があるため、executeQueryを使用します
+        const result = await executeQuery(
+          'DELETE FROM PROJECT_MEMBER WHERE PROJECT_ID = ? AND USER_ID = ?',
+          [input.プロジェクトID, input.ユーザーID]
+        );
         
         if (!result.success) {
           throw new TRPCError({
             code: 'NOT_FOUND',
-            message: result.error?.message || 'メンバーが見つかりません',
+            message: result.error?.message || 'メンバーが見つからないか、削除に失敗しました',
           });
         }
         
@@ -464,12 +405,13 @@ export const projectRouter = createTRPCRouter({
   addProjectIdSubColumn: publicProcedure
     .mutation(async () => {
       try {
+        await createProjectsTable(); // テーブル作成を試行
         const result = await runProjectIdSubMigration();
 
         if (!result.success) {
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
-            message: result.error || 'カラム追加に失敗しました',
+            message: result.error?.message || 'カラム追加に失敗しました',
           });
         }
 

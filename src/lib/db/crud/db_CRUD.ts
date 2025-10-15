@@ -1,4 +1,5 @@
-import { initializeDatabase, DataResult } from '../connection/db_connection';
+import { initializeDatabase } from '../connection/db_connection';
+import { DALResponse } from '@src/lib/types/api';
 import type { Database } from 'sqlite';
 
 /*********************************************************
@@ -7,7 +8,7 @@ import type { Database } from 'sqlite';
  * @param data - 挿入するデータ
  * @returns 挿入結果（成功/失敗、データ、エラーメッセージ）
  *********************************************************/
-export async function insertData<T extends Record<string, unknown>>(table: string, data: T): Promise<DataResult<T>> {
+export async function insertData<T extends Record<string, unknown>>(table: string, data: T): Promise<DALResponse<T>> {
   let db: Database | null = null;
   try {
     db = await initializeDatabase();
@@ -21,14 +22,15 @@ export async function insertData<T extends Record<string, unknown>>(table: strin
     return {
       success: true,
       data: { ...data, id: result.lastID } as T,
-      error: null,
     };
   } catch (error) {
     console.error('データの挿入に失敗しました:', error);
     return {
       success: false,
-      error: 'データベースエラーが発生しました',
-      data: null,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: 'データベースエラーが発生しました'
+      }
     };
   } finally {
     if (db) {
@@ -239,11 +241,11 @@ export async function createRecord<T extends Record<string, unknown>>(
  * @returns 更新結果（成功/失敗、データ、エラーメッセージ）
  *********************************************************/
 export async function updateRecord<T>(
-  table: string, 
-  id: number, 
-  data: Partial<T>, 
+  table: string,
+  id: number,
+  data: Partial<T>,
   idColumn = 'id'
-): Promise<{ success: boolean; data?: T; error?: { code: string; message: string } }> {
+): Promise<DALResponse<T>> {
   let db: Database | null = null;
   try {
     db = await initializeDatabase();
@@ -286,10 +288,10 @@ export async function updateRecord<T>(
  * @returns 削除結果（成功/失敗、エラーメッセージ）
  *********************************************************/
 export async function deleteRecord(
-  table: string, 
-  id: number, 
+  table: string,
+  id: number,
   idColumn = 'id'
-): Promise<{ success: boolean; error?: { code: string; message: string } }> {
+): Promise<DALResponse<null>> {
   let db: Database | null = null;
   try {
     db = await initializeDatabase();
@@ -297,7 +299,8 @@ export async function deleteRecord(
     await db!.run(query, [id]);
 
     return {
-      success: true
+      success: true,
+      data: null
     };
   } catch (error) {
     console.error('データの削除に失敗しました:', error);
@@ -367,17 +370,18 @@ export async function getAllRecords<T>(
  * @param values - クエリパラメータ
  * @returns 実行結果（成功/失敗、エラーメッセージ）
  *********************************************************/
-export async function executeQuery(
-  query: string, 
+export async function executeParameterizedQuery(
+  query: string,
   values: unknown[] = []
-): Promise<{ success: boolean; error?: { code: string; message: string } }> {
+): Promise<DALResponse<null>> {
   let db: Database | null = null;
   try {
     db = await initializeDatabase();
     await db!.run(query, values);
 
     return {
-      success: true
+      success: true,
+      data: null
     };
   } catch (error) {
     console.error('クエリの実行に失敗しました:', error);

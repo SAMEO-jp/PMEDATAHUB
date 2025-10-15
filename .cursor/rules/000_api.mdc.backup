@@ -1,0 +1,1070 @@
+---
+alwaysApply: true
+---
+# ルール名:
+ APIの設計
+
+# Persona:
+
+# Context:
+ [tRPC](mdc:https:/trpc.io)はエンドツーエンドの型安全なAPIを可能にし、スキーマ、コード生成、またはランタイムエラーなしでAPIを構築・消費できるようにします。これらのルールは、tRPC v11のベストプラクティスに従い、**createTRPCReact + 手動Provider設定**を使用するプロジェクト向けです。
+
+## プロジェクト構造
+推奨されるtRPCセットアップ構造：
+```md
+├── src
+│   ├── app
+│   │   ├── api
+│   │   │   └── trpc
+│   │   │       └── [trpc]
+│   │   │           └── route.ts  # tRPC HTTPハンドラーのみ
+│   │   └── layout.tsx  # TRPCProviderをここに配置
+│   ├── lib
+│   │   ├── trpc
+│   │   │   ├── client.ts      # createTRPCReact設定
+│   │   │   ├── Provider.tsx   # 手動Provider設定
+│   │   │   ├── trpc.ts        # プロシージャヘルパー
+│   │   │   └── routers
+│   │   │       ├── _app.ts    # メインアプリルーター
+│   │   │       ├── app  
+│   │   │       │   └── [feature].ts # アプリページ固有ルーター
+│   │   │       └── db      
+│   │   │           └── [feature].ts # データベース固有ルーター
+│   │   │       
+│   │   └── db/                # データアクセス層
+│   │       ├── db_advanced.ts
+│   │       ├── db_connection.ts
+│   │       ├── db_CRUD.ts
+│   │       ├── db_DeleteTable.ts
+│   │       └── db_GetData.ts
+│   └── hooks
+│       └── use[Feature]Data.ts # カスタムフック
+```
+
+## サーバーサイドセットアップ
+
+### tRPCバックエンドの初期化
+
+```typescript
+// lib/trpc/trpc.ts
+import { initTRPC } from '@trpc/server';
+import superjson from 'superjson';
+import { ZodError } from 'zod';
+
+export const createTRPCContext = async (opts: { headers: Headers }) => {
+  return {
+    headers: opts.headers,
+  };
+};
+
+const t = initTRPC.context<typeof createTRPCContext>().create({
+  transformer: superjson,
+  errorFormatter({ shape, error }) {
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        zodError:
+          error.cause instanceof ZodError ? error.cause.flatten() : null,
+      },
+    };
+  },
+});
+
+export const createTRPCRouter = t.router;
+export const publicProcedure = t.procedure;
+```
+
+### ルーターの作成
+
+```typescript
+// lib/trpc/routers/_app.ts
+import { createTRPCRouter } from '../trpc';
+import { userRouter } from './user';
+import { postRouter } from './post';
+
+export const appRouter = createTRPCRouter({
+  user: userRouter,
+  post: postRouter,
+});
+
+export type AppRouter = typeof appRouter;
+```
+
+### 機能別ルーターの作成
+
+```typescript
+// src/lib/trpc/routers/user.ts
+
+/**
+ * @file ユーザー（User）に関連するAPIエンドポイント（プロシージャ）を定義するルーターファイルです。
+ */
+
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
+// データベース操作関数をインポート（実際の実装に置き換えてください）
+import { getRecord, updateRecord, getAllRecords, createRecord } from '@src/lib/db/db_CRUD';
+import { createTRPCRouter, publicProcedure } from '../trpc';
+
+/**
+ * ユーザー関連のプロシージャをまとめたルーター。
+ * `createTRPCRouter` を使って定義します。
+ * ここで定義されたプロシージャは `trpc.user.getAll` のようにクライアントから呼び出されます。
+ */
+export const userRouter = createTRPCRouter({
+  /**
+   * 全てのユーザーを取得するプロシージャ。
+   * .query() を使用するため、これはデータを取得する（読み取り）操作です。
+   */
+  getAll: publicProcedure
+    .query(async () => {
+      try {
+        // --- データベース操作 ---
+        // 実際にはここで `getAllRecords('users')` のような関数を呼び出し、
+        // 全ユーザーのデータをデータベースから取得します。
+        // const allUsers = await getAllRecords('users');
+        // return { success: true, data: allUsers };
+        // --------------------
+
+        // モックデータ（サンプル）を返す
+        return { success: true, data: [] };
+      } catch (error) {
+        // サーバーサイドでエラーをロギング
+        console.error("tRPC user.getAll error:", error);
+        // クライアントには標準化されたエラーを返す
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'データの取得に失敗しました',
+        });
+      }
+    }),
+
+  /**
+   * 新しいユーザーを作成するプロシージャ。
+   * .mutation() を使用するため、これはデータを変更する（書き込み）操作です。
+   */
+  create: publicProcedure
+    // .input() でクライアントからの入力データを検証します。
+    // z (Zod) を使ってスキーマを定義し、バリデーションルールを指定します。
+    .input(z.object({
+      name: z.string().min(1, '名前は必須です'),
+      email: z.string().email('有効なメールアドレスを入力してください'),
+      age: z.number().min(0, '年齢は0以上である必要があります'),
+    }))
+    // mutationの引数から検証済みの `input` を受け取ります。
+    .mutation(async ({ input }) => {
+      try {
+        // --- データベース操作 ---
+        // 検証済みの `input` データを使って、データベースに新しいユーザーを作成します。
+        // const newUser = await createRecord('users', input);
+        // return { success: true, data: newUser };
+        // --------------------
+
+        // モックデータ（サンプル）を返す
+        return { success: true, data: input };
+      } catch (error) {
+        console.error("tRPC user.create error:", error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'データの作成に失敗しました',
+        });
+      }
+    }),
+
+  /**
+   * 条件を指定してユーザーを検索するプロシージャ。
+   * .query() を使用するため、これもデータを取得する操作です。
+   */
+  search: publicProcedure
+    // 検索条件を .input() で定義します。
+    // .optional() を付けることで、そのフィールドが省略可能になります。
+    .input(z.object({
+      name: z.string().optional(),
+      email: z.string().optional(),
+    }))
+    // queryの引数から検証済みの `input` (検索条件) を受け取ります。
+    .query(async ({ input }) => {
+      try {
+        // --- 検索ロジック ---
+        // `input.name` や `input.email` を使ってデータベースを検索するロジックをここに実装します。
+        // const searchedUsers = await searchRecords('users', input);
+        // return { success: true, data: searchedUsers };
+        // ------------------
+        // モックデータ（サンプル）を返す
+        return { success: true, data: [] };
+      } catch (error) {
+        console.error("tRPC user.search error:", error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '検索に失敗しました',
+        });
+      }
+    }),
+});
+```
+
+## クライアントサイドセットアップ
+
+### createTRPCReact設定
+
+```typescript
+// lib/trpc/client.ts
+import { createTRPCReact } from '@trpc/react-query';
+
+import type { AppRouter } from './routers/_app';
+
+export const trpc = createTRPCReact<AppRouter>();
+```
+
+### 手動Provider設定
+
+```typescript
+// lib/trpc/Provider.tsx
+'use client';
+
+import { httpBatchLink } from '@trpc/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import superjson from 'superjson';
+
+import { trpc } from './client';
+
+function getBaseUrl() {
+  if (typeof window !== 'undefined') return '';
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return `http://localhost:${process.env.PORT ?? 3000}`;
+}
+
+export function TRPCProvider({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient());
+  const [trpcClient] = useState(() =>
+    trpc.createClient({
+      links: [
+        httpBatchLink({
+          url: `${getBaseUrl()}/api/trpc`,
+          transformer: superjson,
+        }),
+      ],
+    }),
+  );
+
+  return (
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </trpc.Provider>
+  );
+}
+```
+
+### レイアウトでのProvider配置
+
+```typescript
+// app/layout.tsx
+import { TRPCProvider } from '@src/lib/trpc/Provider';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="ja">
+      <body>
+        <TRPCProvider>
+          {children}
+        </TRPCProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+## データアクセス層（DAL）の統一
+
+### 📁 利用するファイル
+以下のファイルを必ず利用する:
+- `src/lib/db/db_advanced.ts`
+- `src/lib/db/db_connection.ts`
+- `src/lib/db/db_CRUD.ts`
+- `src/lib/db/db_DeleteTable.ts`
+- `src/lib/db/db_GetData.ts`
+
+### 📂 データアクセス層の構造化
+データアクセス層（DAL）は、以下の構造で整理すること:
+
+#### フォルダ構成
+```md
+src/lib/db/
+├── queries/              # 特殊なビジネスロジックを含むクエリ関数
+│   ├── userQueries.ts         # ユーザー関連の特殊クエリ
+│   ├── projectMemberQueries.ts # プロジェクトメンバー関連の特殊クエリ
+│   └── [feature]Queries.ts     # 機能別の特殊クエリ
+├── crud/                 # 汎用CRUD操作関数
+│   ├── db_CRUD.ts
+│   ├── db_GetData.ts
+│   └── db_advanced.ts
+├── connection/           # DB接続関連
+│   └── db_connection.ts
+└── [その他の汎用ファイル]
+```
+
+#### 整理の原則
+1. **汎用関数と特殊関数を分離**: `queries/`フォルダに複雑なJOINや特殊ビジネスロジックを集約
+2. **機能別グルーピング**: 関連するクエリを1つのファイルにまとめる
+3. **再利用性の確保**: 複数の箇所から呼び出されるクエリは`queries/`に配置
+4. **保守性の向上**: 汎用関数と特殊関数の役割を明確に分離
+
+#### 使用例
+```typescript
+// ✅ 良い例：汎用CRUD関数
+import { getAllRecords, createRecord } from '../crud/db_CRUD';
+
+// ✅ 良い例：特殊クエリ関数
+import { getProjectMembers } from '../queries/projectMemberQueries';
+
+// ❌ 避けるべき例：直接DB操作をtRPCルーターに記述
+const result = await db.raw('SELECT * FROM users u LEFT JOIN projects p ON ...');
+```
+
+### 🔄 戻り値の統一フォーマット
+DB アクセス関数（例: `getRecord()`, `updateById()` など）は、戻り値に必ず以下の構造を含める:
+
+```typescript
+// 成功時
+{
+  success: true,
+  data: T
+}
+
+// 失敗時  
+{
+  success: false,
+  error: {
+    code: string,
+    message: string
+  }
+}
+```
+
+### 🚫 例外処理の方針
+- DAL 側で `success: false` となった場合は**例外を投げない**
+- 呼び出し元の tRPC プロシージャで `TRPCError` にマッピングして返却する
+
+### 🔧 ORM使用時の注意
+Prisma・Knex・TypeORM などの ORM を利用する場合も、「結果が取得できたか/できなかったか」の判定を行うユーティリティを必ず挟む。
+
+#### 実装例:
+```typescript
+// src/lib/db/db_CRUD.ts
+export async function getRecord<T>(table: string, id: number): Promise<DALResponse<T>> {
+  try {
+    const result = await db(table).where('id', id).first();
+    
+    if (!result) {
+      return {
+        success: false,
+        error: {
+          code: 'RECORD_NOT_FOUND',
+          message: `Record with id ${id} not found in ${table}`
+        }
+      };
+    }
+    
+    return {
+      success: true,
+      data: result as T
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: error instanceof Error ? error.message : 'Unknown database error'
+      }
+    };
+  }
+}
+```
+
+## ベストプラクティス
+
+### 1. カスタムフックによるロジックの集約
+tRPCのデータ操作（QueryやMutation）は、関連するテーブル（機能）ごとにカスタムフックへ集約することを推奨します。これにより、コンポーネントの関心をUIに集中させ、データロジックを再利用しやすくします。
+#### 命名規則
+ - ファイル名: hooks/use{TableName}Data.ts 例: hooks/useUserData.ts, hooks/usePostData.ts
+ - フック名: use{TableName}Data 例: useUserData, usePostData
+
+```typescript
+// hooks/useFeatureData.ts
+import { trpc } from '@src/lib/trpc/client';
+
+export const useFeatureAll = () => {
+  return trpc.feature.getAll.useQuery();
+};
+
+export const useFeatureSearch = (filters: Record<string, any>) => {
+  return trpc.feature.search.useQuery(filters, {
+    enabled: Object.values(filters).some(value => value && value.length > 0)
+  });
+};
+
+export const useFeatureMutations = () => {
+  const utils = trpc.useUtils();
+  
+  const createMutation = trpc.feature.create.useMutation({
+    onSuccess: () => {
+      void utils.feature.getAll.invalidate();
+      void utils.feature.search.invalidate();
+    }
+  });
+
+  const updateMutation = trpc.feature.update.useMutation({
+    onSuccess: () => {
+      void utils.feature.getAll.invalidate();
+      void utils.feature.search.invalidate();
+    }
+  });
+
+  const deleteMutation = trpc.feature.delete.useMutation({
+    onSuccess: () => {
+      void utils.feature.getAll.invalidate();
+      void utils.feature.search.invalidate();
+    }
+  });
+
+  return { createMutation, updateMutation, deleteMutation };
+};
+```
+
+### 2. コンポーネントでの使用
+
+```tsx
+// components/FeatureComponent.tsx
+'use client';
+
+import { useState } from 'react';
+import { trpc } from '@src/lib/trpc/client';
+import { useFeatureMutations } from '@src/hooks/useFeatureData';
+
+export function FeatureComponent() {
+  const { data: allData, isLoading } = trpc.feature.getAll.useQuery();
+  const { createMutation, updateMutation, deleteMutation } = useFeatureMutations();
+  const utils = trpc.useUtils();
+
+  const handleCreate = (formData: any) => {
+    createMutation.mutate(formData);
+  };
+
+  const handleUpdate = (id: number, updates: any) => {
+    updateMutation.mutate({ id, data: updates });
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm('本当に削除しますか？')) {
+      deleteMutation.mutate({ id });
+    }
+  };
+
+  return (
+    <div>
+      {/* UI実装 */}
+    </div>
+  );
+}
+```
+
+### 3. エラーハンドリング
+
+```typescript
+// 統一されたエラーレスポンス形式
+export const createTRPCRouter = t.router;
+export const publicProcedure = t.procedure;
+
+// エラーハンドリング付きプロシージャ
+export const safeProcedure = publicProcedure.use(async ({ next, ctx }) => {
+  try {
+    return await next({ ctx });
+  } catch {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: '予期しないエラーが発生しました',
+    });
+  }
+});
+```
+
+### 4. 型安全性の確保
+
+```typescript
+import { z } from 'zod';
+
+// types/feature.ts
+export interface Feature {
+  id: number;
+  name: string;
+  description?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Zodスキーマ
+
+export const FeatureSchema = z.object({
+  name: z.string().min(1, '名前は必須です'),
+  description: z.string().optional(),
+});
+```
+
+### 5. パフォーマンス最適化
+
+```typescript
+// クエリの最適化
+const { data, isLoading } = trpc.feature.getAll.useQuery(undefined, {
+  staleTime: 5 * 60 * 1000, // 5分間キャッシュ
+  cacheTime: 10 * 60 * 1000, // 10分間キャッシュ保持
+});
+
+// 条件付きクエリ
+const { data: searchData } = trpc.feature.search.useQuery(
+  searchFilters,
+  { 
+    enabled: Object.values(searchFilters).some(value => value && value.length > 0),
+    refetchOnWindowFocus: false,
+  }
+);
+```
+
+
+## ファイル命名規則
+
+- **ルーター**: `[feature].ts` (例: `user.ts`, `post.ts`)
+- **カスタムフック**: `use[Feature]Data.ts` (例: `useUserData.ts`, `usePostData.ts`)
+- **テストコンポーネント**: `[Feature]TRPCTest.tsx` (例: `UserTRPCTest.tsx`, `PostTRPCTest.tsx`)
+- **テストページ**: `test-[feature]-trpc/page.tsx` (例: `test-user-trpc/page.tsx`)
+- **特殊クエリ関数**: `[feature]Queries.ts` (例: `userQueries.ts`, `projectMemberQueries.ts`)
+- **汎用CRUD関数**: `db_[function].ts` (例: `db_CRUD.ts`, `db_GetData.ts`)
+
+## エラーハンドリング
+
+### 統一されたエラーレスポンス形式
+
+```typescript
+// 成功レスポンス
+{
+  success: true,
+  data: any,
+  message?: string
+}
+
+// エラーレスポンス
+{
+  success: false,
+  error: {
+    code: string,
+    message: string,
+    details?: any
+  }
+}
+```
+
+### エラーコード
+
+- `BAD_REQUEST`: リクエストの形式が不正
+- `UNAUTHORIZED`: 認証が必要
+- `FORBIDDEN`: アクセス権限なし
+- `NOT_FOUND`: リソースが見つからない
+- `INTERNAL_SERVER_ERROR`: サーバー内部エラー
+
+## 共通プロシージャパターン
+
+### CRUD操作の標準パターン
+
+```typescript
+export const featureRouter = createTRPCRouter({
+  // 全件取得
+  getAll: publicProcedure
+    .query(async () => {
+      try {
+        // DAL層を使用したデータ取得
+        const result = await getAllRecords('features');
+        
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: result.error?.message || 'データの取得に失敗しました',
+          });
+        }
+        
+        return { success: true, data: result.data };
+      } catch {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'データの取得に失敗しました',
+        });
+      }
+    }),
+
+  // ID指定取得
+  getById: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      try {
+        const result = await getRecord('features', input.id);
+        
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: result.error?.message || 'レコードが見つかりません',
+          });
+        }
+        
+        return { success: true, data: result.data };
+      } catch {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'データの取得に失敗しました',
+        });
+      }
+    }),
+
+  // 検索
+  search: publicProcedure
+    .input(z.object({
+      // 検索条件
+    }))
+    .query(async ({ input }) => {
+      try {
+        // 検索ロジック
+        return { success: true, data: [] };
+      } catch {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '検索に失敗しました',
+        });
+      }
+    }),
+
+  // 作成
+  create: publicProcedure
+    .input(FeatureSchema)
+    .mutation(async ({ input }) => {
+      try {
+        const result = await createRecord('features', input);
+        
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: result.error?.message || 'データの作成に失敗しました',
+          });
+        }
+        
+        return { success: true, data: result.data };
+      } catch {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'データの作成に失敗しました',
+        });
+      }
+    }),
+
+  // 更新
+  update: publicProcedure
+    .input(z.object({
+      id: z.number(),
+      data: FeatureSchema.partial(),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const result = await updateRecord('features', input.id, input.data);
+        
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: result.error?.message || 'レコードが見つかりません',
+          });
+        }
+        
+        return { success: true, data: result.data };
+      } catch {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'データの更新に失敗しました',
+        });
+      }
+    }),
+
+  // 削除
+  delete: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      try {
+        const result = await deleteRecord('features', input.id);
+        
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: result.error?.message || 'レコードが見つかりません',
+          });
+        }
+        
+        return { success: true, data: result.data };
+      } catch {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'データの削除に失敗しました',
+        });
+      }
+    }),
+});
+```
+
+## バリデーション実装
+
+### Zodスキーマによる入力検証
+
+```typescript
+// 基本バリデーション
+const UserSchema = z.object({
+  name: z.string().min(1, '名前は必須です'),
+  email: z.string().email('有効なメールアドレスを入力してください'),
+  age: z.number().min(0, '年齢は0以上である必要があります'),
+});
+
+// 条件付きバリデーション
+const ConditionalSchema = z.object({
+  type: z.enum(['admin', 'user']),
+  permissions: z.array(z.string()).optional(),
+}).refine((data) => {
+  if (data.type === 'admin' && (!data.permissions || data.permissions.length === 0)) {
+    return false;
+  }
+  return true;
+}, {
+  message: '管理者の場合は権限を指定してください',
+});
+
+// カスタムバリデーション
+const CustomValidationSchema = z.object({
+  password: z.string().min(8, 'パスワードは8文字以上である必要があります'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'パスワードが一致しません',
+  path: ['confirmPassword'],
+});
+```
+
+## ログ出力の統一
+
+### エラーログの出力
+
+```typescript
+// プロシージャ内でのエラーハンドリング
+export const userRouter = createTRPCRouter({
+  getById: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      try {
+        const result = await getRecord('users', input.id);
+        
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: result.error?.message || 'ユーザーが見つかりません',
+          });
+        }
+        
+        return { success: true, data: result.data };
+      } catch {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'データの取得に失敗しました',
+        });
+      }
+    }),
+});
+```
+
+## 型安全性の確保
+
+### 型定義の統一
+
+```typescript
+// types/api.ts
+export type ApiSuccess<T> = {
+  success: true;
+  data: T;
+};
+
+export type ApiError = {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+    status?: number;
+  };
+};
+
+export type ApiResponse<T> = ApiSuccess<T> | ApiError;
+
+// DAL層の型定義
+export interface DALResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+```
+
+## 🚨 避けるべきパターン
+
+- ❌ **DAL層で例外を投げる**
+- ❌ **統一されていないレスポンス形式**
+- ❌ **適切でないエラーハンドリング**
+- ❌ **型安全性を無視した実装**
+- ❌ **不適切なログ出力**
+- ❌ **バリデーションを省略する**
+- ❌ **DAL層の関数を直接呼び出さない**
+- ❌ **エラーコードを統一しない**
+- ❌ **transformerをcreateClientの直接オプションに指定する**
+- ❌ **機能別ルーターをHTTPハンドラーと同じディレクトリに配置する**
+- ❌ **process.envを直接使用する**
+- ❌ **汎用関数と特殊クエリ関数を同じ階層に混在させる**
+- ❌ **複雑なJOINをtRPCルーター内に直接記述する**
+
+## 📋 実装チェックリスト
+
+- [ ] 統一されたレスポンス形式を使用しているか
+- [ ] 適切なエラーハンドリングが実装されているか
+- [ ] DAL層の関数を使用しているか
+- [ ] 型安全性が確保されているか
+- [ ] Zodスキーマによるバリデーションが実装されているか
+- [ ] エラーハンドリングが適切に実装されているか
+- [ ] エラーコードが統一されているか
+- [ ] カスタムフックを使用しているか
+- [ ] パフォーマンス最適化が実装されているか
+- [ ] テストページが作成されているか
+- [ ] transformerがhttpBatchLinkのオプションに指定されているか
+- [ ] 機能別ルーターがHTTPハンドラーと分離されているか
+- [ ] 環境変数が型安全にアクセスされているか
+- [ ] データアクセス層がqueries/crud/connectionで整理されているか
+- [ ] 汎用関数と特殊クエリ関数が適切に分離されているか
+
+## バージョン互換性
+
+このガイドはtRPC v11用で、以下が必要です：
+- TypeScript >= 5.7.2
+- @trpc/react-query >= 11.4.3
+- @tanstack/react-query >= 5.81.5
+- 厳密なTypeScriptモード（tsconfig.jsonで`"strict": true`）
+
+## 環境変数の型安全性
+
+### 🚨 重要な注意事項
+
+**`process.env`を直接使用することは避けてください。** 環境変数の型安全性を保証するために、Zodを使用したバリデーションを必ず実装してください。
+
+### 環境変数スキーマの定義
+
+```typescript
+// lib/env.ts
+import { z } from 'zod';
+
+const envSchema = z.object({
+  // 必須環境変数
+  NODE_ENV: z.enum(['development', 'production', 'test']),
+  PORT: z.string().transform((val) => parseInt(val, 10)),
+  
+  // オプション環境変数（デフォルト値付き）
+  VERCEL_URL: z.string().optional(),
+  NEXT_PUBLIC_API_BASE_URL: z.string().optional().default(''),
+  
+  // データベース関連
+  DATABASE_URL: z.string().url('有効なデータベースURLを指定してください'),
+  
+  // 認証関連
+  JWT_SECRET: z.string().min(32, 'JWT_SECRETは32文字以上である必要があります'),
+  
+  // 外部API関連
+  EXTERNAL_API_KEY: z.string().optional(),
+  EXTERNAL_API_URL: z.string().url().optional(),
+});
+
+// 環境変数の検証と型安全な取得
+export const env = envSchema.parse(process.env);
+
+// 型定義のエクスポート
+export type Env = z.infer<typeof envSchema>;
+```
+
+### 環境変数使用の実装例
+
+```typescript
+// lib/trpc/Provider.tsx
+'use client';
+
+import { httpBatchLink } from '@trpc/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import superjson from 'superjson';
+import { env } from '@src/lib/env';
+import { trpc } from './client';
+
+function getBaseUrl() {
+  if (typeof window !== 'undefined') return '';
+  
+  // 型安全な環境変数アクセス
+  if (env.VERCEL_URL) return `https://${env.VERCEL_URL}`;
+  return `http://localhost:${env.PORT}`;
+}
+
+export function TRPCProvider({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient());
+  const [trpcClient] = useState(() =>
+    trpc.createClient({
+      links: [
+        httpBatchLink({
+          url: `${getBaseUrl()}/api/trpc`,
+          transformer: superjson,
+        }),
+      ],
+    }),
+  );
+
+  return (
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </trpc.Provider>
+  );
+}
+```
+
+### API設定での使用例
+
+```typescript
+// lib/apiRequest.ts
+import axios, { AxiosError, AxiosRequestConfig, Method } from 'axios';
+import { NextRequest } from 'next/server';
+
+import { env } from '@src/lib/env';
+
+const api = axios.create({
+  // 型安全な環境変数アクセス
+  baseURL: env.NEXT_PUBLIC_API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true,
+});
+
+api.interceptors.response.use(
+  (res) => res,
+  (error: AxiosError) => {
+    console.error('API error:', error);
+    if (error.response?.status === 401) {
+      console.warn('401: 認証エラー');
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+```
+
+### 開発環境での環境変数チェック
+
+```typescript
+// lib/env.ts
+import { z } from 'zod';
+
+const envSchema = z.object({
+  // ... スキーマ定義
+});
+
+// 開発環境でのみ環境変数をチェック
+if (process.env.NODE_ENV === 'development') {
+  try {
+    envSchema.parse(process.env);
+    console.log('✅ 環境変数の検証が完了しました');
+  } catch (error) {
+    console.error('❌ 環境変数の検証に失敗しました:', error);
+    process.exit(1);
+  }
+}
+
+export const env = envSchema.parse(process.env);
+```
+
+### 環境変数の型安全性チェックリスト
+
+- [ ] `process.env`を直接使用していないか
+- [ ] Zodスキーマで環境変数を定義しているか
+- [ ] 必須環境変数が適切に検証されているか
+- [ ] オプション環境変数にデフォルト値が設定されているか
+- [ ] 開発環境で環境変数の検証が行われているか
+- [ ] 型安全な環境変数アクセスが実装されているか
+- [ ] 環境変数の値が適切にバリデーションされているか
+
+### 🚫 避けるべきパターン
+
+```typescript
+// ❌ 悪い例：直接的なprocess.env使用
+function getBaseUrl() {
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return `http://localhost:${process.env.PORT ?? 3000}`; // 型安全性なし
+}
+
+// ❌ 悪い例：バリデーションなし
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || '', // 型安全性なし
+});
+
+// ❌ 悪い例：transformerの間違った指定場所
+trpc.createClient({
+  transformer: superjson, // ❌ ここではなく
+  links: [
+    httpBatchLink({
+      url: `${getBaseUrl()}/api/trpc`,
+    }),
+  ],
+});
+```
+
+### ✅ 推奨パターン
+
+```typescript
+// ✅ 良い例：型安全な環境変数アクセス
+import { env } from '@src/lib/env';
+
+function getBaseUrl() {
+  if (env.VERCEL_URL) return `https://${env.VERCEL_URL}`;
+  return `http://localhost:${env.PORT}`; // 型安全
+}
+
+const api = axios.create({
+  baseURL: env.NEXT_PUBLIC_API_BASE_URL, // 型安全
+});
+
+// ✅ 良い例：transformerの正しい指定場所
+trpc.createClient({
+  links: [
+    httpBatchLink({
+      url: `${getBaseUrl()}/api/trpc`,
+      transformer: superjson, // ✅ ここ
+    }),
+  ],
+});
+```
+
+## その他のリソース
+
+- [tRPC公式ドキュメント](mdc:https:/trpc.io/docs)
+- [React Query公式ドキュメント](mdc:https:/tanstack.com/query/latest)
+- [Zod公式ドキュメント](mdc:https:/zod.dev)
+
+
+
+
+
+

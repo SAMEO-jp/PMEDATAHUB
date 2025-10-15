@@ -188,6 +188,42 @@ export const HEADER_CONFIGS: HeaderConfigMap = {
     showNotifications: false
   },
 
+  '/app_project/[project_id]/cmom': {
+    title: 'CMOM管理',
+    subtitle: '構成管理BOMの管理',
+    actions: [
+      {
+        id: 'add-cmom',
+        label: 'CMOM追加',
+        onClick: () => {},
+        variant: 'primary'
+      }
+    ],
+    showActions: true,
+    showSearch: true,
+    showBreadcrumb: true,
+    showUserInfo: true,
+    showNotifications: false
+  },
+
+  '/app_project/[project_id]/contract-management': {
+    title: '契約管理',
+    subtitle: 'プロジェクト契約情報の管理',
+    actions: [
+      {
+        id: 'add-contract',
+        label: '新規契約追加',
+        onClick: () => {},
+        variant: 'primary'
+      }
+    ],
+    showActions: true,
+    showSearch: true,
+    showBreadcrumb: true,
+    showUserInfo: true,
+    showNotifications: false
+  },
+
   '/app_project/[project_id]': {
     title: 'プロジェクト詳細',
     subtitle: 'プロジェクト情報の表示・編集',
@@ -553,6 +589,27 @@ export const HEADER_CONFIGS: HeaderConfigMap = {
     subtitle: '仕様書の管理',
     actions: [],
     showActions: false,
+    showSearch: true,
+    showBreadcrumb: true,
+    showUserInfo: true,
+    showNotifications: false
+  },
+
+  // ========================================
+  // 出荷案内書作成関連
+  // ========================================
+  '/shipping-guidance': {
+    title: '出荷案内書作成',
+    subtitle: '出荷案内書の作成と管理',
+    actions: [
+      {
+        id: 'new-shipping-guidance',
+        label: '新規作成',
+        onClick: () => {},
+        variant: 'primary'
+      }
+    ],
+    showActions: true,
     showSearch: true,
     showBreadcrumb: true,
     showUserInfo: true,
