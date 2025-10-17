@@ -61,7 +61,12 @@ export const useProjectHeader = (
   }, [project, setDisplayType, setCurrentProject, setDisplayConfig]);
 
   // プロジェクトステータスをマッピング
-  const mapProjectStatus = (status: string): 'active' | 'completed' | 'pending' => {
+  const mapProjectStatus = (status: string | null | undefined): 'active' | 'completed' | 'pending' => {
+    // statusがnullまたはundefinedの場合はpendingを返す
+    if (!status) {
+      return 'pending';
+    }
+    
     switch (status.toLowerCase()) {
       case 'active':
       case '進行中':

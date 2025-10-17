@@ -80,7 +80,7 @@ echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
-npm run dev
+PORT=3000 npm run dev
 
 # このスクリプトはnpm run devが終了するまで待機します
 

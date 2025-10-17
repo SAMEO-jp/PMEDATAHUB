@@ -3,8 +3,9 @@
     "version": "0.0.1",
     "private": true,
     "scripts": {
-        "dev": "next dev",
+        "dev": "PORT=3000 next dev",
         "dev:safe": "bash scripts/start-dev-safe.sh",
+        "dev:kill": "bash scripts/kill-dev-ports.sh",
         "build": "next build",
         "build:standalone": "npm run build:standalone:setup && next build && npm run build:standalone:copy && npm run build:standalone:assets",
         "build:standalone:setup": "node -e \"const fs=require('fs'); fs.copyFileSync('next.config.standalone.js', 'next.config.js')\"",
@@ -66,6 +67,7 @@
     "devDependencies": {
         "@eslint/js": "^9.28.0",
         "@next/eslint-plugin-next": "^15.3.4",
+        "@playwright/test": "^1.56.1",
         "@types/node": "20.19.19",
         "@types/react": "^18.2.67",
         "@types/react-dom": "^18.2.22",
@@ -83,6 +85,7 @@
         "postcss-import": "^16.1.1",
         "prisma": "^6.16.3",
         "prisma-dbml-generator": "^0.12.0",
+        "specify-cli": "^0.1.0",
         "tailwindcss": "^3.4.18",
         "ts-node": "^10.9.2",
         "typescript": "^5.4.2",
