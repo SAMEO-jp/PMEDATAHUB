@@ -1,0 +1,146 @@
+"use client"
+
+import React, { useState, useContext, useMemo, useCallback } from 'react'
+import type { Project } from '@src/types/db_project'
+import type { TimeGridEvent } from '@src/app/zisseki-demo/[year]/[week]/types'
+import { ViewModeContext } from '../../../ViewModeContext'
+import ChartSidebar from './ChartSidebar'
+import AllProjectsChart from './AllProjectsChart'
+import ProjectChart from './ProjectChart'
+
+interface ZissekiChartViewProps {
+  year: number
+  month: number
+  projects: Project[]
+  events: TimeGridEvent[]
+  projectsLoading: boolean
+  projectsError: any
+  zissekiLoading: boolean
+  zissekiError: any
+}
+
+export default function ZissekiChartView({ 
+  year, 
+  month, 
+  projects, 
+  events, 
+  projectsLoading, 
+  projectsError, 
+  zissekiLoading, 
+  zissekiError 
+}: ZissekiChartViewProps) {
+  const [selectedProject, setSelectedProject] = useState<string | null>(null)
+  const { setSelectedProjectName } = useContext(ViewModeContext)
+  
+  // プロジェクト一覧の計算をメモ化
+  const allProjects = useMemo(() => {
+    // 実績データから直接プロジェクト一覧を作成
+    const uniqueProjectNames = [...new Set(events.map(e => e.project).filter(Boolean))];
+    
+    // 実績データのプロジェクト名をベースにしたプロジェクト一覧を作成
+    const projectsFromEvents = uniqueProjectNames.map((projectName, index) => ({
+      PROJECT_ID: `event-project-${index}`,
+      PROJECT_NAME: projectName,
+      PROJECT_CLIENT_NAME: null,
+    }));
+    
+    // プロジェクトテーブルからマッチング
+    const projectsWithEvents = projectsFromEvents.map(eventProject => {
+      const matchedProject = projects.find(project => {
+        if (project.PROJECT_ID === eventProject.PROJECT_NAME) return true;
+        if (project.PROJECT_ID?.toLowerCase() === eventProject.PROJECT_NAME?.toLowerCase()) return true;
+        if (project.PROJECT_ID?.includes(eventProject.PROJECT_NAME)) return true;
+        if (eventProject.PROJECT_NAME?.includes(project.PROJECT_ID)) return true;
+        return false;
+      });
+      
+      return matchedProject || eventProject;
+    });
+
+    const result = [...projectsWithEvents];
+    
+    // プロジェクトテーブルから実績データに含まれていないプロジェクトを追加
+    projects.forEach(project => {
+      const isAlreadyIncluded = result.some(p => 
+        p.PROJECT_ID === project.PROJECT_ID || 
+        p.PROJECT_NAME === project.PROJECT_NAME
+      );
+      
+      const hasEventData = events.some(event => {
+        return event.project === project.PROJECT_ID || 
+               event.project === project.PROJECT_NAME ||
+               project.PROJECT_ID === event.project ||
+               project.PROJECT_NAME === event.project;
+      });
+      
+      if (!isAlreadyIncluded && hasEventData) {
+        result.push(project);
+      }
+    });
+    
+    return result;
+  }, [projects, events]);
+  
+  // 選択されたプロジェクトの情報を取得（メモ化）
+  const selectedProjectInfo = useMemo(() => {
+    return selectedProject 
+      ? allProjects.find((p) => p.PROJECT_ID === selectedProject)
+      : null;
+  }, [selectedProject, allProjects]);
+
+  // プロジェクト選択ハンドラーをメモ化
+  const handleProjectSelect = useCallback((projectId: string | null) => {
+    setSelectedProject(projectId);
+    
+    // 選択されたプロジェクト名をContextに設定
+    if (projectId) {
+      const selectedProjectInfo = allProjects.find(p => p.PROJECT_ID === projectId);
+      setSelectedProjectName(selectedProjectInfo?.PROJECT_NAME || null);
+    } else {
+      setSelectedProjectName(null);
+    }
+  }, [allProjects, setSelectedProjectName]);
+
+  return (
+    <div className="flex h-full">
+      {/* 左サイドバー */}
+      <ChartSidebar 
+        selectedProject={selectedProject}
+        onProjectSelect={handleProjectSelect}
+        projects={allProjects}
+        isLoading={projectsLoading}
+        error={projectsError}
+      />
+      
+      {/* メインコンテンツ */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-4">
+          {selectedProject === null ? (
+            <AllProjectsChart year={year} month={month} events={events} projects={projects} />
+          ) : selectedProjectInfo ? (
+            <ProjectChart 
+              year={year} 
+              month={month} 
+              projectId={selectedProject}
+              projectName={selectedProjectInfo.PROJECT_NAME}
+              events={events}
+            />
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <div>プロジェクト情報が見つかりません</div>
+              <div className="text-sm mt-2">
+                選択されたプロジェクトID: {selectedProject}
+              </div>
+              <div className="text-sm">
+                利用可能なプロジェクト数: {allProjects.length}
+              </div>
+              <div className="text-sm">
+                実績データのプロジェクト数: {uniqueProjectNames.length}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

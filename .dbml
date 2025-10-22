@@ -1,0 +1,272 @@
+Table "トランザクション種類" {
+  "id" integer [pk, not null]
+  "種類名称" text
+  "分類名称" text
+}
+
+Table "ユーザー_copy" {
+  "id" integer [pk, not null, ref: < "個別実績データリスト"."ユーザーID"]
+}
+
+Table "成果物" {
+  "id" integer [pk, not null, ref: < "プロジェクトタスク成果物リスト"."成果物ID"]
+  "トランザクションid" integer
+}
+
+Table "図面部品関係リスト" {
+  "id" integer [pk, not null]
+  "図面id" integer [ref: < "図面情報"."id"]
+  "部品id" integer [ref: < "部品情報"."id"]
+  "部品番号" integer
+}
+
+Table "出荷グループリスト" {
+  "id" integer [pk, not null]
+  "契約データid" integer [ref: < "契約情報"."id"]
+  "プロジェクト・タスクid" integer
+  "トランザクションid" integer
+  "出荷グループ名" integer
+}
+
+Table "プロジェクト・タスク（出荷タスク）" {
+  "id" integer [pk, not null, ref: < "出荷グループリスト"."プロジェクト・タスクid"]
+}
+
+Table "出荷グループ構成リスト" {
+  "id" integer [pk, not null]
+  "部品データ" integer [not null]
+  "出荷グループid" integer [not null, ref: < "出荷グループリスト"."id"]
+  "出荷グループ内構成名称" integer
+}
+
+Table "プロジェクトタスク計画" {
+  "id" integer [pk, not null]
+  "プロジェクトタスクid" integer [not null]
+  "表示順" integer
+  "作業カレンダーid" integer
+  "計画開始日時" datetime
+  "計画終了日時" datetime
+  "実開始日時" datetime
+  "実終了日時" datetime
+  "トランザクションid" integer
+
+  Indexes {
+    プロジェクトタスクid [unique, name: "idx_プロジェクトタスク計画_プロジェクトタスクid"]
+  }
+}
+
+Table "プロジェクト・タスク（契約タスク）" {
+  "id" integer [pk, not null, ref: < "契約情報"."トランザクションid"]
+}
+
+Table "プロジェクトタスク依存関係リスト" {
+  "id" integer [pk, not null]
+  "タスクid" integer
+  "先行タスクid" integer [not null]
+  "関係種別コード" text
+  "ラグDAY後続" integer
+  "トランザクションid" integer
+}
+
+Table "出荷トラック運転者情報" {
+  "id" integer [pk, not null]
+  "運転者名" integer
+  "出荷グループid" integer [ref: < "出荷グループリスト"."id"]
+  "トランザクションid" integer
+}
+
+Table "プロジェクトタスク成果物リスト" {
+  "id" integer [pk, not null]
+  "プロジェクトタスクid" integer
+  "トランザクションid" integer
+  "成果物ID" integer
+}
+
+Table "組み立て詳細情報" {
+  "id" integer [pk, not null]
+  "組立id" integer [ref: < "組立情報"."id"]
+  "図形情報" text
+}
+
+Table "プロジェクト・タスク（作図業務）" {
+  "id" integer [pk, not null, ref: < "図面情報"."プロジェクト・タスクid"]
+}
+
+Table "3D" {
+  "id" integer [pk, not null]
+  "保管リンク先" text
+  "トランザクションid" integer
+}
+
+Table "図面ー３Dリンクリスト" {
+  "id" integer [pk, not null, ref: < "3D"."id"]
+  "部品ID" integer
+  "３DID" integer
+}
+
+Table "プロジェクトタスクメンバリスト" {
+  "id" integer [pk, not null]
+  "ユーザーid" integer [not null]
+  "プロジェクトタスクid" integer [not null]
+  "トランザクションid" integer [not null]
+}
+
+Table "タスクリスト" {
+  "id" integer [pk, not null, ref: < "プロジェクトタスクメンバリスト"."プロジェクトタスクid", ref: < "プロジェクトタスク成果物リスト"."プロジェクトタスクid", ref: < "プロジェクトタスク依存関係リスト"."先行タスクid", ref: < "設計タスクリスト"."親子id", ref: < "プロジェクトタスク依存関係リスト"."タスクid", ref: < "プロジェクトタスク計画"."プロジェクトタスクid", ref: < "プロジェクトタスク進捗"."プロジェクトタスクid", ref: < "設計タスクリスト"."タスクid"]
+  "タスク名称" integer
+  "プロジェクトid" integer
+}
+
+Table "組立情報" {
+  "id" integer [pk, not null, ref: < "図面組立関係リスト"."組み立てid"]
+  "部品id" integer
+  "場所" text
+  "コメント" text
+}
+
+Table "カレンダー表示用プロパティ" {
+  "id" integer [pk, not null, ref: < "個別実績データリスト"."カレンダー表示用ID"]
+  "件名" text
+  "コメント" text
+  "色" integer
+}
+
+Table "出荷工程承認テーブル" {
+  "id" integer [pk, not null]
+  "出荷工程情報" integer [ref: < "出荷工程情報"."id"]
+  "承認者id" integer
+  "承認者コメント" real
+  "親子id" integer
+  "承認依頼者" integer
+  "承認日時" integer
+  "承認結果" integer
+}
+
+Table "契約部品リスト" {
+  "id" integer [pk, not null, ref: < "出荷グループ構成リスト"."部品データ"]
+  "部品id" integer [ref: < "部品情報"."id"]
+  "契約id" integer [ref: < "契約情報"."id"]
+  "数量" integer
+}
+
+Table "プロジェクト・タスク_copy" {
+  "id" integer [pk, not null, ref: < "個別実績データリスト"."プロジェクト・タスク"]
+  "タスク名称" integer
+  "親子id" integer [not null]
+  "トランザクションid" integer [not null]
+}
+
+Table "契約情報" {
+  "id" integer [pk, not null]
+  "プロジェクト・タスクid" integer
+  "契約名" integer
+  "契約会社id" integer
+  "トランザクションid" integer
+}
+
+Table "設計タスクリスト" {
+  "id" integer [pk, not null]
+  "親子id" integer [not null]
+  "関係性名称" integer
+  "タスクid" integer
+}
+
+Table "部品形状情報" {
+  "id" integer [pk, not null]
+  "部品id" integer
+  "図形情報" text
+}
+
+Table "出荷状況" {
+  "id" integer [pk, not null]
+  "出荷グループid" integer [ref: < "出荷グループリスト"."id"]
+  "ステータス" integer
+  "トランザクションid" integer
+}
+
+Table "部品情報" {
+  "id" integer [pk, not null, ref: < "図面ー３Dリンクリスト"."id", ref: < "部品発注量情報"."部品id", ref: < "部品形状情報"."部品id"]
+  "図面部品関係リストid" integer
+  "部品名称" integer
+  "部品番号" integer
+  "形状情報id" integer
+}
+
+Table "プロジェクトタスク進捗" {
+  "id" integer [pk, not null]
+  "プロジェクトタスクid" integer [not null]
+  "進捗率" integer
+  "マイルストーンフラグ" boolean
+  "トランザクションid" integer
+
+  Indexes {
+    プロジェクトタスクid [unique, name: "idx_プロジェクトタスク計画_プロジェクトタスクid"]
+  }
+}
+
+Table "図面組立関係リスト" {
+  "id" integer [pk, not null]
+  "図面id" integer
+  "組み立てid" integer
+}
+
+Table "個別実績データリスト" {
+  "id" integer [not null]
+  "ユーザーID" integer [not null]
+  "プロジェクト・タスク" integer [not null]
+  "開始時間" integer
+  "終了時間" integer
+  "業務コード" integer
+  "カレンダー表示用ID" integer
+
+  Indexes {
+    (id, ユーザーID, プロジェクト・タスク) [pk, name: "pk_table_13_id"]
+  }
+}
+
+Table "図面保存先リンク先" {
+  "id" integer [pk, not null]
+  "図面id" integer [ref: < "図面情報"."id"]
+  "リンク先" text
+  "保存ファイル拡張子" text
+}
+
+Table "トランザクション" {
+  "id" integer [pk, not null]
+  "トランザクション種類" integer [not null, ref: < "トランザクション種類"."id"]
+  "ユーザーID" integer [not null]
+  "日時" datetime [not null]
+}
+
+Table "部品発注量情報" {
+  "id" integer [pk, not null]
+  "部品id" integer
+  "数量" integer
+  "予備品数量" integer
+}
+
+Table "出荷工程情報" {
+  "id" integer [pk, not null]
+  "出荷日" integer [not null]
+  "出荷グループid" integer [not null, ref: < "出荷グループリスト"."id"]
+  "受取日" integer
+  "情報ステータス" integer
+}
+
+Table "プロジェクトリスト" {
+  "id" integer [pk, not null, ref: < "タスクリスト"."プロジェクトid"]
+  "プロジェクト名称" integer
+}
+
+Table "図面情報" {
+  "id" integer [pk, not null, ref: < "図面組立関係リスト"."id"]
+  "図面リストid" integer
+  "図面名称" integer
+  "図面番号" integer
+  "状態" integer
+  "プロジェクト・タスクid" integer
+}
+
+Table "ユーザー" {
+  "id" integer [pk, not null, ref: < "プロジェクトタスクメンバリスト"."ユーザーid"]
+}

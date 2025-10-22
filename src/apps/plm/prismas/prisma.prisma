@@ -1,0 +1,108 @@
+// PLM Application Database Schema
+// Project Lifecycle Management System for Employee Data
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./plm.db"
+}
+
+model EmployeeStatusHistory {
+  id               Int      @id @default(autoincrement()) @map("id")
+  employee_number   Int      @map("社員番号")
+  joined_year      Int      @map("入社年")
+  retired_year     Int?     @map("退社年")
+  data_updated_at  DateTime @map("データ更新日")
+  data_added_at    DateTime @map("データ追加日")
+  is_visible       Boolean  @default(false) @map("表示非表示")
+
+  @@map("社員在籍履歴")
+}
+
+model PositionHistory {
+  id           Int      @id @default(autoincrement()) @map("id")
+  employee_info_id Int    @map("社員情報id")
+  position     String   @map("役職")
+  added_at     DateTime @map("追加日")
+  add_reason   String?  @map("追加理由")
+  employee_info EmployeeInfo @relation(fields: [employee_info_id], references: [id])
+
+  @@map("履歴付き役職情報")
+}
+
+model EmployeeInfo {
+  id                Int      @id @default(autoincrement()) @map("id")
+  employee_number   Int?      @map("社員番号")
+  department_id     Int?      @map("所属部署")
+  personal_info_id  Int?      @map("個人情報")
+  company_info_id   Int?      @map("会社付与情報")
+
+  // リレーション
+  positions        PositionHistory[]
+  personal_histories PersonalInfoHistory[]
+  department_histories DepartmentInfoHistory[]
+  company_info     CompanyInfo? @relation(fields: [company_info_id], references: [id])
+
+  @@map("社員情報")
+}
+
+model DepartmentInfoHistory {
+  id           Int      @id @default(autoincrement()) @map("id")
+  employee_info_id Int   @map("社員情報id")
+  department_id    Int?  @map("部署情報")
+  added_at      DateTime @map("追加日")
+  deleted_at    DateTime? @map("削除日")
+  employee_info EmployeeInfo @relation(fields: [employee_info_id], references: [id])
+  department    DepartmentInfo? @relation(fields: [department_id], references: [id])
+
+  @@map("所属部署情報履歴")
+}
+
+model DepartmentInfo {
+  id          Int      @id @default(autoincrement()) @map("id")
+  parent_id   Int?     @map("親子id")
+  name        String   @map("名称")
+  full_name   String?  @map("フル名称")
+  added_at    DateTime @map("追加日")
+  deleted_at  DateTime? @map("削除日")
+  department_histories DepartmentInfoHistory[]
+
+  @@map("部署情報")
+}
+
+model PersonalInfoHistory {
+  id              Int      @id @default(autoincrement()) @map("id")
+  employee_info_id  Int      @map("社員情報id")
+  last_name       String   @map("名字")
+  first_name      String   @map("名前")
+  address         String?  @map("住所")
+  phone_number    String?  @map("電話番号")
+  emergency_contact String? @map("緊急連絡先")
+  birthplace      String?  @map("出身情報")
+  allergy         String?  @map("アレルギー")
+  added_at        DateTime @map("追加日")
+  deleted_at      DateTime? @map("削除日")
+  employee_info   EmployeeInfo @relation(fields: [employee_info_id], references: [id])
+
+  @@map("履歴付き個人情報")
+}
+
+model CompanyInfo {
+  id            Int      @id @default(autoincrement()) @map("id")
+  employee_code String?  @map("社員コード")
+  email         String?  @map("メールアドレス")
+  phone_ext     String?  @map("内線番号")
+  office_location String? @map("勤務地")
+  cost_center   String?  @map("コストセンター")
+  added_at      DateTime @default(now()) @map("追加日")
+  deleted_at    DateTime? @map("削除日")
+
+  // リレーション
+  employees     EmployeeInfo[]
+
+  @@map("会社付与情報")
+}

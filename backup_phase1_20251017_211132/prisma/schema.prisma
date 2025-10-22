@@ -1,0 +1,568 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
+  output   = "../"
+  outputName = "db.dbml"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../data/achievements.db"
+}
+
+model BOM_BUHIN {
+  id                      Int     @id @default(autoincrement())
+  BUHIN_ID                String
+  ZUMEN_ID                String
+  BUHIN_PROJECT_ID        String?
+  BUHIN_QUANTITY          Int?    @default(0)
+  BUHIN_SPARE_QUANTITY    Int?    @default(0)
+  BUHIN_NAME              String?
+  BUHIN_KIND              String?
+  BUHIN_REMARKS           String?
+  BUHIN_TEHAI_DIVISION    String?
+  BUHIN_TEHAI_ID          String?
+  BUHIN_MANUFACTURER      String?
+  BUHIN_SEKKOUHIN         String?
+  KANREN_BUHIN            String?
+  SOUTI_SEIBAN            String?
+  BUHIN_PART_TANNI_WEIGHT Float?  @default(0)
+}
+
+model BOM_BUZAI {
+  ROWID          Int     @id @unique(map: "sqlite_autoindex_BOM_BUZAI_1") @default(autoincrement())
+  BUZAI_ID       String?
+  Zumen_ID       String?
+  PART_ID        String?
+  BUZAI_NAME     String?
+  BUZAI_WEIGHT   String?
+  BUZAI_QUANTITY String?
+  ZAISITU_NAME   String?
+}
+
+model BOM_PART {
+  ROWID             Int     @id @default(autoincrement())
+  PART_ID           String?
+  QUANTITY          Int?
+  SPARE_QUANTITY    Int?
+  PART_NAME         String?
+  REMARKS           String?
+  TEHAI_DIVISION    String?
+  TEHAI_ID          String?
+  MANUFACTURER      String?
+  PART_PROJECT_ID   String?
+  ZUMEN_ID          String?
+  PART_TANNI_WEIGHT String?
+}
+
+model BOM_ZUMEN {
+  ROWID            Int     @id @default(autoincrement())
+  Zumen_ID         String?
+  project_ID       String?
+  Zumen_Name       String?
+  Zumen_Kind       String?
+  Kumitate_Zumen   String?
+  Souti_ID         String?
+  Souti_name       String?
+  rev_number       String?
+  Tantou_a1        String?
+  Tantou_a2        String?
+  Tantou_b1        String?
+  Tantou_b2        String?
+  Tantou_c1        String?
+  Tantou_c2        String?
+  status           String?
+  Syutuzubi_Date   String?
+  Sakuzu_a         String?
+  Sakuzu_b         String?
+  Sakuzu_date      String?
+  Scale            String?
+  Size             String?
+  Sicret_code      String?
+  WRITEver         String?
+  KANREN_ZUMEN     String?
+  zumen_pdf_link   String?
+  zumen_image_link String?
+  zumen_cad_link   String?
+
+  @@unique([project_ID, Zumen_ID, Zumen_Name], map: "idx_bom_zumen_unique")
+}
+
+model DEPARTMENT {
+  id              Int     @id @default(autoincrement())
+  name            String
+  department_kind String
+  top_department  String?
+  status          String? @default("active")
+}
+
+model KONPO_PALET {
+  konpo_palet_id       Int              @id @default(autoincrement())
+  palet_master_id      Int
+  buhin_id             String
+  palet_buhin_quantity Int?             @default(0)
+  created_at           DateTime?        @default(now())
+  updated_at           DateTime?
+  PALET_MASTER_OLD     PALET_MASTER_OLD @relation(fields: [palet_master_id], references: [palet_master_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model PALET_LIST {
+  palet_list_id           Int                    @id @default(autoincrement())
+  palet_master_id         Int
+  palet_list_display_name String?
+  palet_quantity          Int?                   @default(1)
+  created_at              DateTime?              @default(now())
+  updated_at              DateTime?
+  PALET_MASTER_OLD        PALET_MASTER_OLD       @relation(fields: [palet_master_id], references: [palet_master_id], onDelete: NoAction, onUpdate: NoAction)
+  PALET_SCHEDULE          PALET_SCHEDULE[]
+  PALET_STATUS_HISTORY    PALET_STATUS_HISTORY[]
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model PALET_MASTER {
+  palet_master_id           String?   @id
+  palet_master_display_name String
+  created_at                DateTime? @default(now())
+  updated_at                DateTime?
+
+  @@ignore
+}
+
+model PALET_MASTER_OLD {
+  palet_master_id           Int           @id @default(autoincrement())
+  palet_master_display_name String
+  created_at                DateTime?     @default(now())
+  updated_at                DateTime?
+  KONPO_PALET               KONPO_PALET[]
+  PALET_LIST                PALET_LIST[]
+}
+
+model PALET_SCHEDULE {
+  palet_schedule_id          Int        @id @default(autoincrement())
+  palet_list_id              Int
+  palet_schedule_status_type String?
+  palet_planned_date         DateTime?
+  palet_schedule_notes       String?
+  created_at                 DateTime?  @default(now())
+  updated_at                 DateTime?
+  PALET_LIST                 PALET_LIST @relation(fields: [palet_list_id], references: [palet_list_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model PALET_STATUS_HISTORY {
+  palet_status_history_id Int                  @id @default(autoincrement())
+  palet_list_id           Int
+  palet_location_id       Int
+  palet_status_type       String?
+  palet_status_date       DateTime?
+  palet_location_info     String?
+  palet_status_notes      String?
+  created_at              DateTime?            @default(now())
+  updated_at              DateTime?
+  PALET_TEMP_LOCATIONS    PALET_TEMP_LOCATIONS @relation(fields: [palet_location_id], references: [palet_location_id], onDelete: NoAction, onUpdate: NoAction)
+  PALET_LIST              PALET_LIST           @relation(fields: [palet_list_id], references: [palet_list_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model PALET_TEMP_LOCATIONS {
+  palet_location_id      Int                    @id @default(autoincrement())
+  palet_location_name    String
+  palet_location_address String?
+  palet_contact_info     String?
+  created_at             DateTime?              @default(now())
+  updated_at             DateTime?
+  PALET_STATUS_HISTORY   PALET_STATUS_HISTORY[]
+}
+
+model PROJECT {
+  ROWID                      Int       @id @default(autoincrement())
+  PROJECT_ID                 String?
+  PROJECT_NAME               String?
+  PROJECT_DESCRIPTION        String?
+  PROJECT_START_DATE         String?
+  PROJECT_START_ENDDATE      String?
+  PROJECT_STATUS             String?
+  PROJECT_CLIENT_NAME        String?
+  PROJECT_CLASSIFICATION     String?
+  PROJECT_BUDGENT_GRADE      String?
+  installationDate           String?
+  drawingCompletionDate      String?
+  PROJECT_EQUIPMENT_CATEGORY String?
+  PROJECT_SYOHIN_CATEGORY    String?
+  CREATED_AT                 String?
+  UPDATE_AT                  String?
+  PROJECT_NOTE               String?
+  SPARE1                     String?
+  SPARE2                     String?
+  SPARE3                     String?
+  IS_PROJECT                 String?
+}
+
+model PROJECT_HISTORY {
+  history_id  Int       @id @default(autoincrement())
+  project_id  String
+  action_type String
+  field_name  String?
+  old_value   String?
+  new_value   String?
+  changed_by  String
+  changed_at  DateTime? @default(now())
+
+  @@index([changed_by], map: "idx_project_history_changed_by")
+  @@index([changed_at], map: "idx_project_history_changed_at")
+  @@index([action_type], map: "idx_project_history_action_type")
+  @@index([project_id], map: "idx_project_history_project_id")
+}
+
+model PROJECT_MEMBERS {
+  member_id   Int       @id @default(autoincrement())
+  project_id  String
+  user_id     String
+  role        String
+  joined_at   DateTime? @default(now())
+  left_at     DateTime?
+  assigned_by String?
+  created_at  DateTime? @default(now())
+  updated_at  DateTime? @default(now())
+
+  @@unique([project_id, user_id], map: "sqlite_autoindex_PROJECT_MEMBERS_1")
+}
+
+model PROJECT_MEMBERS_OLD {
+  member_id   Int       @id @default(autoincrement())
+  project_id  String
+  user_id     String
+  role        String
+  joined_at   DateTime? @default(now())
+  left_at     DateTime?
+  assigned_by String?
+  created_at  DateTime? @default(now())
+  updated_at  DateTime? @default(now())
+
+  @@unique([project_id, user_id], map: "sqlite_autoindex_PROJECT_MEMBERS_OLD_1")
+  @@index([role], map: "idx_project_members_role")
+  @@index([user_id], map: "idx_project_members_user_id")
+  @@index([project_id], map: "idx_project_members_project_id")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model USER {
+  user_id       String?
+  name_japanese String?
+  TEL           String?
+  mail          String?
+  name_english  String?
+  name_yomi     String?
+  company       String?
+  bumon         String?
+  in_year       String?
+  Kengen        String?
+  TEL_naisen    String?
+  sitsu         String?
+  ka            String?
+  syokui        String?
+
+  @@ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model album_photos_link {
+  fk_album_id  Int?
+  fk_photo_id  Int?
+  photo_order  Int?          @default(0)
+  added_at     DateTime?     @default(now())
+  photos       photos?       @relation(fields: [fk_photo_id], references: [photo_id], onDelete: Cascade, onUpdate: NoAction)
+  photo_albums photo_albums? @relation(fields: [fk_album_id], references: [album_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([fk_album_id, fk_photo_id])
+  @@index([fk_photo_id], map: "idx_album_photos_photo_id")
+  @@index([fk_album_id], map: "idx_album_photos_album_id")
+  @@ignore
+}
+
+model business_achievements {
+  achievement_id          Int       @id @default(autoincrement())
+  user_id                 String
+  project_id              String?
+  souti_code              String?
+  workpack_code           String?
+  category_code           String
+  achievement_title       String
+  achievement_description String?
+  achievement_notes       String?
+  start_datetime          DateTime
+  end_datetime            DateTime
+  achievement_status      String?   @default("active")
+  created_at              DateTime? @default(now())
+  updated_at              DateTime? @default(now())
+  deleted_at              DateTime?
+  created_by              String?
+  updated_by              String?
+
+  @@index([deleted_at], map: "idx_achievements_deleted_at")
+  @@index([category_code], map: "idx_achievements_category_code")
+  @@index([end_datetime], map: "idx_achievements_end_datetime")
+  @@index([start_datetime], map: "idx_achievements_start_datetime")
+  @@index([project_id], map: "idx_achievements_project_id")
+  @@index([user_id], map: "idx_achievements_user_id")
+}
+
+model business_categories {
+  category_id               Int                   @id @default(autoincrement())
+  parent_category_id        Int?
+  category_type             String?
+  category_name             String
+  category_code             String?               @unique(map: "sqlite_autoindex_business_categories_1")
+  category_description      String?
+  category_color            String?               @default("#0078D4")
+  category_level            Int                   @default(1)
+  sort_order                Int?                  @default(0)
+  is_active                 Boolean?              @default(true)
+  category_level1_code      String?
+  category_level2_code      String?
+  category_level3_code      String?
+  category_level4_code      String?
+  created_at                DateTime?             @default(now())
+  updated_at                DateTime?             @default(now())
+  business_categories       business_categories?  @relation("business_categoriesTobusiness_categories", fields: [parent_category_id], references: [category_id], onDelete: Restrict, onUpdate: NoAction)
+  other_business_categories business_categories[] @relation("business_categoriesTobusiness_categories")
+
+  @@index([is_active], map: "idx_categories_active")
+  @@index([category_level], map: "idx_categories_level")
+  @@index([category_code], map: "idx_categories_code")
+  @@index([parent_category_id], map: "idx_categories_parent_id")
+}
+
+model document_demo {
+  id              Int       @id @default(autoincrement())
+  name            String
+  rootdocument_id Int?
+  type            String?
+  bumon           String?
+  name_project    String?
+  meca_number     String?
+  create_date     DateTime? @default(now())
+  delete_date     DateTime?
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model events {
+  id                        String? @id
+  title                     String
+  description               String?
+  project                   String?
+  startDateTime             String
+  endDateTime               String
+  top                       Int?
+  height                    Int?
+  color                     String?
+  unsaved                   Int?
+  category                  String?
+  employeeNumber            String?
+  activityCode              String?
+  purposeProject            String?
+  departmentCode            String?
+  equipmentNumber           String?
+  equipmentName             String?
+  equipment_id              String?
+  equipment_Name            String?
+  itemName                  String?
+  indirectType              String?
+  indirectDetailType        String?
+  selectedTab               String?
+  selectedProjectSubTab     String?
+  selectedIndirectSubTab    String?
+  selectedIndirectDetailTab String?
+  selectedOtherSubTab       String?
+  status                    String?
+  createdAt                 String? @default("CURRENT_TIMESTAMP")
+  updatedAt                 String? @default("CURRENT_TIMESTAMP")
+
+  @@ignore
+}
+
+model kounyu_assignment {
+  id            Int           @id @default(autoincrement())
+  kounyu_id     Int
+  user_id       String
+  assigned_at   DateTime?     @default(now())
+  status        String?       @default("active")
+  project_id    String?
+  kounyu_master kounyu_master @relation(fields: [kounyu_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([kounyu_id, user_id], map: "sqlite_autoindex_kounyu_assignment_1")
+  @@index([project_id], map: "idx_kounyu_assignment_project")
+  @@index([status], map: "idx_kounyu_assignment_status")
+  @@index([user_id], map: "idx_kounyu_assignment_user")
+  @@index([kounyu_id], map: "idx_kounyu_assignment_kounyu")
+}
+
+model kounyu_master {
+  id                     Int                 @id @default(autoincrement())
+  project_id             String
+  management_number      String
+  item_name              String
+  contract_number        String?
+  item_category          String
+  setsubi_seiban         String?
+  responsible_department String?
+  drawing_number         String?
+  display_order          Int?                @default(0)
+  remarks                String?
+  created_at             DateTime?           @default(now())
+  updated_at             DateTime?           @default(now())
+  kounyu_assignment      kounyu_assignment[]
+
+  @@unique([project_id, management_number], map: "sqlite_autoindex_kounyu_master_1")
+  @@index([display_order], map: "idx_kounyu_master_order")
+  @@index([item_category], map: "idx_kounyu_master_category")
+  @@index([management_number], map: "idx_kounyu_master_management")
+  @@index([project_id], map: "idx_kounyu_master_project")
+}
+
+model photo_albums {
+  album_id             Int                 @id @default(autoincrement())
+  fk_project_id        String
+  album_name           String
+  album_description    String?
+  album_cover_photo_id Int?
+  album_created_at     DateTime?           @default(now())
+  album_updated_at     DateTime?           @default(now())
+  album_photos_link    album_photos_link[] @ignore
+
+  @@index([fk_project_id], map: "idx_albums_project_id")
+}
+
+model photo_categories {
+  category_id          Int          @id @default(autoincrement())
+  category_name        String       @unique(map: "sqlite_autoindex_photo_categories_1")
+  category_description String?
+  created_at           DateTime?    @default(now())
+  photo_tags           photo_tags[]
+}
+
+model photo_tags {
+  tag_id           Int               @id @default(autoincrement())
+  fk_category_id   Int?
+  tag_name         String            @unique(map: "sqlite_autoindex_photo_tags_1")
+  tag_description  String?
+  created_at       DateTime?         @default(now())
+  photo_categories photo_categories? @relation(fields: [fk_category_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction)
+  photo_tags_link  photo_tags_link[] @ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model photo_tags_link {
+  fk_photo_id Int?
+  fk_tag_id   Int?
+  created_at  DateTime?   @default(now())
+  photo_tags  photo_tags? @relation(fields: [fk_tag_id], references: [tag_id], onDelete: Cascade, onUpdate: NoAction)
+  photos      photos?     @relation(fields: [fk_photo_id], references: [photo_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([fk_photo_id, fk_tag_id])
+  @@ignore
+}
+
+model photos {
+  photo_id               Int                 @id @default(autoincrement())
+  fk_project_id          String
+  fk_palet_list_id       String?
+  photo_file_path        String              @unique(map: "sqlite_autoindex_photos_1")
+  photo_thumbnail_path   String?
+  photo_title            String
+  photo_description      String?
+  photo_location         String?
+  photo_shooting_date    String?
+  photo_category         String              @default("others")
+  photo_tags             String?
+  photo_status           String?             @default("active")
+  fk_uploaded_by_user_id String?
+  photo_uploaded_at      DateTime?           @default(now())
+  photo_updated_at       DateTime?           @default(now())
+  album_photos_link      album_photos_link[] @ignore
+  photo_tags_link        photo_tags_link[]   @ignore
+}
+
+model setsubi_assignment {
+  id             Int            @id @default(autoincrement())
+  project_id     String
+  user_id        String
+  setsubi_id     Int
+  assigned_at    DateTime?      @default(now())
+  status         String?        @default("active")
+  setsubi_master setsubi_master @relation(fields: [setsubi_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([project_id, user_id, setsubi_id], map: "sqlite_autoindex_setsubi_assignment_1")
+  @@index([status], map: "idx_setsubi_assignment_status")
+  @@index([setsubi_id], map: "idx_setsubi_assignment_setsubi")
+  @@index([user_id], map: "idx_setsubi_assignment_user")
+  @@index([project_id], map: "idx_setsubi_assignment_project")
+}
+
+model setsubi_history {
+  id         Int       @id @default(autoincrement())
+  project_id String
+  seiban     String
+  created_at DateTime? @default(now())
+
+  @@unique([project_id, seiban], map: "sqlite_autoindex_setsubi_history_1")
+  @@index([seiban], map: "idx_setsubi_history_seiban")
+  @@index([project_id], map: "idx_setsubi_history_project")
+}
+
+model setsubi_master {
+  id                 Int                  @id @default(autoincrement())
+  seiban             String               @unique(map: "sqlite_autoindex_setsubi_master_1")
+  shohin_category    String?
+  setsubi_name       String
+  parent_seiban      String?
+  location_code      String?
+  created_at         DateTime?            @default(now())
+  updated_at         DateTime?            @default(now())
+  setsubi_assignment setsubi_assignment[]
+
+  @@index([parent_seiban], map: "idx_setsubi_master_parent")
+  @@index([seiban], map: "idx_setsubi_master_seiban")
+}
+
+model user_settings {
+  setting_id    Int       @id @default(autoincrement())
+  user_id       String
+  setting_key   String
+  setting_value String?
+  created_at    DateTime? @default(now())
+  updated_at    DateTime? @default(now())
+
+  @@unique([user_id, setting_key], map: "sqlite_autoindex_user_settings_1")
+}
+
+model tasks {
+  id              Int       @id @default(autoincrement())
+  project_id      String
+  epc_id          String?
+  equipment_id    Int?
+  parent_task_id  Int?
+  task_type       String    @default("タスク")
+  name            String
+  description     String?
+  start_date      String?
+  end_date        String?
+  status          String    @default("未着手")
+  progress_rate   Float?    @default(0.0)
+  estimated_hours Float?
+  actual_hours    Float?
+  sort_order      Int?      @default(0)
+  priority        String?   @default("medium")
+  is_deleted      Int       @default(0)
+  created_at      String
+  updated_at      String
+  
+  tasks           tasks?    @relation("TasksToTasks", fields: [parent_task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  other_tasks     tasks[]   @relation("TasksToTasks")
+
+  @@index([project_id], map: "idx_tasks_project_id")
+  @@index([parent_task_id], map: "idx_tasks_parent_task_id")
+  @@index([status], map: "idx_tasks_status")
+  @@index([epc_id], map: "idx_tasks_epc_id")
+}
